@@ -64,9 +64,13 @@ int main(int argc, char *argv[])
             padding: 80px 100px;
             selection-background-color: #2c578a;
         }
+        #topToolbarHolder {
+            background: transparent;
+        }
         #topToolbar {
             background-color: #161616;
-            border-bottom: 1px solid #232323;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
         }
         #topToolbar QToolButton {
             background: transparent;
@@ -74,21 +78,29 @@ int main(int argc, char *argv[])
             border: none;
             padding: 4px 6px;
             font-size: 12px;
+            border-radius: 6px;
         }
         #topToolbar QToolButton:hover {
             color: #d8d3c6;
+            background-color: rgba(255, 255, 255, 0.04);
         }
         #topToolbar QToolButton:checked {
-            color: #d8d3c6;
+            color: #f0e8d8;
+            background-color: rgba(255, 255, 255, 0.07);
         }
         #topToolbar QToolButton::menu-indicator {
             image: none;
             width: 0;
         }
+        #topToolbar QFrame#ttbVSep {
+            background-color: #2a2a2a;
+            border: none;
+            margin: 0 4px;
+        }
         #topToolbar QToolButton#ttbFont {
             min-width: 130px;
             color: #c8c3b6;
-            padding: 4px 0;
+            padding: 4px 8px;
         }
         #topToolbar QToolButton#ttbFont:hover {
             color: #f0e8d8;
@@ -96,16 +108,11 @@ int main(int argc, char *argv[])
         #topToolbar QToolButton#ttbSize,
         #topToolbar QToolButton#ttbLineHeight {
             min-width: 60px;
-            padding: 4px 0;
+            padding: 4px 6px;
         }
         #topToolbar QToolButton#ttbIndent {
             font-size: 14px;
-            min-width: 18px;
-            padding: 4px 0;
-        }
-        #topToolbar QToolButton#ttbImage,
-        #topToolbar QToolButton#ttbFocus {
-            min-width: 26px;
+            min-width: 24px;
             padding: 4px 0;
         }
         #ttbSizeStepper QToolButton#ttbSizeStep {

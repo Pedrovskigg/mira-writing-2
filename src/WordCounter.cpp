@@ -19,9 +19,21 @@ constexpr int kCursorIdleMs = 4000;
 constexpr int kDeltaMaxMs = 5000;
 
 QString stripTagsAndEntities(const QString& html) {
+    static const QRegularExpression styleBlockRe(
+        QStringLiteral("<style\\b[^>]*>.*?</style\\s*>"),
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+    static const QRegularExpression scriptBlockRe(
+        QStringLiteral("<script\\b[^>]*>.*?</script\\s*>"),
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+    static const QRegularExpression commentRe(
+        QStringLiteral("<!--.*?-->"),
+        QRegularExpression::DotMatchesEverythingOption);
     static const QRegularExpression tagRe(QStringLiteral("<[^>]*>"));
     static const QRegularExpression entityRe(QStringLiteral("&[#A-Za-z0-9]+;"));
     QString text = html;
+    text.replace(styleBlockRe, QStringLiteral(" "));
+    text.replace(scriptBlockRe, QStringLiteral(" "));
+    text.replace(commentRe, QStringLiteral(" "));
     text.replace(tagRe, QStringLiteral(" "));
     text.replace(entityRe, QStringLiteral(" "));
     return text;
@@ -732,9 +744,11 @@ void WordCounter::onEditorContentFlushed(const QString& key) {
     const QString html = m_cache ? m_cache->get(key) : QString();
     const int now = countWordsInHtml(html);
     const auto it = m_goalWordSnapshot.constFind(key);
+    const bool hasPrev = (it != m_goalWordSnapshot.constEnd());
+    const int prev = hasPrev ? it.value() : 0;
     m_goalWordSnapshot.insert(key, now);
-    if (it == m_goalWordSnapshot.constEnd()) return; // primeira vez, só baseline
-    const int delta = now - it.value();
+    if (!hasPrev) return; // primeira vez, só baseline
+    const int delta = now - prev;
     if (delta > 0) {
         updateGoalProgress(delta, 0);
     }

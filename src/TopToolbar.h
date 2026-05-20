@@ -32,17 +32,38 @@ signals:
     void openProjectRequested();
     void saveProjectRequested();
     void refMenuToggleRequested();
+    // Placeholders — ainda sem implementação
+    void boldToggled(bool enabled);
+    void italicToggled(bool enabled);
+    void glossaryRequested();
+    void readModeToggled(bool enabled);
+    void searchRequested();
+    void reminderRequested();
+    void immersiveSoundRequested();
+    void settingsRequested();
+    void fullscreenToggled(bool enabled);
+    void themePanelRequested();
 
 private:
     QToolButton *newProjectButton;
     QToolButton *openProjectButton;
     QToolButton *saveProjectButton;
+    QToolButton *boldButton;
+    QToolButton *italicButton;
+    QToolButton *glossaryButton;
+    QToolButton *readModeButton;
+    QToolButton *focusButton;
+    QToolButton *searchButton;
     QToolButton *fontButton;
     QToolButton *sizeButton;
     QToolButton *lineHeightButton;
     QToolButton *indentButton;
     QToolButton *imageButton;
-    QToolButton *focusButton;
+    QToolButton *reminderButton;
+    QToolButton *immersiveSoundButton;
+    QToolButton *themePanelButton;
+    QToolButton *settingsButton;
+    QToolButton *fullscreenButton;
     QToolButton *refMenuButton;
 
     QIcon focusOffIcon;

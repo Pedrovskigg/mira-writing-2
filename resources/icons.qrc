@@ -6,7 +6,21 @@
         <file alias="focusmode-off.svg">../src/assets/icons/focusmode-off.svg</file>
         <file alias="focusmode-on.svg">../src/assets/icons/focusmode-on.svg</file>
         <file alias="font-size.svg">../src/assets/icons/font-size.svg</file>
+        <file alias="fullscreen.svg">../src/assets/icons/fullscreen.svg</file>
+        <file alias="glossary.svg">../src/assets/icons/glossary.svg</file>
+        <file alias="immersive-sound.svg">../src/assets/icons/immersive-sound.svg</file>
         <file alias="italic.svg">../src/assets/icons/italic.svg</file>
+        <file alias="loadproject.svg">../src/assets/icons/loadproject.svg</file>
+        <file alias="newproject.svg">../src/assets/icons/newproject.svg</file>
+        <file alias="readmode.svg">../src/assets/icons/readmode.svg</file>
+        <file alias="refmenu.svg">../src/assets/icons/refmenu.svg</file>
+        <file alias="reminder.svg">../src/assets/icons/reminder.svg</file>
+        <file alias="save-project.svg">../src/assets/icons/save-project.svg</file>
+        <file alias="search.svg">../src/assets/icons/search.svg</file>
+        <file alias="settings.svg">../src/assets/icons/settings.svg</file>
         <file alias="text-spacing.svg">../src/assets/icons/text-spacing.svg</file>
+        <file alias="theme-panel.svg">../src/assets/icons/theme-panel.svg</file>
+        <file alias="leftbar/manuscriptpanel.svg">../src/assets/icons/leftbar/manuscriptpanel.svg</file>
+        <file alias="leftbar/projectinfo.svg">../src/assets/icons/leftbar/projectinfo.svg</file>
     </qresource>
 </RCC>

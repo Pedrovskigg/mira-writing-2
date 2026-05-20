@@ -93,7 +93,16 @@ MainWindow::MainWindow(QWidget *parent)
 {
     baseWindowTitle = tr("Mira Writing");
     setWindowTitle(baseWindowTitle);
-    setMenuWidget(toolbar);
+
+    // Toolbar flutuante: holder com margem em volta da TopToolbar
+    auto *toolbarHolder = new QWidget(this);
+    toolbarHolder->setObjectName(QStringLiteral("topToolbarHolder"));
+    auto *holderLayout = new QHBoxLayout(toolbarHolder);
+    holderLayout->setContentsMargins(12, 10, 12, 4);
+    holderLayout->setSpacing(0);
+    holderLayout->addWidget(toolbar);
+    setMenuWidget(toolbarHolder);
+
     resize(1100, 800);
 
     setupEditor();
