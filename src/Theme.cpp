@@ -329,6 +329,140 @@ void Manager::loadBundled()
         t.pageShadowOffset = 0;
         m_themes.append(t);
     }
+    {
+        // Snow Storm — variante clara oficial do Nord (Polar Night → Snow Storm).
+        // Mesma família, polos invertidos: fundo branco-glaciar, texto Polar Night.
+        MiraTheme t;
+        t.id = QStringLiteral("nord-light");
+        t.name = QStringLiteral("Snow Storm");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#d8dee9");  // nord4
+        t.panelBackground  = QStringLiteral("#e5e9f0");  // nord5
+        t.panelBorder      = QStringLiteral("#bcc4d2");
+        t.textPrimary      = QStringLiteral("#3b4252");  // nord1
+        t.textMuted        = QStringLiteral("#6c7080");
+        t.textBright       = QStringLiteral("#2e3440");  // nord0
+        t.hoverOverlay     = QStringLiteral("rgba(46,52,64,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(46,52,64,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(46,52,64,0.12)");
+        t.accentDefault    = QStringLiteral("#5e81ac");  // nord10 deep frost
+
+        t.hoverStrong         = QStringLiteral("rgba(46,52,64,0.10)");
+        t.borderStrong        = QStringLiteral("rgba(46,52,64,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(46,52,64,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(46,52,64,0.04)");
+        t.disabledText        = QStringLiteral("rgba(46,52,64,0.32)");
+        t.selectionRing       = QStringLiteral("#2e3440");
+
+        // Auroras escurecidas pra ter contraste no fundo claro.
+        t.accentSuccess           = QStringLiteral("#6e8a4f");
+        t.accentSuccessSoft       = QStringLiteral("rgba(110,138,79,0.16)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(110,138,79,0.50)");
+        t.accentDanger            = QStringLiteral("#9d3e47");
+        t.accentDangerSoft        = QStringLiteral("rgba(157,62,71,0.12)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(157,62,71,0.50)");
+        t.accentWarning           = QStringLiteral("#aa5536");
+        t.accentInfo              = QStringLiteral("#5e81ac");
+        t.accentInfoSoft          = QStringLiteral("rgba(94,129,172,0.18)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(94,129,172,0.55)");
+
+        t.editorBackground = QStringLiteral("#eceff4");  // nord6
+        t.editorTextColor  = QStringLiteral("#2e3440");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(46,52,64,80)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 5;
+        m_themes.append(t);
+    }
+    {
+        // Nord Royal — Nord com a aurora purple como accent default e o yellow
+        // entrando no mix. Tom mais místico/literário, ainda dentro da família.
+        MiraTheme t;
+        t.id = QStringLiteral("nord-royal");
+        t.name = QStringLiteral("Nord Royal");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#2e3440");
+        t.panelBackground  = QStringLiteral("#3b4252");
+        t.panelBorder      = QStringLiteral("#4c566a");
+        t.textPrimary      = QStringLiteral("#d8dee9");
+        t.textMuted        = QStringLiteral("#7b8394");
+        t.textBright       = QStringLiteral("#eceff4");
+        t.hoverOverlay     = QStringLiteral("rgba(216,222,233,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(216,222,233,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(216,222,233,0.10)");
+        t.accentDefault    = QStringLiteral("#b48ead");  // nord15 aurora purple
+
+        t.hoverStrong         = QStringLiteral("rgba(216,222,233,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(216,222,233,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(216,222,233,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.22)");
+        t.disabledText        = QStringLiteral("rgba(216,222,233,0.30)");
+        t.selectionRing       = QStringLiteral("#eceff4");
+
+        t.accentSuccess           = QStringLiteral("#a3be8c");  // aurora green
+        t.accentSuccessSoft       = QStringLiteral("rgba(163,190,140,0.20)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(163,190,140,0.55)");
+        t.accentDanger            = QStringLiteral("#bf616a");  // aurora red
+        t.accentDangerSoft        = QStringLiteral("rgba(191,97,106,0.15)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(191,97,106,0.50)");
+        t.accentWarning           = QStringLiteral("#ebcb8b");  // nord13 aurora yellow
+        t.accentInfo              = QStringLiteral("#88c0d0");  // nord8 frost cyan
+        t.accentInfoSoft          = QStringLiteral("rgba(136,192,208,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(136,192,208,0.55)");
+
+        t.editorBackground = QStringLiteral("#3b4252");
+        t.editorTextColor  = QStringLiteral("#d8dee9");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,160)");
+        t.pageShadowRadius = 24;
+        t.pageShadowOffset = 5;
+        m_themes.append(t);
+    }
+    {
+        // Tokyo Night — paleta do Enkia. Fundo azul-marinho profundo,
+        // texto lavanda, accents em ciano elétrico e magenta. Vibe noturna
+        // urbana, kanji em neon de Shibuya.
+        MiraTheme t;
+        t.id = QStringLiteral("tokyo-night");
+        t.name = QStringLiteral("Tokyo Night");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#1a1b26");
+        t.panelBackground  = QStringLiteral("#24283b");
+        t.panelBorder      = QStringLiteral("#3b4261");
+        t.textPrimary      = QStringLiteral("#a9b1d6");  // fg_dark
+        t.textMuted        = QStringLiteral("#565f89");  // comment
+        t.textBright       = QStringLiteral("#c0caf5");  // fg
+        t.hoverOverlay     = QStringLiteral("rgba(192,202,245,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(192,202,245,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(192,202,245,0.10)");
+        t.accentDefault    = QStringLiteral("#7aa2f7");  // blue
+
+        t.hoverStrong         = QStringLiteral("rgba(192,202,245,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(192,202,245,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(192,202,245,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.28)");
+        t.disabledText        = QStringLiteral("rgba(192,202,245,0.30)");
+        t.selectionRing       = QStringLiteral("#c0caf5");
+
+        t.accentSuccess           = QStringLiteral("#9ece6a");  // green
+        t.accentSuccessSoft       = QStringLiteral("rgba(158,206,106,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(158,206,106,0.55)");
+        t.accentDanger            = QStringLiteral("#f7768e");  // red
+        t.accentDangerSoft        = QStringLiteral("rgba(247,118,142,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(247,118,142,0.50)");
+        t.accentWarning           = QStringLiteral("#ff9e64");  // orange
+        t.accentInfo              = QStringLiteral("#bb9af7");  // magenta/lavanda
+        t.accentInfoSoft          = QStringLiteral("rgba(187,154,247,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(187,154,247,0.55)");
+
+        t.editorBackground = QStringLiteral("#1f2335");  // bg meio termo
+        t.editorTextColor  = QStringLiteral("#c0caf5");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,170)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 5;
+        m_themes.append(t);
+    }
 }
 
 void Manager::loadFromSettings()
