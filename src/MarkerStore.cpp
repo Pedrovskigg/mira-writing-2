@@ -12,6 +12,7 @@
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QUuid>
+#include <cmath>
 
 namespace {
 
@@ -26,6 +27,18 @@ QColor parseColor(const QString& s)
     return c.isValid() ? c : QColor(QStringLiteral("#FFD54F"));
 }
 
+}
+
+QColor MarkerStore::pickContrastingFg(const QColor& bg)
+{
+    auto channel = [](double c) {
+        c /= 255.0;
+        return (c <= 0.03928) ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
+    };
+    const double L = 0.2126 * channel(bg.red())
+                   + 0.7152 * channel(bg.green())
+                   + 0.0722 * channel(bg.blue());
+    return (L > 0.179) ? QColor(Qt::black) : QColor(Qt::white);
 }
 
 MarkerStore::MarkerStore(QObject* parent)
@@ -128,10 +141,9 @@ void MarkerStore::applyToDocument(const QString& docKey, QTextDocument* doc)
         c.setPosition(from);
         c.setPosition(to, QTextCursor::KeepAnchor);
         QTextCharFormat fmt;
-        // Marca-texto = background (igual ao Mira 1 com `background-color` no
-        // span). Foreground continuaria sendo a cor do tema, mantendo o
-        // contraste do texto sobre o highlight.
-        fmt.setBackground(parseColor(e.color));
+        const QColor bg = parseColor(e.color);
+        fmt.setBackground(bg);
+        fmt.setForeground(pickContrastingFg(bg));
         fmt.setProperty(MarkerIdProperty, e.id);
         c.mergeCharFormat(fmt);
     }
@@ -198,8 +210,8 @@ QString MarkerStore::applyMarkerToSelection(const QString& docKey,
 {
     if (!cursor.hasSelection()) return QString();
     QTextCharFormat fmt;
-    // Marca-texto via background (igual Mira 1: span com background-color).
     fmt.setBackground(color);
+    fmt.setForeground(pickContrastingFg(color));
 
     QString id;
     if (!comment.trimmed().isEmpty()) {
@@ -243,6 +255,7 @@ void MarkerStore::removeMarker(const QString& docKey, QTextDocument* doc, const 
             QTextCharFormat clear = c.charFormat();
             clear.clearProperty(MarkerIdProperty);
             clear.clearBackground();
+            clear.clearForeground();
             c.setCharFormat(clear);
         }
     }
@@ -272,6 +285,7 @@ void MarkerStore::updateMarker(const QString& docKey, QTextDocument* doc, const 
             c.setPosition(frag.position() + frag.length(), QTextCursor::KeepAnchor);
             QTextCharFormat next;
             next.setBackground(color);
+            next.setForeground(pickContrastingFg(color));
             next.setProperty(MarkerIdProperty, id);
             c.mergeCharFormat(next);
         }

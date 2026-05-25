@@ -19,6 +19,10 @@ class MarkerStore : public QObject {
 public:
     static constexpr int MarkerIdProperty = 0x10A0; // QTextFormat::UserProperty+0xA0
 
+    // Preto ou branco — o que melhor contrasta com `bg` (WCAG luminance).
+    // Usado pra escolher cor do texto sobre highlight de marker.
+    static QColor pickContrastingFg(const QColor& bg);
+
     struct Entry {
         QString id;        // GUID
         int blockIndex = 0;

@@ -3,8 +3,11 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QFontDatabase>
+#include <QIcon>
 #include <QLocale>
+#include <QPixmap>
 #include <QSet>
+#include <QSplashScreen>
 #include <QStringList>
 #include <QTranslator>
 
@@ -51,6 +54,13 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName("Mira Writing");
     QApplication::setApplicationVersion("0.1.0");
     QApplication::setOrganizationName("Mira Writing");
+    QApplication::setWindowIcon(QIcon(":/app/mira.png"));
+
+    QSplashScreen splash(QPixmap(":/app/splash.png"));
+    splash.setAttribute(Qt::WA_TranslucentBackground);
+    splash.setWindowFlag(Qt::FramelessWindowHint);
+    splash.show();
+    app.processEvents();
 
     // Stylesheet global vive em Theme::globalStyleSheet() — derivada do tema
     // corrente. MainWindow::onThemeChanged() reaplica em troca de tema.
@@ -71,6 +81,7 @@ int main(int argc, char *argv[])
     MainWindow window;
     window.setAvailableFontFamilies(customFontFamilies);
     window.show();
+    splash.finish(&window);
 
     return app.exec();
 }

@@ -1371,15 +1371,30 @@ void MainWindow::applyTextColor()
     p.setColor(QPalette::Text, textColor);
     editor->setPalette(p);
 
-    // mergeCharFormat preserva bold/italic/etc. Salvar/restaurar isModified
-    // pra não marcar o doc como sujo por causa de mudança visual de tema.
+    // Itera por fragmentos pra preservar foreground custom dos markers:
+    // onde tem background (highlight), o foreground vem de pickContrastingFg
+    // baseado na cor do highlight; nos demais, usa textColor do tema.
     const bool wasModified = editor->document()->isModified();
-    QTextCursor cursor(editor->document());
-    cursor.select(QTextCursor::Document);
-    QTextCharFormat fmt;
-    fmt.setForeground(textColor);
-    cursor.mergeCharFormat(fmt);
-    editor->document()->setModified(wasModified);
+    QTextDocument* doc = editor->document();
+    for (QTextBlock block = doc->firstBlock(); block.isValid(); block = block.next()) {
+        for (auto it = block.begin(); !it.atEnd(); ++it) {
+            const QTextFragment frag = it.fragment();
+            if (!frag.isValid() || frag.length() == 0) continue;
+            const QTextCharFormat existing = frag.charFormat();
+            QColor fg = textColor;
+            const QBrush bgBrush = existing.background();
+            if (bgBrush.style() != Qt::NoBrush && bgBrush.color().alpha() > 0) {
+                fg = MarkerStore::pickContrastingFg(bgBrush.color());
+            }
+            QTextCursor c(doc);
+            c.setPosition(frag.position());
+            c.setPosition(frag.position() + frag.length(), QTextCursor::KeepAnchor);
+            QTextCharFormat fmt;
+            fmt.setForeground(fg);
+            c.mergeCharFormat(fmt);
+        }
+    }
+    doc->setModified(wasModified);
 
     if (editor->viewport()) editor->viewport()->update();
 }

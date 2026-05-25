@@ -1,4 +1,8 @@
 <RCC>
+    <qresource prefix="/app">
+        <file alias="mira.png">../src/assets/logo/app-icon-256.png</file>
+        <file alias="splash.png">../src/assets/logo/splash.png</file>
+    </qresource>
     <qresource prefix="/icons">
         <file alias="add-image.svg">../src/assets/icons/add-image.svg</file>
         <file alias="bold.svg">../src/assets/icons/bold.svg</file>

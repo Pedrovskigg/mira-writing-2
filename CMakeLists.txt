@@ -103,6 +103,7 @@ qt_add_executable(mira-writing
     src/GlossaryAddPopup.cpp
     src/GlossaryAddPopup.h
     resources/icons.qrc
+    $<$<PLATFORM_ID:Windows>:resources/mira.rc>
 )
 
 qt_add_translations(mira-writing
