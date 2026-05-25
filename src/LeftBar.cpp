@@ -35,16 +35,12 @@ constexpr int kBarWidth = 60;
 constexpr int kBtnSize  = 40;
 constexpr int kIconSize = 26;
 
-constexpr auto kIconNormal   = "#8a857a"; // textMuted
-constexpr auto kIconHover    = "#d8d3c6"; // textPrimary
-constexpr auto kIconSelected = "#f0e8d8"; // textBright
-
 QIcon loadLeftbarIcon(const QString& fileName) {
     return IconUtils::loadToolbarIcon(
         QStringLiteral(":/icons/leftbar/%1").arg(fileName),
-        QColor(kIconNormal),
-        QColor(kIconHover),
-        QColor(kIconSelected),
+        QColor(Theme::textMuted()),
+        QColor(Theme::textPrimary()),
+        QColor(Theme::textBright()),
         QSize(kIconSize, kIconSize));
 }
 
@@ -68,7 +64,7 @@ QString fixedButtonQss() {
             color: %4;
         }
         QToolButton:checked {
-            background: rgba(255,255,255,0.05);
+            background: %6;
             border-color: %5;
             color: %4;
         }
@@ -76,7 +72,8 @@ QString fixedButtonQss() {
             Theme::hoverOverlay(),
             Theme::subtleBorder(),
             Theme::textBright(),
-            Theme::accentDefault());
+            Theme::accentDefault(),
+            Theme::pressedOverlay());
 }
 
 QString drawerButtonQss(const QString& accent) {
@@ -93,16 +90,18 @@ QString drawerButtonQss(const QString& accent) {
             font-weight: 700;
         }
         QToolButton:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.16);
+            background: %3;
+            border-color: %4;
             color: %2;
         }
         QToolButton:checked {
-            background: rgba(255,255,255,0.06);
+            background: %5;
             border-color: %1;
             color: %2;
         }
-    )").arg(accent, Theme::textBright());
+    )").arg(accent, Theme::textBright(),
+           Theme::hoverOverlay(), Theme::subtleBorder(),
+           Theme::pressedOverlay());
 }
 
 QString newDrawerQss() {

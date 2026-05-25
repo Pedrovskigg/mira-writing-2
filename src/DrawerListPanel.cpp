@@ -104,9 +104,9 @@ QString folderChipQss() {
     // Chip de pasta: arredondado, fundo translúcido, ícone de pasta à esquerda.
     return QStringLiteral(R"(
         QPushButton {
-            background: rgba(255,255,255,0.05);
+            background: %3;
             color: %1;
-            border: 1px solid rgba(255,255,255,0.10);
+            border: 1px solid %4;
             border-radius: 11px;
             padding: 2px 10px;
             font-family: 'Lora','Crimson Text',serif;
@@ -114,20 +114,22 @@ QString folderChipQss() {
             text-align: left;
         }
         QPushButton:hover {
-            background: rgba(255,255,255,0.10);
+            background: %5;
             color: %2;
-            border-color: rgba(255,255,255,0.18);
+            border-color: %6;
         }
-    )").arg(Theme::textPrimary(), Theme::textBright());
+    )").arg(Theme::textPrimary(), Theme::textBright(),
+           Theme::hoverOverlay(), Theme::subtleBorder(),
+           Theme::hoverStrong(), Theme::borderStrong());
 }
 
 QString folderBackQss() {
     // Botão "voltar" exibido quando se está dentro de uma pasta.
     return QStringLiteral(R"(
         QPushButton {
-            background: rgba(255,255,255,0.05);
+            background: %3;
             color: %1;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid %4;
             border-radius: 11px;
             padding: 2px 10px;
             font-family: 'Lora','Crimson Text',serif;
@@ -135,11 +137,13 @@ QString folderBackQss() {
             text-align: left;
         }
         QPushButton:hover {
-            background: rgba(255,255,255,0.10);
+            background: %5;
             color: %2;
-            border-color: rgba(255,255,255,0.22);
+            border-color: %6;
         }
-    )").arg(Theme::textBright(), Theme::textBright());
+    )").arg(Theme::textBright(), Theme::textBright(),
+           Theme::hoverOverlay(), Theme::subtleBorder(),
+           Theme::hoverStrong(), Theme::focusBorder());
 }
 
 QString createButtonQss(const QString& accent) {
@@ -218,10 +222,10 @@ QPixmap photoRounded(const QPixmap& src, int side, int radius) {
 }
 
 QString roleColor(const QString& role) {
-    // Mira 1 usa um tom só (cyan) pra todos os papéis. Mantemos pra ficar
-    // visualmente consistente; refina depois se Pedro pedir cor por papel.
+    // Mira 1 usa um tom só (cyan) pra todos os papéis. Aqui usamos accentInfo()
+    // pra ter contraste tanto no tema escuro quanto no claro.
     Q_UNUSED(role);
-    return QStringLiteral("#7dd3fc");
+    return Theme::accentInfo();
 }
 
 } // namespace
@@ -420,7 +424,7 @@ DrawerListPanel::DrawerListPanel(ProjectModel* model, QWidget* parent)
     m_resizeHandle->setCursor(Qt::SizeHorCursor);
     m_resizeHandle->setStyleSheet(QStringLiteral(
         "#drawerResizeHandle { background: transparent; }"
-        "#drawerResizeHandle:hover { background: rgba(255,255,255,0.10); }"));
+        "#drawerResizeHandle:hover { background: %1; }").arg(Theme::subtleBorder()));
     m_resizeHandle->setAttribute(Qt::WA_StyledBackground, true);
     m_resizeHandle->installEventFilter(this);
     m_resizeHandle->setGeometry(width() - kResizeHandleWidth, 0, kResizeHandleWidth, height());
@@ -432,7 +436,7 @@ DrawerListPanel::DrawerListPanel(ProjectModel* model, QWidget* parent)
     m_resizeHandleBottom->setCursor(Qt::SizeVerCursor);
     m_resizeHandleBottom->setStyleSheet(QStringLiteral(
         "#drawerResizeHandleBottom { background: transparent; }"
-        "#drawerResizeHandleBottom:hover { background: rgba(255,255,255,0.10); }"));
+        "#drawerResizeHandleBottom:hover { background: %1; }").arg(Theme::subtleBorder()));
     m_resizeHandleBottom->setAttribute(Qt::WA_StyledBackground, true);
     m_resizeHandleBottom->installEventFilter(this);
     m_resizeHandleBottom->setGeometry(0, height() - kResizeHandleWidth,
@@ -880,15 +884,16 @@ QWidget* DrawerListPanel::makeElementCard(const QString& itemId, const QString& 
     card->setFixedSize(kCardWidth, kCardHeight);
     card->setStyleSheet(QStringLiteral(R"(
         QFrame#elemCard {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: %1;
+            border: 1px solid %2;
             border-radius: 8px;
         }
         QFrame#elemCard:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.18);
+            background: %3;
+            border-color: %4;
         }
-    )"));
+    )").arg(Theme::pressedOverlay(), Theme::subtleBorder(),
+           Theme::hoverOverlay(), Theme::borderStrong()));
 
     auto* lay = new QVBoxLayout(card);
     lay->setContentsMargins(8, 8, 8, 8);
@@ -898,7 +903,8 @@ QWidget* DrawerListPanel::makeElementCard(const QString& itemId, const QString& 
     photo->setFixedSize(kCardPhoto, kCardPhoto);
     photo->setAlignment(Qt::AlignCenter);
     photo->setStyleSheet(QStringLiteral(
-        "background: rgba(0,0,0,0.35); border-radius: 6px; color: %1; font-size: 9px;").arg(Theme::textMuted()));
+        "background: %1; border-radius: 6px; color: %2; font-size: 9px;")
+        .arg(Theme::inputBackground(), Theme::textMuted()));
     QPixmap pm = pixFromDataUrl(imageDataUrl);
     if (!pm.isNull()) {
         photo->setPixmap(photoRounded(pm, kCardPhoto, 6));
@@ -1677,7 +1683,8 @@ void DrawerListPanel::installDropTargetOnFolderChip(QWidget* chip, const QString
                 de->acceptProposedAction();
                 m_chip->setProperty("dropHover", true);
                 m_chip->setStyleSheet(m_chip->styleSheet() + QStringLiteral(
-                    "QPushButton { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.32); }"));
+                    "QPushButton { background: %1; border-color: %2; }")
+                    .arg(Theme::hoverStrong(), Theme::focusBorder()));
                 return true;
             } else if (ev->type() == QEvent::DragMove) {
                 auto* de = static_cast<QDragMoveEvent*>(ev);

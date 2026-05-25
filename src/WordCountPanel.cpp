@@ -248,11 +248,11 @@ void WordCountPanel::applyThemeStyle()
         }
         QComboBox::drop-down { border: none; width: 16px; }
         QComboBox[lazyass="true"] {
-            border: 1px solid #d66060;
-            color: #d66060;
+            border: 1px solid %10;
+            color: %10;
         }
         QLabel#wcpLazyass {
-            color: #d66060;
+            color: %10;
             font-size: 11px;
             font-style: italic;
         }
@@ -307,7 +307,8 @@ void WordCountPanel::applyThemeStyle()
              txtPrimary, // 6
              txtMuted,   // 7
              txtBright,  // 8
-             accent)     // 9
+             accent,     // 9
+             Theme::accentWarning()) // 10
     );
 }
 

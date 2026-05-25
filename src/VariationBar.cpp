@@ -54,7 +54,7 @@ QString iconBtnQss() {
         }
     )").arg(Theme::textMuted(), Theme::hoverOverlay(),
            Theme::textBright(), Theme::subtleBorder(),
-           QStringLiteral("#3a3a42"));
+           Theme::disabledText());
 }
 }
 

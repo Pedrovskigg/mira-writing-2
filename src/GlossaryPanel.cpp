@@ -145,7 +145,8 @@ void GlossaryPanel::applyTheme()
         "  padding: 4px 10px; font-size: 11px;"
         "}"
         "QPushButton#glsAddBtn:hover, QPushButton#glsRemoveBtn:hover { background: %5; }"
-        "QPushButton#glsRemoveBtn { color: #E57373; border-color: #80E57373; }"
+        "QPushButton#glsRemoveBtn { color: %8; border-color: %9; }"
+        "QPushButton#glsRemoveBtn:hover { background: %10; }"
         "QLineEdit, QTextEdit {"
         "  background: %6; color: %3;"
         "  border: 1px solid %2; border-radius: 4px;"
@@ -164,7 +165,10 @@ void GlossaryPanel::applyTheme()
           Theme::textMuted(),
           Theme::hoverOverlay(),
           Theme::editorBackground(),
-          Theme::pressedOverlay()));
+          Theme::pressedOverlay(),
+          Theme::accentDanger(),
+          Theme::accentDangerBorderSoft(),
+          Theme::accentDangerSoft()));
 }
 
 void GlossaryPanel::rebuildList()

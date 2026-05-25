@@ -26,6 +26,36 @@ struct MiraTheme {
     QString subtleBorder;
     QString accentDefault;
 
+    // Hover/focus mais fortes — usados em botões e inputs.
+    // Em tema escuro, `rgba(255,255,255,0.12+)`; em tema claro, `rgba(0,0,0,0.08+)`.
+    QString hoverStrong;
+    QString borderStrong;
+    QString focusBorder;
+
+    // Background de campos "inset" (textareas, combos): em tema escuro afunda
+    // pra `rgba(0,0,0,0.30)`; em tema claro sobe pra um cinza neutro.
+    QString inputBackground;
+
+    // Texto e borda de elementos desabilitados.
+    QString disabledText;
+
+    // Cor de "ring" pra selecionar itens em grids/swatches — em tema escuro é
+    // branco, em tema claro é preto suave.
+    QString selectionRing;
+
+    // Cores semânticas: confirm/success, danger/delete, warning, info.
+    // Cada uma vem com a cor cheia + um background hover suave.
+    QString accentSuccess;
+    QString accentSuccessSoft;
+    QString accentSuccessBorderSoft;
+    QString accentDanger;
+    QString accentDangerSoft;
+    QString accentDangerBorderSoft;
+    QString accentWarning;
+    QString accentInfo;
+    QString accentInfoSoft;
+    QString accentInfoBorderSoft;
+
     // Editor — "página" de escrita (apenas cor; largura/margens vivem em EditorLayout)
     QString editorBackground;
     QString editorTextColor;
@@ -77,6 +107,26 @@ QString subtleBorder();
 QString accentDefault();
 QString panelQss(const QString& objectName);
 
+// Hover/focus fortes e inputs.
+QString hoverStrong();
+QString borderStrong();
+QString focusBorder();
+QString inputBackground();
+QString disabledText();
+QString selectionRing();
+
+// Cores semânticas (acentos).
+QString accentSuccess();
+QString accentSuccessSoft();
+QString accentSuccessBorderSoft();
+QString accentDanger();
+QString accentDangerSoft();
+QString accentDangerBorderSoft();
+QString accentWarning();
+QString accentInfo();
+QString accentInfoSoft();
+QString accentInfoBorderSoft();
+
 // Novos acessores específicos do editor.
 QString editorBackground();
 QString editorTextColor();
@@ -84,5 +134,10 @@ bool pageShadowEnabled();
 QString pageShadowColor();
 int pageShadowRadius();
 int pageShadowOffset();
+
+// Stylesheet global do app — substitui o bloco hard-coded que vivia no main.cpp.
+// Tem QMenu, QScrollBar, TopToolbar, FontPickerPopup, ImageInsertDialog,
+// ImageOverlay etc. Reaplicar em themeChanged().
+QString globalStyleSheet();
 
 } // namespace Theme

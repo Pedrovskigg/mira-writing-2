@@ -133,6 +133,20 @@ void MarkerHoverPopup::applyTheme()
           Theme::textPrimary(),
           Theme::subtleBorder(),
           Theme::hoverOverlay()));
+
+    // Recolore os ícones SVG (edit/trash) — o tinting é feito no load,
+    // então se o tema mudou precisamos recarregar.
+    const QSize iconSz(14, 14);
+    const QColor iconColor(Theme::textPrimary());
+    const QColor iconHover(Theme::textBright());
+    if (m_editBtn) {
+        m_editBtn->setIcon(IconUtils::loadToolbarIcon(
+            QStringLiteral(":/icons/edit.svg"), iconColor, iconHover, iconHover, iconSz));
+    }
+    if (m_deleteBtn) {
+        m_deleteBtn->setIcon(IconUtils::loadToolbarIcon(
+            QStringLiteral(":/icons/trash.svg"), iconColor, iconHover, iconHover, iconSz));
+    }
 }
 
 void MarkerHoverPopup::showFor(const QString& markerId,

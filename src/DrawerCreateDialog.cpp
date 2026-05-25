@@ -19,7 +19,6 @@
 namespace {
 
 constexpr int kIconRenderSize = 18;
-constexpr auto kIconColor = "#d8d3c6";
 
 struct IconEntry {
     const char* id;
@@ -55,11 +54,10 @@ const QList<IconEntry>& drawerIconCatalogRaw() {
 }
 
 QIcon loadElementIcon(const QString& id) {
+    const QColor c(Theme::textPrimary());
     return IconUtils::loadToolbarIcon(
         QStringLiteral(":/icons/elements/%1.svg").arg(id),
-        QColor(kIconColor),
-        QColor(kIconColor),
-        QColor(kIconColor),
+        c, c, c,
         QSize(kIconRenderSize, kIconRenderSize));
 }
 

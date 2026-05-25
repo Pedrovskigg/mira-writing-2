@@ -68,6 +68,7 @@ private:
     void layoutResizeHandles();
 
     void buildUi();
+    void applyMainStyleSheet();
     void rebuildTabs();
     void rebuildNavBody();
     void buildManuscriptsView();

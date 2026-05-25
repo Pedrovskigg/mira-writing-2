@@ -1,5 +1,7 @@
 #include "ElementCreateDialog.h"
 
+#include "Theme.h"
+
 #include <QBuffer>
 #include <QByteArray>
 #include <QComboBox>
@@ -155,32 +157,42 @@ void ElementCreateDialog::buildUi()
     outer->addLayout(btnRow);
 
     setStyleSheet(QStringLiteral(R"(
-        QDialog#elementCreateDialog { background: #1a1a1a; }
-        QDialog#elementCreateDialog QLabel { color: #c8c3b6; font-size: 12px; }
+        QDialog#elementCreateDialog { background: %1; }
+        QDialog#elementCreateDialog QLabel { color: %2; font-size: 12px; }
         QDialog#elementCreateDialog QLineEdit, QDialog#elementCreateDialog QComboBox {
-            background: #161616; color: #e8e3d6;
-            border: 1px solid #2a2a2a; border-radius: 4px;
+            background: %3; color: %4;
+            border: 1px solid %5; border-radius: 4px;
             padding: 6px 8px; min-height: 24px;
         }
         QDialog#elementCreateDialog QComboBox::drop-down { border: none; width: 16px; }
         QDialog#elementCreateDialog QComboBox QAbstractItemView {
-            background: #161616; color: #e8e3d6;
-            selection-background-color: #2c3a5e;
-            border: 1px solid #2a2a2a;
+            background: %3; color: %4;
+            selection-background-color: %6;
+            border: 1px solid %5;
         }
         QLabel#ecdImagePreview {
-            background: #161616; color: #6a6558;
-            border: 1px dashed #2a2a2a; border-radius: 4px;
+            background: %3; color: %7;
+            border: 1px dashed %5; border-radius: 4px;
             font-size: 10px;
         }
         QPushButton#ecdBtn {
-            background: #232323; color: #c8c3b6;
-            border: 1px solid #2a2a2a; border-radius: 4px;
+            background: %8; color: %2;
+            border: 1px solid %5; border-radius: 4px;
             padding: 6px 14px; min-height: 26px;
         }
-        QPushButton#ecdBtn:hover { background: #2c2c2c; color: #e8e3d6; }
-        QPushButton#ecdBtn:default { background: #2c3a5e; color: #f0e8d8; border-color: #3a4d7a; }
-    )"));
+        QPushButton#ecdBtn:hover { background: %9; color: %4; }
+        QPushButton#ecdBtn:default { background: %6; color: %4; border-color: %10; }
+    )").arg(Theme::panelBackground(),     // 1
+           Theme::textPrimary(),          // 2
+           Theme::inputBackground(),      // 3
+           Theme::textBright(),           // 4
+           Theme::panelBorder(),          // 5
+           Theme::accentInfoSoft(),       // 6 (selection bg)
+           Theme::textMuted(),            // 7 (image placeholder text)
+           Theme::hoverOverlay(),         // 8 (button bg)
+           Theme::hoverStrong(),          // 9 (button hover bg)
+           Theme::accentInfoBorderSoft()  // 10 (default button border)
+        ));
 }
 
 void ElementCreateDialog::setInitial(const QString& title, const QString& role, const QString& imageDataUrl)

@@ -2186,6 +2186,12 @@ void MainWindow::onThemePanelRequested()
 void MainWindow::onThemeChanged()
 {
     // Tema cuida só de cores/aparência. Largura/margens são do EditorLayout.
+    // Stylesheet global (QMainWindow, QMenu, QScrollBar, TopToolbar, popups
+    // de imagem/fonte) é derivada do tema e precisa ser reaplicada.
+    if (auto* a = qobject_cast<QApplication*>(QApplication::instance())) {
+        a->setStyleSheet(Theme::globalStyleSheet());
+    }
+
     if (editorContainer) {
         editorContainer->setStyleSheet(
             QStringLiteral("#editorContainer { background: %1; }").arg(Theme::appBackground()));

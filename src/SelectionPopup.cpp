@@ -103,9 +103,24 @@ void SelectionPopup::applyRootStyle()
 void SelectionPopup::applyTheme()
 {
     applyRootStyle();
-    // Ícones dos botões já existentes seguem com a cor antiga até a próxima
-    // criação — o ganho visual aqui é o background/border do popup, que é
-    // o que mais salta aos olhos. MVP aceita.
+    reloadAllIcons();
+    for (QFrame* line : m_separators) {
+        if (line) line->setStyleSheet(QStringLiteral("color: %1;").arg(Theme::subtleBorder()));
+    }
+}
+
+void SelectionPopup::reloadAllIcons()
+{
+    for (auto it = m_iconAliasByBtn.cbegin(); it != m_iconAliasByBtn.cend(); ++it) {
+        QToolButton* btn = it.key();
+        if (!btn) continue;
+        const QString resPath = QStringLiteral(":/icons/%1").arg(it.value());
+        btn->setIcon(IconUtils::loadToolbarIcon(resPath,
+                                                QColor(Theme::textPrimary()),
+                                                QColor(Theme::textBright()),
+                                                QColor(Theme::accentDefault()),
+                                                QSize(kIconSize, kIconSize)));
+    }
 }
 
 QToolButton* SelectionPopup::addAction(const QString &iconAlias,
@@ -124,6 +139,7 @@ QToolButton* SelectionPopup::addAction(const QString &iconAlias,
         connect(b, &QToolButton::clicked, this, [cb]() { cb(); });
     }
     m_layout->addWidget(b);
+    m_iconAliasByBtn.insert(b, iconAlias);
     adjustSize();
     return b;
 }
@@ -135,6 +151,7 @@ void SelectionPopup::addSeparator()
     line->setStyleSheet(QStringLiteral("color: %1;").arg(Theme::subtleBorder()));
     line->setFixedSize(1, kButtonSize - 8);
     m_layout->addWidget(line);
+    m_separators.append(line);
 }
 
 bool SelectionPopup::hasSelection() const

@@ -108,14 +108,17 @@ void GlossaryAddPopup::applyTheme()
         "  padding: 4px 12px; font-size: 11px;"
         "}"
         "QPushButton:hover { background: %6; }"
-        "QPushButton#glsAddOk { color: #7BC592; border-color: #807BC592; }"
-        "QPushButton#glsAddOk:hover { background: rgba(120,200,140,0.18); }"
+        "QPushButton#glsAddOk { color: %7; border-color: %8; }"
+        "QPushButton#glsAddOk:hover { background: %9; }"
     ).arg(Theme::panelBackground(),
           Theme::panelBorder(),
           Theme::textPrimary(),
           Theme::textMuted(),
           Theme::editorBackground(),
-          Theme::hoverOverlay()));
+          Theme::hoverOverlay(),
+          Theme::accentSuccess(),
+          Theme::accentSuccessBorderSoft(),
+          Theme::accentSuccessSoft()));
 }
 
 void GlossaryAddPopup::presentAt(const QPoint& globalAnchor, const QString& seedTerm)

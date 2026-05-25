@@ -65,13 +65,14 @@ QString actionBtnStyle()
         "}"
         "QToolButton:hover { background: %4; border-color: %5; }"
         "QToolButton#confirmBtn { color: %6; border-color: %6; }"
-        "QToolButton#confirmBtn:hover { background: rgba(120,200,140,0.18); }"
+        "QToolButton#confirmBtn:hover { background: %7; }"
     ).arg(Theme::subtleBorder(),
           Theme::textPrimary(),
           QString::number(kActionSize),
           Theme::hoverOverlay(),
           Theme::textBright(),
-          QStringLiteral("#7BC592"));
+          Theme::accentSuccess(),
+          Theme::accentSuccessSoft());
 }
 
 QString customBtnStyle(const QString& color)

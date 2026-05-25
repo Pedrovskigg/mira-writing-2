@@ -1,6 +1,7 @@
 #include "SettingsPanel.h"
 
 #include "EditorLayout.h"
+#include "Theme.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -23,110 +24,9 @@ SettingsPanel::SettingsPanel(QWidget* parent)
     setModal(false);
     resize(420, 360);
 
-    setStyleSheet(QStringLiteral(R"(
-        #settingsPanel {
-            background-color: #161616;
-        }
-        #settingsPanel QLabel {
-            color: #c8c3b6;
-            font-size: 12px;
-        }
-        #settingsPanel QLabel#settingsTitle {
-            color: #e8e3d6;
-            font-size: 18px;
-            font-weight: bold;
-            padding-bottom: 4px;
-        }
-        #settingsPanel QGroupBox {
-            color: #d8d3c6;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            margin-top: 14px;
-            padding-top: 14px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        #settingsPanel QGroupBox::title {
-            subcontrol-origin: margin;
-            left: 14px;
-            padding: 0 6px;
-        }
-        #settingsPanel QCheckBox {
-            color: #c8c3b6;
-            spacing: 8px;
-            font-size: 12px;
-            font-weight: normal;
-        }
-        #settingsPanel QCheckBox::indicator {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            border: 1px solid #4a4a40;
-            background: #1c1c1c;
-        }
-        #settingsPanel QCheckBox::indicator:checked {
-            background: #d8d3c6;
-            border-color: #d8d3c6;
-        }
-        #settingsPanel QComboBox {
-            background: #1c1c1c;
-            color: #e8e3d6;
-            border: 1px solid #2e2e2e;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            font-weight: normal;
-            min-height: 22px;
-        }
-        #settingsPanel QComboBox:hover {
-            border-color: #3a3a3a;
-        }
-        #settingsPanel QComboBox QAbstractItemView {
-            background: #1c1c1c;
-            color: #c8c3b6;
-            border: 1px solid #2e2e2e;
-            selection-background-color: #2a2a2a;
-            selection-color: #f0e8d8;
-        }
-        #settingsPanel QPushButton {
-            background: #2a2a2a;
-            color: #c8c3b6;
-            border: none;
-            padding: 6px 18px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        #settingsPanel QPushButton:hover {
-            background: #3a3a3a;
-            color: #e8e3d6;
-        }
-        #settingsPanel QSlider::groove:horizontal {
-            background: #1c1c1c;
-            height: 4px;
-            border-radius: 2px;
-        }
-        #settingsPanel QSlider::sub-page:horizontal {
-            background: #4a6f64;
-            border-radius: 2px;
-        }
-        #settingsPanel QSlider::handle:horizontal {
-            background: #d8d3c6;
-            width: 12px;
-            height: 12px;
-            margin: -5px 0;
-            border-radius: 6px;
-            border: none;
-        }
-        #settingsPanel QSlider::handle:horizontal:hover {
-            background: #f0e8d8;
-        }
-        #settingsPanel QLabel#pageValueLabel {
-            color: #e8e3d6;
-            font-size: 12px;
-            font-weight: normal;
-            min-width: 56px;
-        }
-    )"));
+    applyTheme();
+    connect(Theme::Manager::instance(), &Theme::Manager::themeChanged,
+            this, &SettingsPanel::applyTheme);
 
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(20, 18, 20, 18);
@@ -151,14 +51,14 @@ SettingsPanel::SettingsPanel(QWidget* parent)
     langRow->addWidget(m_langCombo);
     spellLayout->addLayout(langRow);
 
-    auto* hint = new QLabel(
+    m_spellHint = new QLabel(
         tr("Palavras desconhecidas ganham um sublinhado vermelho. "
            "Clique com o botão direito numa delas para ver sugestões "
            "ou adicionar ao dicionário do projeto."),
         spellGroup);
-    hint->setWordWrap(true);
-    hint->setStyleSheet(QStringLiteral("color: #8a857a; font-size: 11px; font-weight: normal;"));
-    spellLayout->addWidget(hint);
+    m_spellHint->setObjectName(QStringLiteral("settingsHint"));
+    m_spellHint->setWordWrap(true);
+    spellLayout->addWidget(m_spellHint);
 
     root->addWidget(spellGroup);
 
@@ -213,13 +113,13 @@ SettingsPanel::SettingsPanel(QWidget* parent)
 
     pageLayout->addLayout(grid);
 
-    auto* pageHint = new QLabel(
+    m_pageHint = new QLabel(
         tr("Define a largura da \"folha\" e o respiro interno entre a borda "
            "e o texto. Vale para todos os projetos."),
         pageGroup);
-    pageHint->setWordWrap(true);
-    pageHint->setStyleSheet(QStringLiteral("color: #8a857a; font-size: 11px; font-weight: normal;"));
-    pageLayout->addWidget(pageHint);
+    m_pageHint->setObjectName(QStringLiteral("settingsHint"));
+    m_pageHint->setWordWrap(true);
+    pageLayout->addWidget(m_pageHint);
 
     root->addWidget(pageGroup);
 
@@ -327,4 +227,138 @@ void SettingsPanel::onLanguageChanged(int /*index*/)
 {
     if (m_blockSignals) return;
     emit spellLanguageChanged(spellLanguage());
+}
+
+void SettingsPanel::applyTheme()
+{
+    const QString panelBg    = Theme::panelBackground();
+    const QString panelBd    = Theme::panelBorder();
+    const QString txtPrim    = Theme::textPrimary();
+    const QString txtMuted   = Theme::textMuted();
+    const QString txtBright  = Theme::textBright();
+    const QString inputBg    = Theme::inputBackground();
+    const QString subtleBd   = Theme::subtleBorder();
+    const QString hover      = Theme::hoverOverlay();
+    const QString hoverStr   = Theme::hoverStrong();
+    const QString accent     = Theme::accentDefault();
+
+    setStyleSheet(QStringLiteral(R"(
+        #settingsPanel {
+            background-color: %1;
+        }
+        #settingsPanel QLabel {
+            color: %4;
+            font-size: 12px;
+        }
+        #settingsPanel QLabel#settingsTitle {
+            color: %6;
+            font-size: 18px;
+            font-weight: bold;
+            padding-bottom: 4px;
+        }
+        #settingsPanel QLabel#settingsHint {
+            color: %5;
+            font-size: 11px;
+            font-weight: normal;
+        }
+        #settingsPanel QGroupBox {
+            color: %4;
+            border: 1px solid %2;
+            border-radius: 8px;
+            margin-top: 14px;
+            padding-top: 14px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        #settingsPanel QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 14px;
+            padding: 0 6px;
+        }
+        #settingsPanel QCheckBox {
+            color: %4;
+            spacing: 8px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        #settingsPanel QCheckBox::indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid %7;
+            background: %3;
+        }
+        #settingsPanel QCheckBox::indicator:checked {
+            background: %4;
+            border-color: %4;
+        }
+        #settingsPanel QComboBox {
+            background: %3;
+            color: %6;
+            border: 1px solid %2;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: normal;
+            min-height: 22px;
+        }
+        #settingsPanel QComboBox:hover {
+            border-color: %9;
+        }
+        #settingsPanel QComboBox QAbstractItemView {
+            background: %1;
+            color: %4;
+            border: 1px solid %2;
+            selection-background-color: %8;
+            selection-color: %6;
+        }
+        #settingsPanel QPushButton {
+            background: %8;
+            color: %4;
+            border: none;
+            padding: 6px 18px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        #settingsPanel QPushButton:hover {
+            background: %9;
+            color: %6;
+        }
+        #settingsPanel QSlider::groove:horizontal {
+            background: %3;
+            height: 4px;
+            border-radius: 2px;
+        }
+        #settingsPanel QSlider::sub-page:horizontal {
+            background: %10;
+            border-radius: 2px;
+        }
+        #settingsPanel QSlider::handle:horizontal {
+            background: %4;
+            width: 12px;
+            height: 12px;
+            margin: -5px 0;
+            border-radius: 6px;
+            border: none;
+        }
+        #settingsPanel QSlider::handle:horizontal:hover {
+            background: %6;
+        }
+        #settingsPanel QLabel#pageValueLabel {
+            color: %6;
+            font-size: 12px;
+            font-weight: normal;
+            min-width: 56px;
+        }
+    )")
+        .arg(panelBg,   // 1
+             panelBd,   // 2
+             inputBg,   // 3
+             txtPrim,   // 4
+             txtMuted,  // 5
+             txtBright, // 6
+             subtleBd,  // 7
+             hover,     // 8
+             hoverStr,  // 9
+             accent));  // 10
 }

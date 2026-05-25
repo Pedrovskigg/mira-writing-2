@@ -25,9 +25,9 @@ QString headerIconQss() {
         }
         QToolButton:hover {
             background: %1;
-            border-color: rgba(255,255,255,0.18);
+            border-color: %2;
         }
-    )").arg(Theme::hoverOverlay());
+    )").arg(Theme::hoverOverlay(), Theme::borderStrong());
 }
 
 QString deleteIconQss() {
@@ -39,10 +39,10 @@ QString deleteIconQss() {
             padding: 2px;
         }
         QToolButton:hover {
-            background: rgba(224,85,85,0.12);
-            border-color: rgba(224,85,85,0.50);
+            background: %1;
+            border-color: %2;
         }
-    )");
+    )").arg(Theme::accentDangerSoft(), Theme::accentDangerBorderSoft());
 }
 
 } // namespace
@@ -52,7 +52,7 @@ BondViewPanel::BondViewPanel(QWidget* parent,
                              const QString& fromTitle,
                              const QString& toTitle)
     : QFrame(parent)
-    , m_color(bond.color.isEmpty() ? QStringLiteral("#4a9eff") : bond.color)
+    , m_color(bond.color.isEmpty() ? Theme::accentInfo() : bond.color)
 {
     setObjectName(QStringLiteral("bondViewPanel"));
     setAttribute(Qt::WA_StyledBackground, true);
@@ -110,7 +110,7 @@ void BondViewPanel::buildUi(const CharacterBond& bond,
 
     const QColor iconN(Theme::textMuted());
     const QColor iconH(Theme::textBright());
-    const QColor dangerN(QStringLiteral("#e05555"));
+    const QColor dangerN(Theme::accentDanger());
 
     auto* editBtn = makeIconBtn(QStringLiteral(":/icons/edit.svg"),
                                 tr("Editar vínculo"), iconN, iconH, false);

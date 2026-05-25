@@ -31,6 +31,7 @@ private:
     void onCheckToggled(bool checked);
     void onLanguageChanged(int index);
     void syncPageLayoutFromManager();
+    void applyTheme();
 
     QCheckBox* m_spellCheck;
     QComboBox* m_langCombo;
@@ -40,6 +41,8 @@ private:
     QLabel* m_pageWidthValue = nullptr;
     QLabel* m_hMarginValue = nullptr;
     QLabel* m_vMarginValue = nullptr;
+    QLabel* m_spellHint = nullptr;
+    QLabel* m_pageHint = nullptr;
     bool m_blockSignals = false;
     bool m_blockLayoutSignals = false;
 };

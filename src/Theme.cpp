@@ -35,6 +35,25 @@ void Manager::loadBundled()
         t.pressedOverlay   = QStringLiteral("rgba(255,255,255,0.04)");
         t.subtleBorder     = QStringLiteral("rgba(255,255,255,0.10)");
         t.accentDefault    = QStringLiteral("#3a8c7a");
+
+        t.hoverStrong         = QStringLiteral("rgba(255,255,255,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(255,255,255,0.20)");
+        t.focusBorder         = QStringLiteral("rgba(255,255,255,0.30)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.30)");
+        t.disabledText        = QStringLiteral("rgba(255,255,255,0.30)");
+        t.selectionRing       = QStringLiteral("#ffffff");
+
+        t.accentSuccess           = QStringLiteral("#7BC592");
+        t.accentSuccessSoft       = QStringLiteral("rgba(120,200,140,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(123,197,146,0.50)");
+        t.accentDanger            = QStringLiteral("#e05555");
+        t.accentDangerSoft        = QStringLiteral("rgba(224,85,85,0.12)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(224,85,85,0.40)");
+        t.accentWarning           = QStringLiteral("#d66060");
+        t.accentInfo              = QStringLiteral("#4a9eff");
+        t.accentInfoSoft          = QStringLiteral("rgba(74,158,255,0.30)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(74,158,255,0.60)");
+
         t.editorBackground = QStringLiteral("#101010");  // R16 G16 B16
         t.editorTextColor  = QStringLiteral("#e0e0e0");  // R224 G224 B224
         // Sombra sutil em fundo escuro: só pra dar volume.
@@ -58,10 +77,30 @@ void Manager::loadBundled()
         t.textPrimary      = QStringLiteral("#1a1a1a");
         t.textMuted        = QStringLiteral("#6e6e6e");
         t.textBright       = QStringLiteral("#0a0a0a");
-        t.hoverOverlay     = QStringLiteral("rgba(0,0,0,0.05)");
-        t.pressedOverlay   = QStringLiteral("rgba(0,0,0,0.03)");
-        t.subtleBorder     = QStringLiteral("rgba(0,0,0,0.10)");
-        t.accentDefault    = QStringLiteral("#3a8c7a");
+        t.hoverOverlay     = QStringLiteral("rgba(0,0,0,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(0,0,0,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(0,0,0,0.12)");
+        t.accentDefault    = QStringLiteral("#2f7565");
+
+        t.hoverStrong         = QStringLiteral("rgba(0,0,0,0.10)");
+        t.borderStrong        = QStringLiteral("rgba(0,0,0,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(0,0,0,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.04)");
+        t.disabledText        = QStringLiteral("rgba(0,0,0,0.32)");
+        t.selectionRing       = QStringLiteral("#1a1a1a");
+
+        // Verdes/vermelhos mais escuros pra terem contraste sobre o branco.
+        t.accentSuccess           = QStringLiteral("#2f8a4f");
+        t.accentSuccessSoft       = QStringLiteral("rgba(47,138,79,0.14)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(47,138,79,0.45)");
+        t.accentDanger            = QStringLiteral("#b73030");
+        t.accentDangerSoft        = QStringLiteral("rgba(183,48,48,0.10)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(183,48,48,0.45)");
+        t.accentWarning           = QStringLiteral("#b03a3a");
+        t.accentInfo              = QStringLiteral("#1f6fd6");
+        t.accentInfoSoft          = QStringLiteral("rgba(31,111,214,0.18)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(31,111,214,0.55)");
+
         t.editorBackground = QStringLiteral("#ffffff");
         t.editorTextColor  = QStringLiteral("#141414");
         t.pageShadowEnabled = true;
@@ -129,6 +168,24 @@ QString pressedOverlay()    { return Manager::instance()->current().pressedOverl
 QString subtleBorder()      { return Manager::instance()->current().subtleBorder; }
 QString accentDefault()     { return Manager::instance()->current().accentDefault; }
 
+QString hoverStrong()              { return Manager::instance()->current().hoverStrong; }
+QString borderStrong()             { return Manager::instance()->current().borderStrong; }
+QString focusBorder()              { return Manager::instance()->current().focusBorder; }
+QString inputBackground()          { return Manager::instance()->current().inputBackground; }
+QString disabledText()             { return Manager::instance()->current().disabledText; }
+QString selectionRing()            { return Manager::instance()->current().selectionRing; }
+
+QString accentSuccess()            { return Manager::instance()->current().accentSuccess; }
+QString accentSuccessSoft()        { return Manager::instance()->current().accentSuccessSoft; }
+QString accentSuccessBorderSoft()  { return Manager::instance()->current().accentSuccessBorderSoft; }
+QString accentDanger()             { return Manager::instance()->current().accentDanger; }
+QString accentDangerSoft()         { return Manager::instance()->current().accentDangerSoft; }
+QString accentDangerBorderSoft()   { return Manager::instance()->current().accentDangerBorderSoft; }
+QString accentWarning()            { return Manager::instance()->current().accentWarning; }
+QString accentInfo()               { return Manager::instance()->current().accentInfo; }
+QString accentInfoSoft()           { return Manager::instance()->current().accentInfoSoft; }
+QString accentInfoBorderSoft()     { return Manager::instance()->current().accentInfoBorderSoft; }
+
 QString panelQss(const QString& objectName)
 {
     return QStringLiteral(R"(
@@ -146,5 +203,297 @@ bool pageShadowEnabled()     { return Manager::instance()->current().pageShadowE
 QString pageShadowColor()    { return Manager::instance()->current().pageShadowColor; }
 int pageShadowRadius()       { return Manager::instance()->current().pageShadowRadius; }
 int pageShadowOffset()       { return Manager::instance()->current().pageShadowOffset; }
+
+QString globalStyleSheet()
+{
+    // Vivia em main.cpp como um QString gigante hard-coded em dark. Movido pra
+    // cá pra reagir ao tema corrente. Cobre cor de fundo da janela, TopToolbar,
+    // menus globais, scrollbar, popups de fonte, dialog/overlay de imagem.
+    const QString appBg      = appBackground();
+    const QString panelBg    = panelBackground();
+    const QString panelBd    = panelBorder();
+    const QString txtPrim    = textPrimary();
+    const QString txtMuted   = textMuted();
+    const QString txtBright  = textBright();
+    const QString hover      = hoverOverlay();
+    const QString hoverStr   = hoverStrong();
+    const QString border     = subtleBorder();
+    const QString inputBg    = inputBackground();
+    const QString selBg      = pressedOverlay();
+    const QString accentBg   = accentDefault();
+
+    return QStringLiteral(R"(
+        QMainWindow {
+            background-color: %1;
+        }
+        #editorContainer {
+            background-color: %1;
+        }
+        QTextEdit {
+            background-color: %2;
+            border: none;
+            padding: 80px 100px;
+            selection-background-color: %13;
+        }
+        #topToolbarHolder {
+            background: transparent;
+        }
+        #topToolbar {
+            background-color: %2;
+            border: 1px solid %3;
+            border-radius: 14px;
+        }
+        #topToolbar QToolButton {
+            background: transparent;
+            color: %5;
+            border: none;
+            padding: 4px 6px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        #topToolbar QToolButton:hover {
+            color: %6;
+            background-color: %7;
+        }
+        #topToolbar QToolButton:checked {
+            color: %6;
+            background-color: %8;
+        }
+        #topToolbar QToolButton::menu-indicator {
+            image: none;
+            width: 0;
+        }
+        #topToolbar QFrame#ttbVSep {
+            background-color: %3;
+            border: none;
+            margin: 0 4px;
+        }
+        #topToolbar QToolButton#ttbFont {
+            min-width: 130px;
+            color: %4;
+            padding: 4px 8px;
+        }
+        #topToolbar QToolButton#ttbFont:hover {
+            color: %6;
+        }
+        #topToolbar QToolButton#ttbSize,
+        #topToolbar QToolButton#ttbLineHeight {
+            min-width: 60px;
+            padding: 4px 6px;
+        }
+        #topToolbar QToolButton#ttbIndent {
+            font-size: 14px;
+            min-width: 24px;
+            padding: 4px 0;
+        }
+        #ttbSizeStepper QToolButton#ttbSizeStep {
+            background: %8;
+            color: %4;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        #ttbSizeStepper QToolButton#ttbSizeStep:hover {
+            background: %7;
+            color: %6;
+        }
+        #ttbSizeStepper QLabel#ttbSizeValue {
+            color: %6;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        QMenu {
+            background-color: %2;
+            color: %4;
+            border: 1px solid %3;
+            padding: 4px;
+        }
+        QMenu::item {
+            padding: 6px 24px;
+        }
+        QMenu::item:selected {
+            background-color: %8;
+            color: %6;
+            border-radius: 3px;
+        }
+        QMenu::separator {
+            height: 1px;
+            background: %9;
+            margin: 4px 8px;
+        }
+        #fontPickerPopup {
+            background-color: %2;
+            border: 1px solid %3;
+        }
+        #fontPickerList {
+            background-color: %2;
+            color: %4;
+            border: none;
+            outline: none;
+            padding: 4px;
+        }
+        #fontPickerList::item {
+            padding: 8px 12px;
+            border-radius: 3px;
+        }
+        #fontPickerList::item:hover {
+            background-color: %7;
+            color: %6;
+        }
+        #fontPickerList::item:selected {
+            background-color: %8;
+            color: %6;
+        }
+        #imageInsertDialog {
+            background-color: %2;
+        }
+        #imageInsertDialog QLabel {
+            color: %4;
+            font-size: 12px;
+        }
+        #imageInsertDialog #imagePreview {
+            background-color: %10;
+            border: 1px solid %3;
+            border-radius: 4px;
+            color: %5;
+        }
+        #imageInsertDialog QRadioButton {
+            color: %4;
+            spacing: 6px;
+            font-size: 12px;
+        }
+        #imageInsertDialog QRadioButton::indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 7px;
+            border: 1px solid %3;
+            background: %10;
+        }
+        #imageInsertDialog QRadioButton::indicator:checked {
+            background: %4;
+            border-color: %4;
+        }
+        #imageInsertDialog QSlider::groove:horizontal {
+            background: %8;
+            height: 4px;
+            border-radius: 2px;
+        }
+        #imageInsertDialog QSlider::handle:horizontal {
+            background: %4;
+            width: 14px;
+            height: 14px;
+            margin: -6px 0;
+            border-radius: 7px;
+        }
+        #imageInsertDialog QSpinBox {
+            background: %10;
+            color: %6;
+            border: 1px solid %3;
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+        #imageInsertDialog QPushButton {
+            background: %8;
+            color: %4;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        #imageInsertDialog QPushButton:hover {
+            background: %7;
+            color: %6;
+        }
+        #imageInsertDialog QPushButton:default {
+            background: %12;
+            color: %6;
+        }
+        #imageInsertDialog QPushButton:default:hover {
+            background: %12;
+        }
+        #imageOverlay {
+            background-color: %2;
+            border: 1px solid %3;
+            border-radius: 6px;
+        }
+        #imageOverlay QToolButton#imgOverlayBtn {
+            background: transparent;
+            color: %4;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 14px;
+            min-width: 22px;
+        }
+        #imageOverlay QToolButton#imgOverlayBtn:hover {
+            background-color: %7;
+            color: %6;
+        }
+        #imageOverlay QToolButton#imgOverlayBtn[active="true"] {
+            background-color: %12;
+            color: %6;
+        }
+        #imageOverlay QLabel#imgOverlayWidth {
+            color: %6;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        #imageOverlay QFrame#imgOverlaySep {
+            color: %3;
+        }
+        QScrollBar:vertical {
+            background: %1;
+            width: 10px;
+            margin: 0;
+        }
+        QScrollBar::handle:vertical {
+            background: %8;
+            border-radius: 5px;
+            min-height: 30px;
+        }
+        QScrollBar::handle:vertical:hover {
+            background: %7;
+        }
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            height: 0;
+        }
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+            background: transparent;
+        }
+        QScrollBar:horizontal {
+            background: %1;
+            height: 10px;
+            margin: 0;
+        }
+        QScrollBar::handle:horizontal {
+            background: %8;
+            border-radius: 5px;
+            min-width: 30px;
+        }
+        QScrollBar::handle:horizontal:hover {
+            background: %7;
+        }
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+            width: 0;
+        }
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+            background: transparent;
+        }
+    )")
+        .arg(appBg,       // %1
+             panelBg,     // %2
+             panelBd,     // %3
+             txtPrim,     // %4
+             txtMuted,    // %5
+             txtBright,   // %6
+             hover,       // %7
+             hoverStr,    // %8
+             border,      // %9
+             inputBg)     // %10
+        .arg(selBg,       // %11 (não usado; reservado)
+             accentBg,    // %12
+             accentBg);   // %13
+}
 
 } // namespace Theme

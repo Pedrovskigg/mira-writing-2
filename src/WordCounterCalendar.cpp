@@ -150,7 +150,7 @@ void WordCounterCalendar::applyThemeStyle()
             background: %3;
         }
         QLabel#wcpCalDay[offType="stolen"] {
-            border: 1px dashed #d66060;
+            border: 1px dashed %10;
         }
     )")
         .arg(bgPanel,    // 1
@@ -161,7 +161,8 @@ void WordCounterCalendar::applyThemeStyle()
              txtPrimary, // 6
              txtMuted,   // 7
              txtBright,  // 8
-             accent)     // 9
+             accent,     // 9
+             Theme::accentWarning()) // 10
     );
     // refresh rebui​lda os labels dos dias (que têm cor inline) com cores do tema.
     refresh();
@@ -269,7 +270,7 @@ void WordCounterCalendar::refresh()
         if (offType == WordCounter::OffDayType::Legit)
             moon = QStringLiteral(" <span style='color:%1;'>☾</span>").arg(Theme::textBright());
         else if (offType == WordCounter::OffDayType::Stolen)
-            moon = QStringLiteral(" <span style='color:#d66060;'>☾</span>");
+            moon = QStringLiteral(" <span style='color:%1;'>☾</span>").arg(Theme::accentWarning());
 
         cell->setText(QStringLiteral(
             "<div style='color:%1; font-size:11px; font-weight:600; line-height:1;'>%2%3</div>"

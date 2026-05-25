@@ -32,6 +32,8 @@
 #include <QShowEvent>
 #include <QSizePolicy>
 #include <QTextBrowser>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QTextDocument>
 #include <QTimer>
 #include <QToolButton>
@@ -103,12 +105,9 @@ RefMenuPanel::RefMenuPanel(ProjectModel* model, EditorHost* host, DocCache* cach
 
 void RefMenuPanel::applyTheme()
 {
-    // Reaplica o panelQss no widget root + frame interno; o conteúdo (header,
-    // tabs, preview) tem stylesheets locais e atualiza no próximo refresh.
-    setStyleSheet(Theme::panelQss(QStringLiteral("refMenuPanel")));
-    if (m_frame) {
-        m_frame->setStyleSheet(Theme::panelQss(QStringLiteral("refFrame")));
-    }
+    // Reaplica a stylesheet principal (header, tabs, preview wrapper, handles)
+    // e força um rebuild da nav/preview pra estilos inline serem regerados.
+    applyMainStyleSheet();
     refresh();
 }
 
@@ -358,43 +357,59 @@ void RefMenuPanel::buildUi()
     m_hBR = makeHandle(QStringLiteral("refHandleBR"), Qt::SizeFDiagCursor);
     layoutResizeHandles();
 
-    // ---- Style ----
+    applyMainStyleSheet();
+}
+
+void RefMenuPanel::applyMainStyleSheet()
+{
+    const QString panelBg   = Theme::panelBackground();
+    const QString appBg     = Theme::appBackground();
+    const QString border    = Theme::panelBorder();
+    const QString subtle    = Theme::subtleBorder();
+    const QString txtPrim   = Theme::textPrimary();
+    const QString txtMuted  = Theme::textMuted();
+    const QString txtBright = Theme::textBright();
+    const QString hover     = Theme::hoverOverlay();
+    const QString accentSf  = Theme::accentInfoSoft();
+    const QString accentBd  = Theme::accentInfoBorderSoft();
+    const QString disabled  = Theme::disabledText();
+
     setStyleSheet(QStringLiteral(R"(
         QWidget#refMenuPanel { background: transparent; }
         QWidget#refFrame {
-            background: rgba(20, 20, 22, 245);
-            border: 1px solid #2c2c2e;
+            background: %1;
+            border: 1px solid %3;
             border-radius: 10px;
         }
         QWidget#refHeader {
-            background: #161618;
-            border-bottom: 1px solid #232325;
+            background: %2;
+            border-bottom: 1px solid %4;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
         }
-        QLabel#refTitle { color: #e8e3d6; font-size: 13px; font-weight: 600; }
+        QLabel#refTitle { color: %7; font-size: 13px; font-weight: 600; }
         QToolButton#refTinyBtn {
-            background: transparent; color: #9a958a;
+            background: transparent; color: %6;
             border: none; border-radius: 4px;
             min-width: 24px; min-height: 24px;
             padding: 0 4px;
             font-size: 13px;
         }
-        QToolButton#refTinyBtn:hover { background: #232325; color: #e8e3d6; }
-        QToolButton#refTinyBtn:checked { background: #2c3a5e; color: #f0e8d8; }
-        QToolButton#refTinyBtn:disabled { color: #545049; }
+        QToolButton#refTinyBtn:hover { background: %8; color: %7; }
+        QToolButton#refTinyBtn:checked { background: %9; color: %7; }
+        QToolButton#refTinyBtn:disabled { color: %11; }
         QToolButton#refDragHandle {
-            background: transparent; color: #8a857a;
+            background: transparent; color: %6;
             border: none; padding: 0 6px; font-size: 14px;
         }
-        QToolButton#refDragHandle:hover { color: #e8e3d6; }
+        QToolButton#refDragHandle:hover { color: %7; }
         QWidget#refTabsRow {
-            background: #18181b;
-            border-bottom: 1px solid #232325;
+            background: %2;
+            border-bottom: 1px solid %4;
         }
         QToolButton#refTabBtn, QToolButton#refTabBtnSmall {
             background: transparent;
-            color: #c8c3b6;
+            color: %5;
             border: 1px solid transparent;
             border-radius: 6px;
             padding: 4px 10px;
@@ -406,34 +421,34 @@ void RefMenuPanel::buildUi()
             font-size: 13px;
         }
         QToolButton#refTabBtn:hover, QToolButton#refTabBtnSmall:hover {
-            background: #232325; color: #e8e3d6;
+            background: %8; color: %7;
         }
         QToolButton#refTabBtn:checked {
-            background: #2c3a5e;
-            border-color: #3b5188;
-            color: #f0e8d8;
+            background: %9;
+            border-color: %10;
+            color: %7;
         }
-        QToolButton#refTabBtn:disabled { color: #56514a; }
+        QToolButton#refTabBtn:disabled { color: %11; }
         QScrollArea#refNavScroll { background: transparent; border: none; }
         QWidget#refNavInner { background: transparent; }
         QWidget#refPreviewWrap {
             background: transparent;
-            border-top: 1px solid #232325;
+            border-top: 1px solid %4;
         }
         QLabel#refPreviewTitle {
-            color: #f0e8d8; font-size: 14px; font-weight: 700;
+            color: %7; font-size: 14px; font-weight: 700;
         }
         QLabel#refPreviewRole {
-            color: #c97aa0; font-size: 10px; font-weight: 700;
+            color: %5; font-size: 10px; font-weight: 700;
             letter-spacing: 0.5px;
         }
         QTextBrowser#refPreview {
             background: transparent;
-            color: #d8d3c6;
+            color: %5;
             padding: 0;
         }
         QLabel#refPreviewPlaceholder {
-            color: #6a6558; font-size: 11px; padding: 12px 0;
+            color: %6; font-size: 11px; padding: 12px 0;
         }
         QScrollArea#refImagesScroll { background: transparent; border: none; }
         QWidget#refHandleL, QWidget#refHandleR, QWidget#refHandleT, QWidget#refHandleB,
@@ -444,9 +459,21 @@ void RefMenuPanel::buildUi()
         QWidget#refHandleT:hover, QWidget#refHandleB:hover,
         QWidget#refHandleTL:hover, QWidget#refHandleTR:hover,
         QWidget#refHandleBL:hover, QWidget#refHandleBR:hover {
-            background: rgba(255,255,255,0.10);
+            background: %12;
         }
-    )"));
+    )")
+        .arg(panelBg,   // 1
+             appBg,     // 2
+             border,    // 3
+             subtle,    // 4
+             txtPrim,   // 5
+             txtMuted,  // 6
+             txtBright, // 7
+             hover,     // 8
+             accentSf,  // 9
+             accentBd,  // 10
+             disabled)  // 11
+        .arg(subtle));  // 12 (handles hover)
 }
 
 void RefMenuPanel::layoutResizeHandles()
@@ -576,7 +603,8 @@ void RefMenuPanel::buildManuscriptsView()
 
     // ---- Seção Manuscritos ----
     auto* msTitle = new QLabel(tr("MANUSCRITOS"), m_navInner);
-    msTitle->setStyleSheet(QStringLiteral("color:#7a7568; font-size:10px; font-weight:700; letter-spacing:1px; padding:6px 6px 2px;"));
+    msTitle->setStyleSheet(QStringLiteral("color:%1; font-size:10px; font-weight:700; letter-spacing:1px; padding:6px 6px 2px;")
+                               .arg(Theme::textMuted()));
     m_navInnerLay->addWidget(msTitle);
 
     auto* msList = new QListWidget(m_navInner);
@@ -587,14 +615,19 @@ void RefMenuPanel::buildManuscriptsView()
     msList->setIconSize(QSize(14, 14));
     msList->setStyleSheet(QStringLiteral(R"(
         QListWidget {
-            background: #161618; color: #c8c3b6;
-            border: 1px solid #232325; border-radius: 6px;
+            background: %1; color: %2;
+            border: 1px solid %3; border-radius: 6px;
             outline: none; padding: 4px;
         }
         QListWidget::item { padding: 6px 8px; border-radius: 4px; }
-        QListWidget::item:hover { background: #1f1f22; color: #e8e3d6; }
-        QListWidget::item:selected { background: #2c3a5e; color: #f0e8d8; }
-    )"));
+        QListWidget::item:hover { background: %4; color: %5; }
+        QListWidget::item:selected { background: %6; color: %5; }
+    )").arg(Theme::appBackground(),
+           Theme::textPrimary(),
+           Theme::panelBorder(),
+           Theme::hoverOverlay(),
+           Theme::textBright(),
+           Theme::accentInfoSoft()));
     QIcon icMs = IconUtils::loadToolbarIcon(QStringLiteral(":/icons/elements/manuscript.svg"),
         QColor(Theme::textMuted()), QColor(Theme::textBright()), QColor(Theme::textBright()),
         QSize(14, 14));
@@ -625,7 +658,8 @@ void RefMenuPanel::buildManuscriptsView()
 
     // ---- Seção Capítulos ----
     auto* chTitle = new QLabel(tr("CAPÍTULOS"), m_navInner);
-    chTitle->setStyleSheet(QStringLiteral("color:#7a7568; font-size:10px; font-weight:700; letter-spacing:1px; padding:10px 6px 2px;"));
+    chTitle->setStyleSheet(QStringLiteral("color:%1; font-size:10px; font-weight:700; letter-spacing:1px; padding:10px 6px 2px;")
+                               .arg(Theme::textMuted()));
     m_navInnerLay->addWidget(chTitle);
 
     auto* chList = new QListWidget(m_navInner);
@@ -635,14 +669,19 @@ void RefMenuPanel::buildManuscriptsView()
     chList->setIconSize(QSize(14, 14));
     chList->setStyleSheet(QStringLiteral(R"(
         QListWidget {
-            background: #161618; color: #c8c3b6;
-            border: 1px solid #232325; border-radius: 6px;
+            background: %1; color: %2;
+            border: 1px solid %3; border-radius: 6px;
             outline: none; padding: 4px;
         }
         QListWidget::item { padding: 6px 8px; border-radius: 4px; }
-        QListWidget::item:hover { background: #1f1f22; color: #e8e3d6; }
-        QListWidget::item:selected { background: #2c3a5e; color: #f0e8d8; }
-    )"));
+        QListWidget::item:hover { background: %4; color: %5; }
+        QListWidget::item:selected { background: %6; color: %5; }
+    )").arg(Theme::appBackground(),
+           Theme::textPrimary(),
+           Theme::panelBorder(),
+           Theme::hoverOverlay(),
+           Theme::textBright(),
+           Theme::accentInfoSoft()));
     QIcon icCh = IconUtils::loadToolbarIcon(QStringLiteral(":/icons/elements/chapter.svg"),
         QColor(Theme::textMuted()), QColor(Theme::textBright()), QColor(Theme::textBright()),
         QSize(14, 14));
@@ -718,7 +757,7 @@ void RefMenuPanel::buildDrawerView()
         });
         rowLay->addWidget(back);
         auto* lab = new QLabel(folder ? folder->title : tr("Pasta"), row);
-        lab->setStyleSheet(QStringLiteral("color:#9a958a; font-size:12px; font-weight:600;"));
+        lab->setStyleSheet(QStringLiteral("color:%1; font-size:12px; font-weight:600;").arg(Theme::textPrimary()));
         rowLay->addWidget(lab);
         rowLay->addStretch();
         m_navInnerLay->addWidget(row);
@@ -758,12 +797,16 @@ void RefMenuPanel::buildDrawerView()
             chip->setCursor(Qt::PointingHandCursor);
             chip->setStyleSheet(QStringLiteral(R"(
                 QToolButton {
-                    background: #1f1f22; color: #c8c3b6;
-                    border: 1px solid #2c2c2f; border-radius: 14px;
+                    background: %1; color: %2;
+                    border: 1px solid %3; border-radius: 14px;
                     padding: 4px 10px; font-size: 11px;
                 }
-                QToolButton:hover { background: #2a2a2e; color: #e8e3d6; }
-            )"));
+                QToolButton:hover { background: %4; color: %5; }
+            )").arg(Theme::appBackground(),
+                   Theme::textPrimary(),
+                   Theme::panelBorder(),
+                   Theme::hoverOverlay(),
+                   Theme::textBright()));
             const QString folderId = f.id;
             connect(chip, &QToolButton::clicked, this, [this, folderId]() {
                 m_currentFolderId = folderId;
@@ -787,7 +830,7 @@ void RefMenuPanel::buildDrawerView()
 
     if (items.isEmpty()) {
         auto* empty = new QLabel(tr("Sem itens nesta gaveta."), m_navInner);
-        empty->setStyleSheet(QStringLiteral("color:#6a6558; font-size:11px; padding:8px;"));
+        empty->setStyleSheet(QStringLiteral("color:%1; font-size:11px; padding:8px;").arg(Theme::textMuted()));
         empty->setAlignment(Qt::AlignCenter);
         m_navInnerLay->addWidget(empty);
         return;
@@ -812,15 +855,20 @@ void RefMenuPanel::buildDrawerView()
             card->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             card->setStyleSheet(QStringLiteral(R"(
                 QToolButton#refVisualCard {
-                    background: #18181b;
-                    border: 1px solid #2a2a2d;
+                    background: %2;
+                    border: 1px solid %3;
                     border-radius: 8px;
                     text-align: left;
                     padding: 0;
                 }
-                QToolButton#refVisualCard:hover { background: #1f1f23; border-color: #3a3a3e; }
-                QToolButton#refVisualCard:checked { border-color: %1; background: #1c2230; }
-            )").arg(accent));
+                QToolButton#refVisualCard:hover { background: %4; border-color: %5; }
+                QToolButton#refVisualCard:checked { border-color: %1; background: %6; }
+            )").arg(accent,
+                   Theme::appBackground(),
+                   Theme::panelBorder(),
+                   Theme::hoverOverlay(),
+                   Theme::borderStrong(),
+                   Theme::accentInfoSoft()));
 
             // Layout interno (foto à esquerda, infos à direita)
             auto* inner = new QWidget(card);
@@ -831,7 +879,7 @@ void RefMenuPanel::buildDrawerView()
 
             auto* photo = new QLabel(inner);
             photo->setFixedSize(56, 56);
-            photo->setStyleSheet(QStringLiteral("background:#0e0e10; border-radius:6px;"));
+            photo->setStyleSheet(QStringLiteral("background:%1; border-radius:6px;").arg(Theme::inputBackground()));
             photo->setAlignment(Qt::AlignCenter);
             const QString img = imageForItem(it);
             QPixmap pm;
@@ -853,7 +901,8 @@ void RefMenuPanel::buildDrawerView()
                 photo->setScaledContents(false);
             } else {
                 photo->setText(QStringLiteral("?"));
-                photo->setStyleSheet(QStringLiteral("background:#0e0e10; border-radius:6px; color:#3a3a3e; font-size:22px; font-weight:700;"));
+                photo->setStyleSheet(QStringLiteral("background:%1; border-radius:6px; color:%2; font-size:22px; font-weight:700;")
+                                         .arg(Theme::inputBackground(), Theme::disabledText()));
             }
             inLay->addWidget(photo);
 
@@ -862,7 +911,7 @@ void RefMenuPanel::buildDrawerView()
             infoLay->setContentsMargins(0, 4, 0, 4);
             infoLay->setSpacing(2);
             auto* name = new QLabel(it.title.isEmpty() ? tr("(sem título)") : it.title, info);
-            name->setStyleSheet(QStringLiteral("color:#e8e3d6; font-size:13px; font-weight:600;"));
+            name->setStyleSheet(QStringLiteral("color:%1; font-size:13px; font-weight:600;").arg(Theme::textBright()));
             infoLay->addWidget(name);
             const QString roleText = roleOrLabelForItem(it);
             if (!roleText.isEmpty()) {
@@ -889,14 +938,19 @@ void RefMenuPanel::buildDrawerView()
         list->setIconSize(QSize(14, 14));
         list->setStyleSheet(QStringLiteral(R"(
             QListWidget {
-                background: #161618; color: #c8c3b6;
-                border: 1px solid #232325; border-radius: 6px;
+                background: %1; color: %2;
+                border: 1px solid %3; border-radius: 6px;
                 outline: none; padding: 4px;
             }
             QListWidget::item { padding: 6px 8px; border-radius: 4px; }
-            QListWidget::item:hover { background: #1f1f22; color: #e8e3d6; }
-            QListWidget::item:selected { background: #2c3a5e; color: #f0e8d8; }
-        )"));
+            QListWidget::item:hover { background: %4; color: %5; }
+            QListWidget::item:selected { background: %6; color: %5; }
+        )").arg(Theme::appBackground(),
+               Theme::textPrimary(),
+               Theme::panelBorder(),
+               Theme::hoverOverlay(),
+               Theme::textBright(),
+               Theme::accentInfoSoft()));
         QIcon icItemDefault = IconUtils::loadToolbarIcon(QStringLiteral(":/icons/elements/file.svg"),
             QColor(Theme::textMuted()), QColor(Theme::textBright()), QColor(Theme::textBright()),
             QSize(14, 14));
@@ -935,20 +989,20 @@ void RefMenuPanel::buildPlaceholderView(const QString& title, const QString& sub
     auto* card = new QFrame(m_navInner);
     card->setStyleSheet(QStringLiteral(R"(
         QFrame {
-            background: #161618;
-            border: 1px dashed #2c2c2f;
+            background: %1;
+            border: 1px dashed %2;
             border-radius: 8px;
         }
-    )"));
+    )").arg(Theme::appBackground(), Theme::panelBorder()));
     auto* lay = new QVBoxLayout(card);
     lay->setContentsMargins(16, 16, 16, 16);
     lay->setSpacing(6);
     auto* t = new QLabel(title, card);
-    t->setStyleSheet(QStringLiteral("color:#e8e3d6; font-size:13px; font-weight:700;"));
+    t->setStyleSheet(QStringLiteral("color:%1; font-size:13px; font-weight:700;").arg(Theme::textBright()));
     t->setAlignment(Qt::AlignCenter);
     lay->addWidget(t);
     auto* s = new QLabel(subtitle, card);
-    s->setStyleSheet(QStringLiteral("color:#7a7568; font-size:11px;"));
+    s->setStyleSheet(QStringLiteral("color:%1; font-size:11px;").arg(Theme::textMuted()));
     s->setAlignment(Qt::AlignCenter);
     s->setWordWrap(true);
     lay->addWidget(s);
@@ -1057,9 +1111,21 @@ void RefMenuPanel::rebuildPreview()
 
     // Conteúdo HTML
     if (rest.trimmed().isEmpty()) {
-        m_preview->setHtml(QStringLiteral("<p style='color:#6a6558;'>%1</p>").arg(tr("(documento vazio)")));
+        m_preview->setHtml(QStringLiteral("<p style='color:%2;'>%1</p>")
+                               .arg(tr("(documento vazio)"), Theme::textMuted()));
     } else {
         m_preview->setHtml(rest);
+    }
+
+    // O HTML salvo vem com `color:` inline do tema da hora em que foi escrito
+    // (charformat embutido pelo toHtml). Sobrescreve com a cor do tema atual
+    // pra não ficar branco no tema claro.
+    {
+        QTextCursor cur(m_preview->document());
+        cur.select(QTextCursor::Document);
+        QTextCharFormat fmt;
+        fmt.setForeground(QColor(Theme::textPrimary()));
+        cur.mergeCharFormat(fmt);
     }
 
     // Resolve src de imagens internas remanescentes para QTextBrowser (caso restem inline)
@@ -1175,14 +1241,18 @@ void RefMenuPanel::onDrawerPickerClicked()
     QMenu menu(this);
     menu.setStyleSheet(QStringLiteral(R"(
         QMenu {
-            background: #18181b; color: #c8c3b6;
-            border: 1px solid #2c2c2f; border-radius: 6px;
+            background: %1; color: %2;
+            border: 1px solid %3; border-radius: 6px;
             padding: 4px;
         }
         QMenu::item { padding: 6px 24px 6px 28px; border-radius: 4px; }
-        QMenu::item:selected { background: #2c3a5e; color: #f0e8d8; }
-        QMenu::separator { height: 1px; background: #2a2a2d; margin: 4px 6px; }
-    )"));
+        QMenu::item:selected { background: %4; color: %5; }
+        QMenu::separator { height: 1px; background: %3; margin: 4px 6px; }
+    )").arg(Theme::panelBackground(),
+           Theme::textPrimary(),
+           Theme::panelBorder(),
+           Theme::accentInfoSoft(),
+           Theme::textBright()));
 
     auto addPlaceholder = [&](const QString& svgId, const QString& label, SourceKind kind) {
         QAction* a = menu.addAction(label);

@@ -2,8 +2,12 @@
 #define SELECTIONPOPUP_H
 
 #include <QFrame>
+#include <QHash>
+#include <QString>
+#include <QVector>
 #include <functional>
 
+class QFrame;
 class QTextEdit;
 class QToolButton;
 class QHBoxLayout;
@@ -37,9 +41,15 @@ private:
     bool hasSelection() const;
     void applyRootStyle();
 
+    void reloadAllIcons();
+
     QTextEdit *m_editor;
     QHBoxLayout *m_layout;
     bool m_dragging = false;
+
+    // Pra recolorir ícones em themeChanged sem rebuildar os botões.
+    QHash<QToolButton*, QString> m_iconAliasByBtn;
+    QVector<QFrame*> m_separators;
 };
 
 #endif
