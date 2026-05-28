@@ -2,13 +2,12 @@
 
 #include "LousaTypes.h"
 
-#include <QGraphicsObject>
 #include <QColor>
-#include <QSizeF>
+#include <QGraphicsObject>
 #include <QPointF>
+#include <QSizeF>
 
-class QGraphicsProxyWidget;
-class QTextEdit;
+class QGraphicsTextItem;
 
 class CardItem : public QGraphicsObject
 {
@@ -17,15 +16,13 @@ public:
     explicit CardItem(const CanvasCard& data, QGraphicsItem* parent = nullptr);
 
     CanvasCard cardData() const;
+    void syncFromData();
 
-    QRectF      boundingRect() const override;
+    QRectF       boundingRect() const override;
     QPainterPath shape()        const override;
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override;
 
-    // Chamado após mudança de cor/tamanho externas (load).
-    void syncFromData();
-
-    static constexpr qreal kHeaderH  = 26.0;
+    static constexpr qreal kHeaderH  = 28.0;
     static constexpr qreal kFoldSize = 20.0;
     static constexpr qreal kRadius   =  8.0;
     static constexpr qreal kShadow   =  6.0;
@@ -37,31 +34,29 @@ signals:
     void deleteRequested(const QString& id);
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent* e)   override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* e)    override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e) override;
-    void hoverMoveEvent(QGraphicsSceneHoverEvent* e)    override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)   override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e)    override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* e)     override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e)  override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* e)     override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)    override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* e) override;
 
 private:
-    bool    isOnDeleteBtn(const QPointF& p) const;
-    bool    isOnResizeZone(const QPointF& p) const;
-    void    applyTextColor();
-    void    updateProxyGeometry();
-    QColor  contrastColor() const;
-    bool    isDark() const;
+    bool   isOnDeleteBtn(const QPointF& p) const;
+    bool   isOnResizeZone(const QPointF& p) const;
+    void   updateTextItem();
+    void   applyTextColor();
+    QColor contrastColor() const;
+    bool   isDark() const;
 
-    CanvasCard            m_data;
-    QGraphicsProxyWidget* m_proxy    = nullptr;
-    QTextEdit*            m_textEdit = nullptr;
+    CanvasCard         m_data;
+    QGraphicsTextItem* m_textItem     = nullptr;
 
-    // Estado de interação
-    bool   m_dragging    = false;
-    bool   m_resizing    = false;
+    bool    m_dragging        = false;
+    bool    m_resizing        = false;
     QPointF m_pressScene;
-    QPointF m_pressItemOrigin; // pos() no início do drag
+    QPointF m_pressItemOrigin;
     QSizeF  m_pressSize;
-    bool   m_hoverDelete = false;
-    bool   m_hoverResize = false;
+    bool    m_hoverDelete     = false;
+    bool    m_hoverResize     = false;
 };
