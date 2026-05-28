@@ -60,6 +60,19 @@ public:
         opt.state &= ~QStyle::State_HasFocus;
         QGraphicsTextItem::paint(painter, &opt, widget);
     }
+
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override {
+        // Card de imagem: double-click no texto → fecha a descrição e volta à imagem.
+        // (Igual ao Mira 1: <textarea onDoubleClick={() => setShowDesc(false)} />)
+        if (auto* card = dynamic_cast<CardItem*>(parentItem())) {
+            if (card->cardData().type == QStringLiteral("image")) {
+                card->toggleImageDesc(false);
+                e->accept();
+                return;
+            }
+        }
+        QGraphicsTextItem::mouseDoubleClickEvent(e);
+    }
 };
 
 bool calcIsDark(const QColor& c)
@@ -176,7 +189,7 @@ void CardItem::updateTextItem()
     }
     m_textItem->setTextWidth(tw);
     m_textItem->setPos(padL, padTop);
-    if (isImg) m_textItem->setPlainText(m_data.description);
+    // Não reseta o texto aqui — o conteúdo é gerido pelo sinal textChanged.
 }
 
 // ── Cores ──────────────────────────────────────────────────────────────────
@@ -243,12 +256,12 @@ void CardItem::openImagePicker()
     emit dataChanged(m_data);
 }
 
-void CardItem::toggleImageDesc(bool focus)
+void CardItem::toggleImageDesc(bool show)
 {
-    m_showDesc = !m_showDesc;
+    m_showDesc = show;
     if (m_textItem) {
-        m_textItem->setVisible(m_showDesc);
-        if (m_showDesc && focus) m_textItem->setFocus();
+        m_textItem->setVisible(show);
+        if (show) m_textItem->setFocus();
     }
     update();
 }
@@ -872,7 +885,7 @@ void CardItem::hoverLeaveEvent(QGraphicsSceneHoverEvent*)
 void CardItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 {
     if (m_data.type == QStringLiteral("image")) {
-        toggleImageDesc(true);
+        toggleImageDesc(!m_showDesc);
         e->accept();
         return;
     }

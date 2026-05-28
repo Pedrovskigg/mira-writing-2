@@ -20,6 +20,7 @@ public:
     void syncFromData();
     void setLinkedHtml(const QString& html);
     void setSnapping(bool active, const QColor& color = QColor());
+    void toggleImageDesc(bool show);   // public: chamado pelo BodyTextItem
     // Chamado pelo LousaScene quando o card snapa em uma conexão:
     // adota a cor da linha e registra linkedToConn.
     void setSnapConnected(const QColor& color, const QString& connId);
@@ -62,7 +63,6 @@ private:
     void   showColorMenu(const QPoint& screenPos);
     void   openImagePicker();
     void   loadPixmapFromContent();
-    void   toggleImageDesc(bool focus = true);
     void   updateTextItem();
     void   applyTextColor();
     QColor bodyColor() const;      // cor de fundo da área de texto
