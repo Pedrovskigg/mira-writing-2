@@ -6,9 +6,12 @@
 #include "LousaView.h"
 #include "Theme.h"
 
+#include <QBuffer>
 #include <QCloseEvent>
 #include <QColorDialog>
 #include <QDir>
+#include <QFileDialog>
+#include <QImage>
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
@@ -107,7 +110,21 @@ void LousaPanel::buildUi()
     });
     connect(btnImg, &QToolButton::clicked, this, [this]() {
         if (!m_scene) return;
-        m_scene->addCard(nextCardData(QStringLiteral("image")));
+        const QString path = QFileDialog::getOpenFileName(
+            this, tr("Escolher imagem"), QString(),
+            tr("Imagens (*.png *.jpg *.jpeg *.bmp *.gif *.webp)"));
+        if (path.isEmpty()) return;
+        QImage img(path);
+        if (img.isNull()) return;
+        if (img.width() > 900 || img.height() > 900)
+            img = img.scaled(900, 900, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QByteArray ba;
+        QBuffer buf(&ba);
+        buf.open(QIODevice::WriteOnly);
+        img.save(&buf, "JPEG", 82);
+        CanvasCard c = nextCardData(QStringLiteral("image"));
+        c.content = QString::fromLatin1(ba.toBase64());
+        m_scene->addCard(c);
         refreshEmptyState();
     });
 
