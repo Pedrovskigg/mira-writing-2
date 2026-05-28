@@ -1,13 +1,12 @@
 #ifndef TOPTOOLBAR_H
 #define TOPTOOLBAR_H
 
+#include <QLabel>
 #include <QList>
 #include <QPair>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
-
-class QLabel;
 class QToolButton;
 class FontPickerPopup;
 class QWidget;
@@ -36,6 +35,9 @@ public:
 
     QRect immersiveSoundButtonGlobalRect() const;
     QRect glossaryButtonGlobalRect() const;
+    QRect reminderButtonGlobalRect() const;
+
+    void setReminderBadge(bool active);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -130,6 +132,9 @@ private:
     QList<QPair<QToolButton*, QString>> iconBindings;
     bool focusCheckedCache = false;
     bool readModeOn = false;
+
+    QLabel *reminderBadge = nullptr;
+    void positionReminderBadge();
 };
 
 #endif

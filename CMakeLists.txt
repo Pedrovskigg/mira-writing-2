@@ -120,6 +120,10 @@ qt_add_executable(mira-writing
     src/GlossaryPanel.h
     src/GlossaryAddPopup.cpp
     src/GlossaryAddPopup.h
+    src/RemindersStore.cpp
+    src/RemindersStore.h
+    src/RemindersPanel.cpp
+    src/RemindersPanel.h
     src/Quotes.cpp
     src/Quotes.h
     src/MainMenuDialog.cpp

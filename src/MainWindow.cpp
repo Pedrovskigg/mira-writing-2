@@ -78,6 +78,8 @@
 #include "GlossaryAddPopup.h"
 #include "GlossaryPanel.h"
 #include "GlossaryStore.h"
+#include "RemindersPanel.h"
+#include "RemindersStore.h"
 #include "MarkerHoverPopup.h"
 #include "MarkerPickPopup.h"
 #include "MarkerStore.h"
@@ -829,6 +831,42 @@ void MainWindow::setupEditor()
         glossaryStore->save();
         if (spellChecker) spellChecker->setGlossaryWords(glossaryStore->terms());
     });
+
+    // Lembretes: store (sidecar JSON) + painel flutuante + polling de notificações.
+    remindersStore = new RemindersStore(this);
+    remindersPanel = new RemindersPanel(remindersStore, this);
+
+    connect(toolbar, &TopToolbar::reminderRequested, this, [this]() {
+        if (!remindersPanel || !toolbar) return;
+        if (remindersPanel->isVisible()) {
+            remindersPanel->hide();
+            return;
+        }
+        remindersPanel->showNear(toolbar->reminderButtonGlobalRect());
+    });
+    connect(remindersStore, &RemindersStore::changed, this, [this]() {
+        if (!remindersStore) return;
+        remindersStore->save();
+        if (toolbar) toolbar->setReminderBadge(remindersStore->hasActive());
+    });
+
+    m_reminderPollTimer = new QTimer(this);
+    m_reminderPollTimer->setInterval(60'000);
+    connect(m_reminderPollTimer, &QTimer::timeout, this, [this]() {
+        if (!remindersStore) return;
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        bool anyFired = false;
+        for (const Reminder& r : remindersStore->all()) {
+            if (r.completedAt != 0 || !r.notify || r.dueAt == 0 || r.notifiedAt != 0) continue;
+            if (r.dueAt <= now) {
+                remindersStore->markNotified(r.id);
+                showReminderToast(tr("Lembrete"), r.text);
+                anyFired = true;
+            }
+        }
+        if (anyFired) remindersStore->save();
+    });
+    m_reminderPollTimer->start();
 
     drawerListPanel->setElementsStore(elementsStore);
     wordCounter = new WordCounter(projectModel, docCache, editorHost, this);
@@ -2722,6 +2760,28 @@ void MainWindow::applyProjectRoot(const QString& root)
         glossaryStore->load();
         if (spellChecker) spellChecker->setGlossaryWords(glossaryStore->terms());
     }
+    if (remindersStore) {
+        remindersStore->setProjectRoot(root);
+        remindersStore->load();
+        if (toolbar) toolbar->setReminderBadge(remindersStore->hasActive());
+        // Toast de boas-vindas: lista os lembretes ativos ao abrir o projeto.
+        if (remindersStore->hasActive()) {
+            QTimer::singleShot(800, this, [this]() {
+                if (!remindersStore) return;
+                const QVector<Reminder> actives = remindersStore->active();
+                if (actives.isEmpty()) return;
+                const int n = actives.size();
+                const QString title = n == 1
+                    ? tr("Lembrete")
+                    : tr("Lembretes (%1)").arg(n);
+                QStringList lines;
+                for (int i = 0; i < qMin(n, 3); ++i)
+                    lines << actives[i].text;
+                if (n > 3) lines << tr("+ %1 mais").arg(n - 3);
+                showReminderToast(title, lines.join(QStringLiteral("\n")));
+            });
+        }
+    }
     // Atualiza o título com o nome da pasta do projeto.
     const QString name = QDir(root).dirName();
     baseWindowTitle = name.isEmpty() ? tr("Mira Writing") : tr("Mira Writing — %1").arg(name);
@@ -2851,6 +2911,89 @@ void MainWindow::saveRecentProjects(const QStringList& list)
 {
     QSettings settings;
     settings.setValue(QStringLiteral("recentProjects/list"), list);
+}
+
+void MainWindow::showReminderToast(const QString& title, const QString& body)
+{
+    // Constrói o widget na primeira chamada.
+    if (!m_reminderToast) {
+        m_reminderToast = new QFrame(this);
+        m_reminderToast->setObjectName(QStringLiteral("reminderToast"));
+        m_reminderToast->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+        m_reminderToast->setFixedWidth(300);
+
+        auto* shadow = new QGraphicsDropShadowEffect(m_reminderToast);
+        shadow->setBlurRadius(18);
+        shadow->setColor(QColor(0, 0, 0, 160));
+        shadow->setOffset(0, 3);
+        m_reminderToast->setGraphicsEffect(shadow);
+
+        auto* root = new QVBoxLayout(m_reminderToast);
+        root->setContentsMargins(14, 10, 14, 10);
+        root->setSpacing(4);
+
+        auto* topRow = new QHBoxLayout();
+        topRow->setSpacing(6);
+        m_reminderToastTitle = new QLabel(m_reminderToast);
+        m_reminderToastTitle->setObjectName(QStringLiteral("rtTitle"));
+        topRow->addWidget(m_reminderToastTitle, 1);
+        auto* closeBtn = new QToolButton(m_reminderToast);
+        closeBtn->setText(QStringLiteral("×"));
+        closeBtn->setObjectName(QStringLiteral("rtClose"));
+        closeBtn->setCursor(Qt::PointingHandCursor);
+        connect(closeBtn, &QToolButton::clicked, m_reminderToast, &QFrame::hide);
+        topRow->addWidget(closeBtn);
+        root->addLayout(topRow);
+
+        m_reminderToastBody = new QLabel(m_reminderToast);
+        m_reminderToastBody->setObjectName(QStringLiteral("rtBody"));
+        m_reminderToastBody->setWordWrap(true);
+        root->addWidget(m_reminderToastBody);
+
+        m_reminderToastTimer = new QTimer(this);
+        m_reminderToastTimer->setSingleShot(true);
+        connect(m_reminderToastTimer, &QTimer::timeout,
+                m_reminderToast, &QFrame::hide);
+
+        m_reminderToast->hide();
+    }
+
+    // Aplica tema.
+    m_reminderToast->setStyleSheet(QStringLiteral(
+        "QFrame#reminderToast {"
+        "  background: %1; border: 1px solid %2; border-radius: 10px;"
+        "}"
+        "QLabel#rtTitle { color: %3; font-size: 13px; font-weight: 600; }"
+        "QLabel#rtBody  { color: %4; font-size: 12px; }"
+        "QToolButton#rtClose {"
+        "  background: transparent; border: none;"
+        "  color: %4; font-size: 16px; font-weight: 300;"
+        "}"
+        "QToolButton#rtClose:hover { color: %3; }"
+    ).arg(Theme::panelBackground(),
+         Theme::panelBorder(),
+         Theme::textPrimary(),
+         Theme::textMuted()));
+
+    m_reminderToastTitle->setText(title);
+    m_reminderToastBody->setText(body);
+    m_reminderToastBody->setVisible(!body.isEmpty());
+
+    m_reminderToast->adjustSize();
+    positionReminderToast();
+    m_reminderToast->show();
+    m_reminderToast->raise();
+    m_reminderToastTimer->start(5000);
+}
+
+void MainWindow::positionReminderToast()
+{
+    if (!m_reminderToast) return;
+    const int margin = 16;
+    const QRect r = rect();
+    m_reminderToast->move(
+        r.right()  - m_reminderToast->width()  - margin,
+        r.bottom() - m_reminderToast->height() - margin);
 }
 
 void MainWindow::openMainMenu()
@@ -3201,6 +3344,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     positionExternalScrollBar();
     positionFindBar();
     positionGlobalSearchPanel();
+    if (m_reminderToast && m_reminderToast->isVisible()) positionReminderToast();
     if (readModeEnabled) positionReadModeHotzones();
     if (toolbar && editor) {
         const QPoint editorCenterGlobal =

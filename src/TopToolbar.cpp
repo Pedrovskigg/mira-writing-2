@@ -108,6 +108,12 @@ TopToolbar::TopToolbar(QWidget *parent)
     setAttribute(Qt::WA_StyledBackground, true);
     setFixedHeight(kBarHeight);
 
+    reminderBadge = new QLabel(this);
+    reminderBadge->setObjectName(QStringLiteral("reminderBadge"));
+    reminderBadge->setFixedSize(9, 9);
+    reminderBadge->setAttribute(Qt::WA_TransparentForMouseEvents);
+    reminderBadge->setVisible(false);
+
     focusOffIcon = loadIcon(QStringLiteral("focusmode-off.svg"));
     focusOnIcon  = loadIcon(QStringLiteral("focusmode-on.svg"));
     readModeOffIcon = loadIcon(QStringLiteral("focusededitor-off.svg"));
@@ -381,6 +387,13 @@ void TopToolbar::applyRootStyle()
         Theme::pressedOverlay()    // 6 — checked bg
     ));
 
+    if (reminderBadge) {
+        reminderBadge->setStyleSheet(QStringLiteral(
+            "QLabel#reminderBadge {"
+            "  background: %1; border-radius: 4px;"
+            "}").arg(Theme::accentDanger()));
+    }
+
     if (docTitleLabel) {
         docTitleLabel->setStyleSheet(QStringLiteral(
             "QLabel#ttbDocTitle {"
@@ -429,6 +442,7 @@ void TopToolbar::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
     positionDocTitle();
+    positionReminderBadge();
 }
 
 void TopToolbar::setTitleAnchorX(int x)
@@ -449,6 +463,29 @@ QRect TopToolbar::glossaryButtonGlobalRect() const
     if (!glossaryButton) return QRect();
     const QPoint topLeft = glossaryButton->mapToGlobal(QPoint(0, 0));
     return QRect(topLeft, glossaryButton->size());
+}
+
+QRect TopToolbar::reminderButtonGlobalRect() const
+{
+    if (!reminderButton) return QRect();
+    const QPoint topLeft = reminderButton->mapToGlobal(QPoint(0, 0));
+    return QRect(topLeft, reminderButton->size());
+}
+
+void TopToolbar::setReminderBadge(bool active)
+{
+    if (reminderBadge) {
+        reminderBadge->setVisible(active);
+        positionReminderBadge();
+    }
+}
+
+void TopToolbar::positionReminderBadge()
+{
+    if (!reminderBadge || !reminderButton || !reminderBadge->isVisible()) return;
+    const QRect br = reminderButton->geometry();
+    reminderBadge->move(br.right() - 10, br.top() + 2);
+    reminderBadge->raise();
 }
 
 void TopToolbar::positionDocTitle()

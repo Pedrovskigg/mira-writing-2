@@ -53,6 +53,8 @@ class GlossaryPanel;
 class GlossaryAddPopup;
 class MainMenuDialog;
 class BackgroundWidget;
+class RemindersStore;
+class RemindersPanel;
 class AutoNavHint;
 class QToolButton;
 class FindBar;
@@ -136,6 +138,9 @@ private:
     bool markerAtViewportPos(const QPoint& viewportPos, QString& outId,
                              QRect& outBoundsGlobal) const;
 
+    void showReminderToast(const QString& title, const QString& body);
+    void positionReminderToast();
+
     void closeBondPopup();
     void closeBondViewPanel();
     void openBondCreatePopup(const QString& drawerKey, const QString& fromItemId,
@@ -194,6 +199,13 @@ private:
     GlossaryStore *glossaryStore = nullptr;
     GlossaryPanel *glossaryPanel = nullptr;
     GlossaryAddPopup *glossaryAddPopup = nullptr;
+    RemindersStore *remindersStore = nullptr;
+    RemindersPanel *remindersPanel = nullptr;
+    QTimer *m_reminderPollTimer = nullptr;
+    QFrame  *m_reminderToast      = nullptr;
+    QLabel  *m_reminderToastTitle = nullptr;
+    QLabel  *m_reminderToastBody  = nullptr;
+    QTimer  *m_reminderToastTimer = nullptr;
     MainMenuDialog *mainMenuDialog = nullptr;
     BackgroundWidget *backgroundWidget = nullptr;
     FindBar *findBar = nullptr;
