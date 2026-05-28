@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "CharacterDetector.h"
+#include "EditorHost.h"
 
 #include <QColor>
 #include <QList>
@@ -52,6 +53,7 @@ class GlossaryPanel;
 class GlossaryAddPopup;
 class MainMenuDialog;
 class BackgroundWidget;
+class AutoNavHint;
 class QToolButton;
 class FindBar;
 class GlobalSearchPanel;
@@ -144,6 +146,11 @@ private:
                            const QPoint& spawnGlobal);
     void createDocFromBond(const QString& drawerKey, const QString& bondId);
     void createDocFromSelection();
+    void navigateAdjacentChapter(int dir);
+    void activateNavZone(int dir, const EditorHost::ViewMode& vm);
+    void deactivateNavZone();
+    void positionExternalScrollBar();
+    void positionAutoNavHint();
 
     bool findImageAt(const QPoint &viewportPos, QTextCursor &imageCursor) const;
     int detectAlignmentForImage(const QTextCursor &imageCursor) const;
@@ -208,6 +215,15 @@ private:
     QString baseWindowTitle;
     QTimer *sceneDetectTimer;
     QString sceneDetectKey;
+    QTimer *m_autoNavTimer = nullptr;
+    int m_autoNavDir = 0;
+    bool m_autoNavCooldown = false;
+    bool m_sliderHeld = false;
+    int m_wheelOverscroll = 0;
+    AutoNavHint *m_autoNavHint = nullptr;
+    QTimer *m_autoNavProgressTimer = nullptr;
+    int m_autoNavProgressMs = 0;
+    QString m_autoNavTargetTitle;
     QTimer *detectionTimer = nullptr;
     QTimer *detectionBatchTimer = nullptr;
     class PresencePopup *presencePopup = nullptr;

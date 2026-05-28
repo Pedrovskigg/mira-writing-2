@@ -21,9 +21,11 @@
 #include <QMouseEvent>
 #include <QResizeEvent>
 #include <QCryptographicHash>
+#include <QPainter>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QShortcut>
+#include <QStyle>
 #include <QSizePolicy>
 #include <QAbstractTextDocumentLayout>
 #include <QTextBlock>
@@ -126,6 +128,49 @@ void applyFloatFrameStyle(QTextFrameFormat &ff, bool isLeft, int w)
     ff.setWidth(QTextLength(QTextLength::FixedLength, w));
 }
 }
+
+// Widget flutuante que mostra "Voltando/Avançando para Cap. X" com barra de
+// progresso preenchendo da esquerda enquanto o timer de auto-navegação corre.
+class AutoNavHint : public QWidget {
+public:
+    AutoNavHint(QWidget* parent) : QWidget(parent) {
+        setAttribute(Qt::WA_TranslucentBackground);
+        setAttribute(Qt::WA_NoSystemBackground);
+        setFixedSize(190, 28);
+    }
+    void setProgress(float p) { if (m_progress != p) { m_progress = p; update(); } }
+    void setText(const QString& t) { if (m_text != t) { m_text = t; update(); } }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        const QRect r = rect().adjusted(0, 2, -2, -2);
+        p.setPen(Qt::NoPen);
+        // Fundo escuro semi-transparente
+        p.setBrush(QColor(18, 18, 18, 215));
+        p.drawRoundedRect(r, 5, 5);
+        // Preenchimento de progresso
+        if (m_progress > 0.0f) {
+            QColor ac = QColor(Theme::accentDefault());
+            ac.setAlpha(170);
+            QRect fill = r;
+            fill.setWidth(qRound(r.width() * m_progress));
+            p.setBrush(ac);
+            p.drawRoundedRect(fill, 5, 5);
+        }
+        // Texto
+        p.setPen(QColor(220, 220, 220));
+        QFont f = font();
+        f.setPointSizeF(8.0);
+        p.setFont(f);
+        p.drawText(r.adjusted(7, 0, -7, 0), Qt::AlignVCenter | Qt::AlignLeft, m_text);
+    }
+
+private:
+    float m_progress = 0.0f;
+    QString m_text;
+};
 
 MainWindow::~MainWindow() {
     // mainMenuDialog é criado sem parent (pra ter taskbar entry própria),
@@ -967,7 +1012,9 @@ void MainWindow::setupEditor()
     // Esconde o scrollbar nativo — o externo cuida do scroll.
     editor->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    externalScrollBar = new QScrollBar(Qt::Vertical, editorRow);
+    // Scrollbar flutuante: filho do container (não do editorRow) para que sua
+    // altura seja travada na viewport, independente do comprimento da página.
+    externalScrollBar = new QScrollBar(Qt::Vertical, container);
     externalScrollBar->setObjectName(QStringLiteral("externalEditorScroll"));
     // Espelha o estado da scrollbar interna do editor.
     auto* innerSb = editor->verticalScrollBar();
@@ -985,8 +1032,75 @@ void MainWindow::setupEditor()
         externalScrollBar->setSingleStep(innerSb->singleStep());
     });
 
+    // Drag da scrollbar: ativa a zona de nav só enquanto o handle está pressionado
+    // na borda. Soltar o handle cancela o carregamento se ele ainda não disparou.
+    connect(externalScrollBar, &QAbstractSlider::sliderPressed, this, [this]() {
+        m_sliderHeld = true;
+        if (m_autoNavCooldown) return;
+        auto* sb = editor->verticalScrollBar();
+        const int v = sb->value(), max = sb->maximum();
+        if (max <= 0) return;
+        const auto vm = editorHost->viewMode();
+        if (vm.type != EditorHost::ChapterDoc && vm.type != EditorHost::SceneDoc) return;
+        if (v == 0)   activateNavZone(-1, vm);
+        if (v == max) activateNavZone( 1, vm);
+    });
+    connect(externalScrollBar, &QAbstractSlider::sliderReleased, this, [this]() {
+        m_sliderHeld = false;
+        if (m_autoNavDir != 0) deactivateNavZone();
+    });
+
+    // Navegação automática entre capítulos: ao chegar na extremidade do scroll
+    // e permanecer por 1,5 s (wheel ou arrastar) vai pro capítulo anterior/seguinte.
+    m_autoNavTimer = new QTimer(this);
+    m_autoNavTimer->setSingleShot(true);
+    m_autoNavTimer->setInterval(2000);
+    connect(m_autoNavTimer, &QTimer::timeout, this, [this]() {
+        const int dir = m_autoNavDir;
+        deactivateNavZone();
+        navigateAdjacentChapter(dir);
+    });
+
+    // Hint widget: barra de progresso + label flutuante ao lado do scroll.
+    m_autoNavHint = new AutoNavHint(container);
+    m_autoNavHint->hide();
+
+    m_autoNavProgressTimer = new QTimer(this);
+    m_autoNavProgressTimer->setInterval(16);
+    connect(m_autoNavProgressTimer, &QTimer::timeout, this, [this]() {
+        m_autoNavProgressMs += 16;
+        if (m_autoNavHint)
+            m_autoNavHint->setProgress(qMin(1.0f, m_autoNavProgressMs / 2000.0f));
+    });
+
+    // valueChanged: drag ativa a zona; wheel usa o caminho do eventFilter.
+    // Aqui apenas cancelamos se o valor saiu da borda.
+    connect(innerSb, &QAbstractSlider::valueChanged, this, [this, innerSb]() {
+        if (m_autoNavCooldown) return;
+        const int v   = innerSb->value();
+        const int max = innerSb->maximum();
+        if (m_sliderHeld) {
+            // Drag: ativa/cancela conforme posição atual do handle
+            if (max <= 0) { deactivateNavZone(); return; }
+            const auto vm = editorHost->viewMode();
+            if (vm.type != EditorHost::ChapterDoc && vm.type != EditorHost::SceneDoc) {
+                deactivateNavZone(); return;
+            }
+            int dir = 0;
+            if (v == 0)   dir = -1;
+            if (v == max) dir = 1;
+            if (dir != 0) activateNavZone(dir, vm);
+            else          deactivateNavZone();
+        } else if (m_autoNavDir != 0) {
+            // Sem drag: cancela zona ativa se o valor saiu da borda esperada
+            const bool atEdge = (m_autoNavDir < 0 && v == 0) || (m_autoNavDir > 0 && v == max);
+            if (!atEdge) deactivateNavZone();
+        }
+    });
+
     editorRowLayout->addWidget(editor, /*stretch=*/1);
-    editorRowLayout->addWidget(externalScrollBar);
+    // externalScrollBar não entra no layout — é posicionado como overlay flutuante
+    // por positionExternalScrollBar(), chamado em resizeEvent e positionSidePanels.
 
     editorColumnLayout->addWidget(editorRow, /*stretch=*/1);
 
@@ -2055,6 +2169,52 @@ void MainWindow::updateFocusedBlock()
     setEditorSelectionsLayer(QStringLiteral("focus"), selections);
 }
 
+void MainWindow::navigateAdjacentChapter(int dir)
+{
+    if (!projectModel) return;
+    const EditorHost::ViewMode vm = editorHost->viewMode();
+    if (vm.type != EditorHost::ChapterDoc && vm.type != EditorHost::SceneDoc) return;
+
+    // Capítulos do manuscrito ativo em ordem de lista
+    QList<Chapter> chapters;
+    for (const auto& c : projectModel->chapters())
+        if (c.manuscriptId == vm.manuscriptId) chapters.append(c);
+    if (chapters.isEmpty()) return;
+
+    int idx = -1;
+    for (int i = 0; i < chapters.size(); ++i)
+        if (chapters[i].id == vm.chapterId) { idx = i; break; }
+    if (idx == -1) return;
+
+    const int target = idx + dir;
+    if (target < 0 || target >= chapters.size()) return;
+
+    EditorHost::ViewMode next;
+    next.type        = EditorHost::ChapterDoc;
+    next.manuscriptId = vm.manuscriptId;
+    next.chapterId   = chapters[target].id;
+
+    m_autoNavCooldown = true;
+    editorHost->setViewMode(next);
+
+    // Ao ir para frente, o doc já carrega no topo (padrão do QTextEdit).
+    // Ao ir para trás, aguarda o layout finalizar via documentSizeChanged para
+    // rolar até o final — evita o delay visível de singleShot com valor fixo.
+    if (dir < 0) {
+        connect(editor->document()->documentLayout(),
+                &QAbstractTextDocumentLayout::documentSizeChanged,
+                this, [this](const QSizeF&) {
+            QTimer::singleShot(0, this, [this]() {
+                editor->verticalScrollBar()->setValue(
+                    editor->verticalScrollBar()->maximum());
+                m_autoNavCooldown = false;
+            });
+        }, Qt::SingleShotConnection);
+    } else {
+        QTimer::singleShot(0, this, [this]() { m_autoNavCooldown = false; });
+    }
+}
+
 void MainWindow::setReadMode(bool enabled)
 {
     readModeEnabled = enabled;
@@ -2294,6 +2454,31 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             }
         } else if (event->type() == QEvent::Resize) {
             hideOverlay();
+        } else if (event->type() == QEvent::Wheel) {
+            // Wheel: exige 2 ticks extras além do limite para ativar a zona de nav.
+            // Rolar na direção oposta cancela e zera o acúmulo.
+            // (Um tick padrão de mouse = 120 unidades de angleDelta; threshold = 240.)
+            if (!m_autoNavCooldown && m_autoNavTimer && !m_sliderHeld) {
+                const auto vm = editorHost->viewMode();
+                if (vm.type == EditorHost::ChapterDoc || vm.type == EditorHost::SceneDoc) {
+                    auto* sb  = editor->verticalScrollBar();
+                    const int max = sb->maximum();
+                    if (max > 0) {
+                        const int dy = static_cast<QWheelEvent*>(event)->angleDelta().y();
+                        const int v  = sb->value();
+                        if (dy > 0 && v == 0) {
+                            m_wheelOverscroll += qAbs(dy);
+                            if (m_wheelOverscroll >= 240) activateNavZone(-1, vm);
+                        } else if (dy < 0 && v == max) {
+                            m_wheelOverscroll += qAbs(dy);
+                            if (m_wheelOverscroll >= 240) activateNavZone( 1, vm);
+                        } else if (dy != 0) {
+                            if (m_autoNavDir != 0) deactivateNavZone();
+                            else m_wheelOverscroll = 0;
+                        }
+                    }
+                }
+            }
         }
     }
     return QMainWindow::eventFilter(watched, event);
@@ -2887,6 +3072,83 @@ void MainWindow::positionGlobalSearchPanel()
     if (globalSearchPanel->isVisible()) globalSearchPanel->raise();
 }
 
+void MainWindow::activateNavZone(int dir, const EditorHost::ViewMode& vm)
+{
+    if (dir == m_autoNavDir) return; // já ativo nesta direção — timer continua
+    m_autoNavDir = dir;
+    m_autoNavTargetTitle.clear();
+    QList<Chapter> filtered;
+    for (const auto& c : projectModel->chapters())
+        if (c.manuscriptId == vm.manuscriptId) filtered.append(c);
+    for (int i = 0; i < filtered.size(); ++i) {
+        if (filtered[i].id == vm.chapterId) {
+            const int ti = i + dir;
+            if (ti >= 0 && ti < filtered.size())
+                m_autoNavTargetTitle = filtered[ti].title;
+            break;
+        }
+    }
+    if (m_autoNavHint) {
+        const QString verb = (dir < 0) ? tr("Voltando para") : tr("Avançando para");
+        const QString lbl  = m_autoNavTargetTitle.isEmpty()
+            ? verb
+            : QStringLiteral("%1: %2").arg(verb, m_autoNavTargetTitle);
+        m_autoNavHint->setText(lbl);
+        m_autoNavHint->setProgress(0.0f);
+        m_autoNavProgressMs = 0;
+        positionAutoNavHint();
+        m_autoNavHint->show();
+        m_autoNavHint->raise();
+    }
+    if (m_autoNavTimer)        m_autoNavTimer->start();
+    if (m_autoNavProgressTimer) m_autoNavProgressTimer->start();
+}
+
+void MainWindow::deactivateNavZone()
+{
+    if (m_autoNavTimer)        m_autoNavTimer->stop();
+    if (m_autoNavProgressTimer) m_autoNavProgressTimer->stop();
+    if (m_autoNavHint)         m_autoNavHint->hide();
+    m_autoNavDir      = 0;
+    m_wheelOverscroll = 0;
+}
+
+void MainWindow::positionExternalScrollBar()
+{
+    if (!externalScrollBar || !editorScroll || !editorContainer || !editorColumn) return;
+    QWidget* vp = editorScroll->viewport();
+    // Coloca a scrollbar imediatamente à direita da página. Como a largura da
+    // página é configurável, usamos mapTo para seguir a posição real do editorColumn.
+    const QPoint colRight    = editorColumn->mapTo(vp, QPoint(editorColumn->width(), 0));
+    const QPoint vpInContainer = vp->mapTo(editorContainer, QPoint(0, 0));
+    const int sbW = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    externalScrollBar->setGeometry(
+        vpInContainer.x() + colRight.x(),
+        vpInContainer.y(),
+        sbW,
+        vp->height()
+    );
+    externalScrollBar->raise();
+    positionAutoNavHint();
+}
+
+void MainWindow::positionAutoNavHint()
+{
+    if (!m_autoNavHint || !externalScrollBar) return;
+    // Sem guard isVisible(): precisa posicionar antes do show() em activateNavZone.
+    // externalScrollBar e m_autoNavHint são filhos diretos de editorContainer,
+    // então geometry() já está no sistema de coordenadas correto.
+    const QRect sb   = externalScrollBar->geometry();
+    const int hintW  = m_autoNavHint->width();
+    const int hintH  = m_autoNavHint->height();
+    const int x      = sb.right() + 4;
+    const int y      = (m_autoNavDir < 0)
+        ? sb.top()    + 6
+        : sb.bottom() - hintH - 6;
+    m_autoNavHint->setGeometry(x, y, hintW, hintH);
+    m_autoNavHint->raise();
+}
+
 void MainWindow::positionSidePanels()
 {
     // Posiciona o DrawerListPanel e o ManuscriptPanel como overlays flutuantes
@@ -2921,6 +3183,8 @@ void MainWindow::positionSidePanels()
         manuscriptPanel->resize(manuscriptPanel->width(), maxH);
         if (manuscriptPanel->isVisible()) manuscriptPanel->raise();
     }
+
+    positionExternalScrollBar();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -2933,6 +3197,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     resizeEditorColumnToViewport();
     positionWordCountPanel();
     positionSidePanels();
+    positionExternalScrollBar();
     positionFindBar();
     positionGlobalSearchPanel();
     if (readModeEnabled) positionReadModeHotzones();
