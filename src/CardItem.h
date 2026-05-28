@@ -4,6 +4,7 @@
 
 #include <QColor>
 #include <QGraphicsObject>
+#include <QPixmap>
 #include <QPointF>
 #include <QSizeF>
 
@@ -36,11 +37,12 @@ signals:
     void createDocRequested(const QString& id);
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent* e)    override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* e)     override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e)  override;
-    void hoverMoveEvent(QGraphicsSceneHoverEvent* e)     override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)    override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e)       override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* e)        override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e)     override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* e)        override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)       override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* e) override;
 
 private:
@@ -49,6 +51,9 @@ private:
     bool   isOnDocBtn(const QPointF& p) const;
     bool   isOnResizeZone(const QPointF& p) const;
     void   showColorMenu(const QPoint& screenPos);
+    void   openImagePicker();
+    void   loadPixmapFromContent();
+    void   toggleImageDesc(bool focus = true);
     void   updateTextItem();
     void   applyTextColor();
     QColor bodyColor() const;      // cor de fundo da área de texto
@@ -57,6 +62,8 @@ private:
 
     CanvasCard         m_data;
     QGraphicsTextItem* m_textItem = nullptr;
+    QPixmap            m_pixmap;
+    bool               m_showDesc = false;
 
     bool    m_dragging        = false;
     bool    m_resizing        = false;

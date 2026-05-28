@@ -13,6 +13,7 @@ struct CanvasCard {
     qreal   height  = 160;
     QString content;
     QColor  color   = QColor(QStringLiteral("#f7d070"));
+    QString description;     // image: legenda/descrição
     QString photoDataUrl;    // character
     QString linkedItemId;    // doc, character
     QString linkedDrawerKey; // doc, character

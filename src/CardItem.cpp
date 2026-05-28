@@ -1,6 +1,9 @@
 #include "CardItem.h"
 
+#include <QBuffer>
 #include <QColorDialog>
+#include <QFileDialog>
+#include <QImage>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneHoverEvent>
 #include <QGraphicsSceneMouseEvent>
@@ -82,7 +85,9 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
     m_textItem = bti;
     m_textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
     m_textItem->setAcceptHoverEvents(false); // hover fica no CardItem
-    m_textItem->document()->setPlainText(m_data.content);
+    const QString initialText = (m_data.type == QStringLiteral("image"))
+        ? m_data.description : m_data.content;
+    m_textItem->document()->setPlainText(initialText);
 
     QTextOption opt;
     opt.setAlignment(Qt::AlignLeft);
@@ -93,10 +98,19 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
     updateTextItem();
     applyTextColor();
 
-    connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
-        m_data.content = m_textItem->document()->toPlainText();
-        emit dataChanged(m_data);
-    });
+    if (m_data.type == QStringLiteral("image")) {
+        loadPixmapFromContent();
+        m_textItem->setVisible(false); // começa escondido; aparece no duplo-clique
+        connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+            m_data.description = m_textItem->document()->toPlainText();
+            emit dataChanged(m_data);
+        });
+    } else {
+        connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+            m_data.content = m_textItem->document()->toPlainText();
+            emit dataChanged(m_data);
+        });
+    }
 }
 
 CanvasCard CardItem::cardData() const
@@ -112,6 +126,7 @@ void CardItem::syncFromData()
 {
     setPos(m_data.x, m_data.y);
     prepareGeometryChange();
+    if (m_data.type == QStringLiteral("image")) loadPixmapFromContent();
     updateTextItem();
     applyTextColor();
     update();
@@ -137,15 +152,20 @@ QPainterPath CardItem::shape() const
 void CardItem::updateTextItem()
 {
     if (!m_textItem) return;
-    constexpr qreal padL = 10.0, padR = 10.0, padTop = 4.0, padBot = 21.0;
-    const qreal tw = qMax(10.0, m_data.width  - padL - padR);
-    const qreal th = qMax(10.0, m_data.height - kHeaderH - padTop - padBot);
+    const bool isImg = (m_data.type == QStringLiteral("image"));
+    // Imagem: área de texto começa abaixo do overlay do header (34px) e cobre o card
+    const qreal padL   = 10.0;
+    const qreal padTop = isImg ? 34.0 : (kHeaderH + 4.0);
+    const qreal padBot = 17.0;
+    const qreal tw = qMax(10.0, m_data.width - 2.0 * padL);
+    const qreal th = qMax(10.0, m_data.height - padTop - padBot);
     if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
         bti->bodyW = tw;
         bti->bodyH = th;
     }
     m_textItem->setTextWidth(tw);
-    m_textItem->setPos(padL, kHeaderH + padTop);
+    m_textItem->setPos(padL, padTop);
+    if (isImg) m_textItem->setPlainText(m_data.description);
 }
 
 // ── Cores ──────────────────────────────────────────────────────────────────
@@ -170,7 +190,50 @@ QColor CardItem::contrastColor() const
 void CardItem::applyTextColor()
 {
     if (!m_textItem) return;
-    m_textItem->setDefaultTextColor(contrastColor());
+    const QColor tc = (m_data.type == QStringLiteral("image"))
+        ? QColor(255, 255, 255, 220)
+        : contrastColor();
+    m_textItem->setDefaultTextColor(tc);
+}
+
+void CardItem::loadPixmapFromContent()
+{
+    if (m_data.content.isEmpty()) { m_pixmap = QPixmap(); return; }
+    const QByteArray ba = QByteArray::fromBase64(m_data.content.toLatin1());
+    m_pixmap.loadFromData(ba);
+}
+
+void CardItem::openImagePicker()
+{
+    const QString path = QFileDialog::getOpenFileName(
+        nullptr, tr("Escolher imagem"), QString(),
+        tr("Imagens (*.png *.jpg *.jpeg *.bmp *.gif *.webp)"));
+    if (path.isEmpty()) return;
+
+    QImage img(path);
+    if (img.isNull()) return;
+    // Comprime: máximo 900px no lado maior, JPEG 82
+    if (img.width() > 900 || img.height() > 900)
+        img = img.scaled(900, 900, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QByteArray ba;
+    QBuffer buf(&ba);
+    buf.open(QIODevice::WriteOnly);
+    img.save(&buf, "JPEG", 82);
+
+    m_data.content = QString::fromLatin1(ba.toBase64());
+    loadPixmapFromContent();
+    update();
+    emit dataChanged(m_data);
+}
+
+void CardItem::toggleImageDesc(bool focus)
+{
+    m_showDesc = !m_showDesc;
+    if (m_textItem) {
+        m_textItem->setVisible(m_showDesc);
+        if (m_showDesc && focus) m_textItem->setFocus();
+    }
+    update();
 }
 
 // ── Pintura ────────────────────────────────────────────────────────────────
@@ -183,7 +246,82 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
 
     p->setRenderHint(QPainter::Antialiasing);
 
-    // Sombra
+    // ── Card de imagem: layout completamente diferente ──────────────────────
+    if (m_data.type == QStringLiteral("image")) {
+        // Sombra
+        p->setPen(Qt::NoPen);
+        p->setBrush(QColor(0, 0, 0, 40));
+        p->drawRoundedRect(QRectF(3, 5, w, h), 10, 10);
+
+        // Fundo escuro
+        p->setPen(QPen(QColor(255, 255, 255, 25), 1));
+        p->setBrush(QColor(QStringLiteral("#111111")));
+        p->drawRoundedRect(QRectF(0, 0, w, h), 10, 10);
+
+        // Imagem (objectFit: cover)
+        if (!m_pixmap.isNull()) {
+            p->save();
+            QPainterPath clip;
+            clip.addRoundedRect(QRectF(0, 0, w, h), 10, 10);
+            p->setClipPath(clip);
+            p->setOpacity(m_showDesc ? 0.41 : 1.0);
+            // Calcula rect de crop centralizado (cover)
+            const qreal iw = m_pixmap.width(), ih = m_pixmap.height();
+            const qreal scale = qMax(w / iw, h / ih);
+            const qreal sw = iw * scale, sh = ih * scale;
+            p->drawPixmap(QRectF((w-sw)/2, (h-sh)/2, sw, sh), m_pixmap,
+                          QRectF(0, 0, iw, ih));
+            p->setOpacity(1.0);
+            p->restore();
+        } else {
+            // Placeholder
+            p->setPen(QColor(255, 255, 255, 60));
+            p->setFont(QFont(QStringLiteral("Segoe UI"), 10));
+            p->drawText(QRectF(0, 0, w, h), Qt::AlignCenter,
+                        tr("Clique direito → Escolher imagem"));
+        }
+
+        // Header overlay (gradiente escuro no topo, até right-28 para o ×)
+        QLinearGradient hg(0, 0, 0, 32);
+        hg.setColorAt(0, QColor(0, 0, 0, 107));
+        hg.setColorAt(1, QColor(0, 0, 0, 0));
+        p->setPen(Qt::NoPen);
+        p->setBrush(hg);
+        p->drawRect(QRectF(0, 0, w, 32));
+
+        // × no canto superior direito (badge semi-transparente)
+        const QColor xBadge = m_hoverDelete ? QColor(0,0,0,180) : QColor(0,0,0,115);
+        p->setBrush(xBadge);
+        p->setPen(Qt::NoPen);
+        p->drawRoundedRect(QRectF(w-24, 4, 20, 20), 4, 4);
+        const QColor xc(255, 255, 255, m_hoverDelete ? 220 : 127);
+        p->setPen(QPen(xc, 1.2, Qt::SolidLine, Qt::RoundCap));
+        const qreal xxc = w-14, xyc = 14;
+        p->drawLine(QPointF(xxc-4, xyc-4), QPointF(xxc+4, xyc+4));
+        p->drawLine(QPointF(xxc+4, xyc-4), QPointF(xxc-4, xyc+4));
+
+        // Resize handle
+        const QColor rhCol(255, 255, 255, int((m_hoverResize ? 0.7 : 0.35) * 255));
+        p->setPen(QPen(rhCol, 1.5, Qt::SolidLine, Qt::RoundCap));
+        const qreal ox = w-3-10, oy = h-3-10;
+        p->drawLine(QPointF(ox+2,oy+9), QPointF(ox+9,oy+2));
+        p->drawLine(QPointF(ox+5,oy+9), QPointF(ox+9,oy+5));
+        p->drawLine(QPointF(ox+8,oy+9), QPointF(ox+9,oy+8));
+
+        // Pin de conexão
+        const qreal px = w/2.0, py = 0.0, pr = 5.0;
+        QRadialGradient pinGrad(px - pr*0.3, py - pr*0.3, pr*2.2);
+        pinGrad.setColorAt(0.0, QColor(200, 200, 200, 180));
+        pinGrad.setColorAt(1.0, QColor(80, 80, 80, 180));
+        p->setPen(QPen(QColor(40, 40, 40, 140), 2));
+        p->setBrush(pinGrad);
+        p->setOpacity(0.55);
+        p->drawEllipse(QPointF(px, py), pr, pr);
+        p->setOpacity(1.0);
+        return; // para aqui — não desenha o resto do paint()
+    }
+
+    // Sombra (note/comment)
     p->setPen(Qt::NoPen);
     p->setBrush(QColor(0, 0, 0, 40));
     p->drawRoundedRect(QRectF(3, 5, w, h), kRadius, kRadius);
@@ -310,6 +448,8 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
 // Layout do header (da direita): [×@w-12] [colorDot@w-27] [doc+@w-42] [...] [grip]
 bool CardItem::isOnDeleteBtn(const QPointF& p) const
 {
+    if (m_data.type == QStringLiteral("image"))
+        return QRectF(m_data.width - 24, 4, 20, 20).contains(p);
     return QRectF(m_data.width - 20, 0, 20, kHeaderH).contains(p);
 }
 bool CardItem::isOnColorDot(const QPointF& p) const
@@ -357,6 +497,21 @@ void CardItem::showColorMenu(const QPoint& screenPos)
 void CardItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     if (e->button() != Qt::LeftButton) { e->ignore(); return; }
+
+    // Imagem: interação própria
+    if (m_data.type == QStringLiteral("image")) {
+        if (isOnDeleteBtn(e->pos())) { emit deleteRequested(m_data.id); e->accept(); return; }
+        if (isOnResizeZone(e->pos())) {
+            m_resizing = true; m_pressScene = e->scenePos();
+            m_pressSize = QSizeF(m_data.width, m_data.height);
+            e->accept(); return;
+        }
+        if (!m_showDesc) { // drag de qualquer ponto quando descrição não está aberta
+            m_dragging = true; m_pressScene = e->scenePos(); m_pressItemOrigin = pos();
+            setCursor(Qt::ClosedHandCursor); e->accept(); return;
+        }
+        e->ignore(); return;
+    }
 
     if (isOnDeleteBtn(e->pos())) {
         emit deleteRequested(m_data.id);
@@ -463,7 +618,27 @@ void CardItem::hoverLeaveEvent(QGraphicsSceneHoverEvent*)
 
 // ── Context menu ─────────────────────────────────────────────────────────────
 
+void CardItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
+{
+    if (m_data.type == QStringLiteral("image")) {
+        toggleImageDesc(true);
+        e->accept();
+        return;
+    }
+    QGraphicsObject::mouseDoubleClickEvent(e);
+}
+
 void CardItem::contextMenuEvent(QGraphicsSceneContextMenuEvent* e)
 {
+    if (m_data.type == QStringLiteral("image")) {
+        QMenu menu;
+        menu.addAction(tr("Escolher imagem..."), this, &CardItem::openImagePicker);
+        menu.addSeparator();
+        menu.addAction(tr("Remover card"), this, [this]() {
+            emit deleteRequested(m_data.id);
+        });
+        menu.exec(e->screenPos());
+        return;
+    }
     showColorMenu(e->screenPos());
 }

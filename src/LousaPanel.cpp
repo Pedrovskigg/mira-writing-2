@@ -86,6 +86,7 @@ void LousaPanel::buildUi()
     auto* btnCmt  = makeIconBtn(tr("Comentário"), m_toolbar);
     btnCmt->setEnabled(true);
     auto* btnImg  = makeIconBtn(tr("Imagem"),     m_toolbar);
+    btnImg->setEnabled(true);
     auto* btnDoc  = makeIconBtn(tr("Documento"),  m_toolbar);
     auto* btnChar = makeIconBtn(tr("Personagem"), m_toolbar);
     tl->addWidget(btnNote);
@@ -102,6 +103,11 @@ void LousaPanel::buildUi()
     connect(btnCmt, &QToolButton::clicked, this, [this]() {
         if (!m_scene) return;
         m_scene->addCard(nextCardData(QStringLiteral("comment")));
+        refreshEmptyState();
+    });
+    connect(btnImg, &QToolButton::clicked, this, [this]() {
+        if (!m_scene) return;
+        m_scene->addCard(nextCardData(QStringLiteral("image")));
         refreshEmptyState();
     });
 
@@ -232,6 +238,7 @@ static CanvasCard cardFromJson(const QJsonObject& o)
     c.content = o.value(QStringLiteral("content")).toString();
     c.color   = QColor(o.value(QStringLiteral("color")).toString(QStringLiteral("#ffd060")));
     if (!c.color.isValid()) c.color = QColor(QStringLiteral("#ffd060"));
+    c.description     = o.value(QStringLiteral("description")).toString();
     c.linkedItemId    = o.value(QStringLiteral("linkedItemId")).toString();
     c.linkedDrawerKey = o.value(QStringLiteral("linkedDrawerName")).toString();
     return c;
@@ -248,6 +255,7 @@ static QJsonObject cardToJson(const CanvasCard& c)
     o.insert(QStringLiteral("height"),          c.height);
     o.insert(QStringLiteral("content"),         c.content);
     o.insert(QStringLiteral("color"),           c.color.name());
+    o.insert(QStringLiteral("description"),      c.description);
     o.insert(QStringLiteral("linkedItemId"),    c.linkedItemId);
     o.insert(QStringLiteral("linkedDrawerName"), c.linkedDrawerKey);
     return o;
@@ -319,6 +327,9 @@ CanvasCard LousaPanel::nextCardData(const QString& type) const
     if (type == QStringLiteral("comment")) {
         c.width  = 220; c.height = 140;
         c.color  = QColor(QStringLiteral("#a78bfa"));
+    } else if (type == QStringLiteral("image")) {
+        c.width  = 220; c.height = 200;
+        c.color  = QColor(QStringLiteral("#34d399")); // não usado como bg
     } else { // note (default)
         c.width  = 200; c.height = 170;
         c.color  = QColor(QStringLiteral("#ffd060"));
