@@ -32,6 +32,7 @@ public:
 signals:
     void dataChanged(const CanvasCard& data);
     void deleteRequested(const QString& id);
+    void createDocRequested(const QString& id);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* e)    override;
@@ -43,7 +44,10 @@ protected:
 
 private:
     bool   isOnDeleteBtn(const QPointF& p) const;
+    bool   isOnColorDot(const QPointF& p) const;
+    bool   isOnDocBtn(const QPointF& p) const;
     bool   isOnResizeZone(const QPointF& p) const;
+    void   showColorMenu(const QPoint& screenPos);
     void   updateTextItem();
     void   applyTextColor();
     QColor contrastColor() const;
@@ -58,5 +62,7 @@ private:
     QPointF m_pressItemOrigin;
     QSizeF  m_pressSize;
     bool    m_hoverDelete     = false;
+    bool    m_hoverColor      = false;
+    bool    m_hoverDoc        = false;
     bool    m_hoverResize     = false;
 };

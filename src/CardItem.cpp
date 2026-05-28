@@ -5,6 +5,8 @@
 #include <QGraphicsSceneHoverEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
+#include <QGraphicsView>
+#include <QRadialGradient>
 #include <QStyleOption>
 #include <QMenu>
 #include <QPainter>
@@ -188,9 +190,11 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
     p->setPen(QPen(isDark() ? QColor(255,255,255,30) : QColor(0,0,0,30), 0.8));
     p->drawLine(QPointF(w-f, h), QPointF(w, h-f));
 
-    // Header: grip (6 pontos)
+    // ── Header ──
     const QColor tc    = contrastColor();
     const QColor muted = QColor(tc.red(), tc.green(), tc.blue(), 90);
+
+    // Grip (6 pontos)
     p->setPen(Qt::NoPen);
     p->setBrush(muted);
     const qreal gx = 8.0, gy = (kHeaderH - 9.0) / 2.0;
@@ -198,12 +202,53 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
         for (int col = 0; col < 2; ++col)
             p->drawEllipse(QPointF(gx + col*4.5, gy + row*4.5), 1.2, 1.2);
 
+    // Doc+ button (SVG: rect + cruz, igual Mira 1)
+    {
+        const qreal dbx = w - 43, dby = kHeaderH / 2.0;
+        const QColor dcol = m_hoverDoc ? tc : muted;
+        p->setPen(QPen(dcol, 1.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        p->setBrush(Qt::NoBrush);
+        p->drawRoundedRect(QRectF(dbx - 4.5, dby - 5.5, 9, 11), 1, 1);
+        p->drawLine(QPointF(dbx - 1.5, dby - 1), QPointF(dbx - 1.5, dby + 3));
+        p->drawLine(QPointF(dbx - 3.5, dby + 1), QPointF(dbx + 0.5, dby + 1));
+    }
+
+    // Color dot (círculo com a cor do card, igual Mira 1)
+    {
+        const qreal cdx = w - 28, cdy = kHeaderH / 2.0;
+        p->setPen(QPen(QColor(0, 0, 0, 76), 1.5));
+        p->setBrush(m_data.color);
+        p->drawEllipse(QPointF(cdx, cdy), 5.5, 5.5);
+        if (m_hoverColor) {  // anel de hover
+            p->setPen(QPen(tc, 1.5));
+            p->setBrush(Qt::NoBrush);
+            p->drawEllipse(QPointF(cdx, cdy), 7, 7);
+        }
+    }
+
     // Botão ×
-    const QColor xCol = m_hoverDelete ? QColor(220,60,60) : muted;
+    const QColor xCol = m_hoverDelete ? QColor(220, 60, 60) : muted;
     p->setPen(QPen(xCol, 1.4, Qt::SolidLine, Qt::RoundCap));
-    const qreal xx = w-13.0, xy = kHeaderH/2.0, xr = 4.0;
-    p->drawLine(QPointF(xx-xr,xy-xr), QPointF(xx+xr,xy+xr));
-    p->drawLine(QPointF(xx+xr,xy-xr), QPointF(xx-xr,xy+xr));
+    const qreal xx = w - 12.0, xy = kHeaderH / 2.0, xr = 4.0;
+    p->drawLine(QPointF(xx-xr, xy-xr), QPointF(xx+xr, xy+xr));
+    p->drawLine(QPointF(xx+xr, xy-xr), QPointF(xx-xr, xy+xr));
+
+    // ── Pin de conexão no topo central (igual Mira 1 getCardCenter) ──
+    {
+        const qreal px = w / 2.0, py = 0.0, pr = 5.0;
+        QRadialGradient pinGrad(px - pr * 0.3, py - pr * 0.3, pr * 2.2);
+        pinGrad.setColorAt(0.0, m_data.color.lighter(130));
+        pinGrad.setColorAt(1.0, m_data.color.darker(150));
+        p->setPen(QPen(m_data.color.darker(145), 2));
+        p->setBrush(pinGrad);
+        p->setOpacity(0.55);
+        p->drawEllipse(QPointF(px, py), pr, pr);
+        // Anel externo de luz (boxShadow simulado)
+        p->setPen(QPen(QColor(255, 255, 255, 20), 1.5));
+        p->setBrush(Qt::NoBrush);
+        p->drawEllipse(QPointF(px, py), pr + 1.5, pr + 1.5);
+        p->setOpacity(1.0);
+    }
 
     // Placeholder quando vazio
     if (m_textItem && m_textItem->document()->toPlainText().isEmpty()) {
@@ -229,14 +274,46 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
 
 // ── Hit-test ────────────────────────────────────────────────────────────────
 
+// Layout do header (da direita): [×@w-12] [colorDot@w-27] [doc+@w-42] [...] [grip]
 bool CardItem::isOnDeleteBtn(const QPointF& p) const
 {
-    return QRectF(m_data.width-21, 0, 21, kHeaderH).contains(p);
+    return QRectF(m_data.width - 20, 0, 20, kHeaderH).contains(p);
 }
-
+bool CardItem::isOnColorDot(const QPointF& p) const
+{
+    return QRectF(m_data.width - 36, 0, 16, kHeaderH).contains(p);
+}
+bool CardItem::isOnDocBtn(const QPointF& p) const
+{
+    return QRectF(m_data.width - 52, 0, 16, kHeaderH).contains(p);
+}
 bool CardItem::isOnResizeZone(const QPointF& p) const
 {
-    return QRectF(m_data.width-17, m_data.height-17, 17, 17).contains(p);
+    return QRectF(m_data.width - 17, m_data.height - 17, 17, 17).contains(p);
+}
+
+void CardItem::showColorMenu(const QPoint& screenPos)
+{
+    QMenu menu;
+    for (const QColor& c : kNotePalette) {
+        QPixmap px(16, 16); px.fill(c);
+        auto* act = menu.addAction(QIcon(px), QString());
+        act->setData(c.name());
+    }
+    menu.addSeparator();
+    auto* custom = menu.addAction(tr("Personalizada..."));
+
+    QAction* chosen = menu.exec(screenPos);
+    if (!chosen) return;
+    QColor nc = (chosen == custom)
+        ? QColorDialog::getColor(m_data.color, nullptr, tr("Cor do card"))
+        : QColor(chosen->data().toString());
+    if (!nc.isValid()) return;
+    prepareGeometryChange();
+    m_data.color = nc;
+    applyTextColor();
+    update();
+    emit dataChanged(m_data);
 }
 
 // ── Mouse events ────────────────────────────────────────────────────────────
@@ -247,6 +324,18 @@ void CardItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
     if (isOnDeleteBtn(e->pos())) {
         emit deleteRequested(m_data.id);
+        e->accept();
+        return;
+    }
+    if (isOnColorDot(e->pos())) {
+        // Converte posição local → tela para posicionar o menu
+        QPoint screenPos = e->screenPos();
+        showColorMenu(screenPos);
+        e->accept();
+        return;
+    }
+    if (isOnDocBtn(e->pos())) {
+        emit createDocRequested(m_data.id);
         e->accept();
         return;
     }
@@ -309,23 +398,30 @@ void CardItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 {
     const QPointF lp = e->pos();
     const bool onDel    = isOnDeleteBtn(lp);
+    const bool onColor  = isOnColorDot(lp);
+    const bool onDoc    = isOnDocBtn(lp);
     const bool onResize = isOnResizeZone(lp);
     const bool onHeader = lp.y() < kHeaderH;
 
-    if (onDel != m_hoverDelete || onResize != m_hoverResize) {
+    if (onDel != m_hoverDelete || onColor != m_hoverColor ||
+        onDoc != m_hoverDoc || onResize != m_hoverResize) {
         m_hoverDelete = onDel;
+        m_hoverColor  = onColor;
+        m_hoverDoc    = onDoc;
         m_hoverResize = onResize;
         update();
     }
-    if (onDel)         setCursor(Qt::PointingHandCursor);
-    else if (onResize) setCursor(Qt::SizeFDiagCursor);
-    else if (onHeader) setCursor(Qt::OpenHandCursor);
-    else               setCursor(Qt::ArrowCursor);
+    if (onDel || onColor || onDoc) setCursor(Qt::PointingHandCursor);
+    else if (onResize)             setCursor(Qt::SizeFDiagCursor);
+    else if (onHeader)             setCursor(Qt::OpenHandCursor);
+    else                           setCursor(Qt::ArrowCursor);
 }
 
 void CardItem::hoverLeaveEvent(QGraphicsSceneHoverEvent*)
 {
-    if (m_hoverDelete || m_hoverResize) { m_hoverDelete = m_hoverResize = false; update(); }
+    const bool needUpdate = m_hoverDelete || m_hoverColor || m_hoverDoc || m_hoverResize;
+    m_hoverDelete = m_hoverColor = m_hoverDoc = m_hoverResize = false;
+    if (needUpdate) update();
     setCursor(Qt::ArrowCursor);
 }
 
@@ -333,24 +429,5 @@ void CardItem::hoverLeaveEvent(QGraphicsSceneHoverEvent*)
 
 void CardItem::contextMenuEvent(QGraphicsSceneContextMenuEvent* e)
 {
-    QMenu menu;
-    for (const QColor& c : kNotePalette) {
-        QPixmap px(14, 14); px.fill(c);
-        auto* act = menu.addAction(QIcon(px), QString());
-        act->setData(c.name());
-    }
-    menu.addSeparator();
-    auto* custom = menu.addAction(tr("Cor personalizada..."));
-
-    QAction* chosen = menu.exec(e->screenPos());
-    if (!chosen) return;
-    QColor nc = (chosen == custom)
-        ? QColorDialog::getColor(m_data.color, nullptr, tr("Cor do card"))
-        : QColor(chosen->data().toString());
-    if (!nc.isValid()) return;
-    prepareGeometryChange();
-    m_data.color = nc;
-    applyTextColor();
-    update();
-    emit dataChanged(m_data);
+    showColorMenu(e->screenPos());
 }
