@@ -65,5 +65,13 @@
         <file alias="elements/drawer.svg">../src/assets/icons/elements/drawer.svg</file>
         <file alias="elements/manuscript.svg">../src/assets/icons/elements/manuscript.svg</file>
         <file alias="elements/chapter.svg">../src/assets/icons/elements/chapter.svg</file>
+        <file alias="canvasicons/newpost-it.svg">../src/assets/icons/canvasicons/newpost-it.svg</file>
+        <file alias="canvasicons/new-comment.svg">../src/assets/icons/canvasicons/new-comment.svg</file>
+        <file alias="canvasicons/new-image.svg">../src/assets/icons/canvasicons/new-image.svg</file>
+        <file alias="canvasicons/link-doc.svg">../src/assets/icons/canvasicons/link-doc.svg</file>
+        <file alias="canvasicons/add-plan-area.svg">../src/assets/icons/canvasicons/add-plan-area.svg</file>
+        <file alias="canvasicons/add-symbol.svg">../src/assets/icons/canvasicons/add-symbol.svg</file>
+        <file alias="canvasicons/export-plan-area.svg">../src/assets/icons/canvasicons/export-plan-area.svg</file>
+        <file alias="canvasicons/export-all-plan-areas.svg">../src/assets/icons/canvasicons/export-all-plan-areas.svg</file>
     </qresource>
 </RCC>

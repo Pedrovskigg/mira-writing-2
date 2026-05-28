@@ -1,5 +1,6 @@
 #include "LousaPanel.h"
 
+#include "IconUtils.h"
 #include "LousaScene.h"
 #include "LousaView.h"
 #include "Theme.h"
@@ -21,17 +22,31 @@
 #include <QVBoxLayout>
 
 namespace {
-constexpr int kToolbarH = 46;
+constexpr int kToolbarH  = 46;
+constexpr int kBtnSize   = 32;
+constexpr int kIconSize  = 20;
 
-QToolButton* makeBtn(const QString& text, const QString& tip, QWidget* parent)
+QToolButton* makeIconBtn(const QString& tip, QWidget* parent)
 {
     auto* b = new QToolButton(parent);
-    b->setText(text);
+    b->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    b->setAutoRaise(true);
     b->setToolTip(tip);
     b->setObjectName(QStringLiteral("lousaToolBtn"));
+    b->setFixedSize(kBtnSize, kBtnSize);
+    b->setIconSize(QSize(kIconSize, kIconSize));
     b->setCursor(Qt::PointingHandCursor);
-    b->setEnabled(false); // habilitado conforme cada grupo é implementado
+    b->setEnabled(false);
     return b;
+}
+
+QIcon loadLousaIcon(const QString& path)
+{
+    return IconUtils::loadToolbarIcon(
+        path,
+        QColor(Theme::textMuted()),
+        QColor(Theme::textPrimary()),
+        QColor(Theme::textBright()));
 }
 } // namespace
 
@@ -63,17 +78,23 @@ void LousaPanel::buildUi()
     tl->setContentsMargins(10, 0, 10, 0);
     tl->setSpacing(4);
 
-    // Grupo 1 — tipos de card (desabilitados agora, ligados conforme Grupo 1)
-    auto* btnNote  = makeBtn(tr("Post-it"),     tr("Adicionar post-it"),      m_toolbar);
-    auto* btnCmt   = makeBtn(tr("Comentário"),  tr("Adicionar comentário"),   m_toolbar);
-    auto* btnImg   = makeBtn(tr("Imagem"),      tr("Adicionar imagem"),       m_toolbar);
-    auto* btnDoc   = makeBtn(tr("Documento"),   tr("Vincular documento"),     m_toolbar);
-    auto* btnChar  = makeBtn(tr("Personagem"),  tr("Adicionar personagem"),   m_toolbar);
+    // Grupo 1 — tipos de card (desabilitados; habilitados conforme cada grupo)
+    auto* btnNote = makeIconBtn(tr("Post-it"),    m_toolbar);
+    auto* btnCmt  = makeIconBtn(tr("Comentário"), m_toolbar);
+    auto* btnImg  = makeIconBtn(tr("Imagem"),     m_toolbar);
+    auto* btnDoc  = makeIconBtn(tr("Documento"),  m_toolbar);
+    auto* btnChar = makeIconBtn(tr("Personagem"), m_toolbar);
     tl->addWidget(btnNote);
     tl->addWidget(btnCmt);
     tl->addWidget(btnImg);
     tl->addWidget(btnDoc);
     tl->addWidget(btnChar);
+
+    m_iconBindings.append({btnNote, QStringLiteral(":/icons/canvasicons/newpost-it.svg")});
+    m_iconBindings.append({btnCmt,  QStringLiteral(":/icons/canvasicons/new-comment.svg")});
+    m_iconBindings.append({btnImg,  QStringLiteral(":/icons/canvasicons/new-image.svg")});
+    m_iconBindings.append({btnDoc,  QStringLiteral(":/icons/canvasicons/link-doc.svg")});
+    m_iconBindings.append({btnChar, QStringLiteral(":/icons/elements/user.svg")});
 
     // Separador
     auto* sep1 = new QFrame(m_toolbar);
@@ -83,8 +104,10 @@ void LousaPanel::buildUi()
     tl->addWidget(sep1);
 
     // Grupo 3 — zona (desabilitado)
-    auto* btnZone = makeBtn(tr("Zona"), tr("Definir área"), m_toolbar);
+    auto* btnZone = makeIconBtn(tr("Definir área"), m_toolbar);
+    m_iconBindings.append({btnZone, QStringLiteral(":/icons/canvasicons/add-plan-area.svg")});
     tl->addWidget(btnZone);
+
 
     tl->addStretch(1);
 
@@ -143,6 +166,8 @@ void LousaPanel::buildUi()
     connect(m_scene, &QGraphicsScene::changed, this, [this](const QList<QRectF>&) {
         refreshEmptyState();
     });
+
+    reloadIcons();
 }
 
 void LousaPanel::refreshEmptyState()
@@ -219,6 +244,12 @@ void LousaPanel::save() const
     f.commit();
 }
 
+void LousaPanel::reloadIcons()
+{
+    for (const auto& [btn, path] : m_iconBindings)
+        if (btn) btn->setIcon(loadLousaIcon(path));
+}
+
 void LousaPanel::onPickColor()
 {
     if (!m_scene) return;
@@ -269,6 +300,7 @@ void LousaPanel::applyTheme()
          Theme::textMuted(),          // 6
          Theme::accentDanger()));     // 7
 
+    reloadIcons();
     updateColorBtn();
 
     if (m_view) {

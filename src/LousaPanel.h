@@ -1,7 +1,9 @@
 #pragma once
 
-#include <QWidget>
+#include <QList>
+#include <QPair>
 #include <QString>
+#include <QWidget>
 
 class LousaScene;
 class LousaView;
@@ -31,9 +33,12 @@ private slots:
 
 private:
     void buildUi();
+    void reloadIcons();
     void save() const;
     void load();
     void updateColorBtn();
+
+    QList<QPair<QToolButton*, QString>> m_iconBindings;
 
     LousaScene*  m_scene        = nullptr;
     LousaView*   m_view         = nullptr;
