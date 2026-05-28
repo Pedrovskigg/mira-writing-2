@@ -133,6 +133,8 @@ qt_add_executable(mira-writing
     src/LousaTypes.h
     src/CardItem.cpp
     src/CardItem.h
+    src/ConnectionItem.cpp
+    src/ConnectionItem.h
     src/Quotes.cpp
     src/Quotes.h
     src/MainMenuDialog.cpp

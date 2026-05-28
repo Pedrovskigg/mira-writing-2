@@ -19,6 +19,7 @@ public:
     CanvasCard cardData() const;
     void syncFromData();
     void setLinkedHtml(const QString& html);
+    void setSnapping(bool active, const QColor& color = QColor());
 
     QRectF       boundingRect() const override;
     QPainterPath shape()        const override;
@@ -36,6 +37,8 @@ signals:
     void dataChanged(const CanvasCard& data);
     void deleteRequested(const QString& id);
     void createDocRequested(const QString& id);
+    void positionChanged(const QString& id);      // CardItem se moveu na cena
+    void pinDragStarted(const QString& fromId, const QPointF& pinScenePos);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* e)       override;
@@ -45,8 +48,10 @@ protected:
     void hoverMoveEvent(QGraphicsSceneHoverEvent* e)        override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)       override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* e) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private:
+    bool   isOnPin(const QPointF& p) const;
     bool   isOnDeleteBtn(const QPointF& p) const;
     bool   isOnColorDot(const QPointF& p) const;
     bool   isOnDocBtn(const QPointF& p) const;
@@ -62,9 +67,14 @@ private:
     bool   isDark() const;
 
     CanvasCard         m_data;
-    QGraphicsTextItem* m_textItem   = nullptr;
-    QPixmap            m_pixmap;      // image + character photo
-    bool               m_showDesc    = false;
+    QGraphicsTextItem* m_textItem    = nullptr;
+    QPixmap            m_pixmap;       // image + character photo
+    bool               m_showDesc     = false;
+    // Snap glow (waypoint snapping)
+    bool               m_snapping     = false;
+    QColor             m_snapColor;
+    // Pin drag state
+    bool               m_draggingPin  = false;
 
     bool    m_dragging        = false;
     bool    m_resizing        = false;

@@ -1,6 +1,7 @@
 #include "LousaPanel.h"
 
 #include "CardItem.h"
+#include "ConnectionItem.h"
 #include "IconUtils.h"
 #include "ProjectModel.h"
 #include "LousaScene.h"
@@ -313,7 +314,73 @@ void LousaPanel::buildUi()
         if (m_zoomLabel) m_zoomLabel->setText(QStringLiteral("%1%").arg(qRound(z * 100)));
         save();
     });
-    connect(m_scene, &LousaScene::cardDataChanged, this, [this]() { save(); });
+    connect(m_scene, &LousaScene::cardDataChanged,       this, [this]() { save(); });
+    connect(m_scene, &LousaScene::connectionDataChanged, this, [this]() { save(); });
+    connect(m_scene, &LousaScene::pendingConnection, this,
+            [this](const QString& fromId, const QString& toId) {
+        // Paleta igual ao Mira 1 CONN_PALETTE
+        static const QColor kConnPalette[] = {
+            QColor(QStringLiteral("#ffffff")), QColor(QStringLiteral("#6ea8fe")),
+            QColor(QStringLiteral("#f97316")), QColor(QStringLiteral("#34d399")),
+            QColor(QStringLiteral("#f472b6")), QColor(QStringLiteral("#fbbf24")),
+            QColor(QStringLiteral("#a78bfa")), QColor(QStringLiteral("#f87171")),
+        };
+
+        // Popup de cor da conexão — QDialog centrado na janela
+        QDialog dlg(this);
+        dlg.setWindowTitle(tr("Nova conexão"));
+        dlg.setFixedWidth(280);
+        auto* vl = new QVBoxLayout(&dlg);
+        vl->setContentsMargins(14, 12, 14, 12);
+        vl->setSpacing(10);
+
+        auto* title = new QLabel(tr("Cor da conexão"), &dlg);
+        title->setStyleSheet(QStringLiteral("font-size: 11px; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.06em;"));
+        vl->addWidget(title);
+
+        // Grid 4×2 de cores
+        auto* grid = new QWidget(&dlg);
+        auto* gl   = new QHBoxLayout(grid);
+        gl->setSpacing(6); gl->setContentsMargins(0,0,0,0);
+        QColor selectedColor = kConnPalette[0];
+        QList<QPushButton*> swatches;
+        for (const QColor& c : kConnPalette) {
+            auto* btn = new QPushButton(grid);
+            btn->setFixedSize(28, 22);
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setStyleSheet(QStringLiteral(
+                "QPushButton { background: %1; border: 1.5px solid rgba(0,0,0,0.25);"
+                " border-radius: 4px; } "
+                "QPushButton:checked { border: 2px solid #fff; }").arg(c.name()));
+            btn->setCheckable(true);
+            btn->setChecked(c == selectedColor);
+            swatches.append(btn);
+            connect(btn, &QPushButton::clicked, &dlg, [btn, c, &selectedColor, &swatches]() {
+                selectedColor = c;
+                for (auto* s : swatches) s->setChecked(false);
+                btn->setChecked(true);
+            });
+            gl->addWidget(btn);
+        }
+        vl->addWidget(grid);
+
+        auto* bb = new QDialogButtonBox(QDialogButtonBox::Cancel, &dlg);
+        auto* createBtn = bb->addButton(tr("Criar"), QDialogButtonBox::AcceptRole);
+        createBtn->setDefault(true);
+        connect(bb, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+        connect(bb, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+        vl->addWidget(bb);
+
+        if (dlg.exec() != QDialog::Accepted) return;
+
+        // Cria a conexão
+        CanvasConnection conn;
+        conn.id     = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        conn.fromId = fromId;
+        conn.toId   = toId;
+        conn.color  = selectedColor;
+        if (m_scene) m_scene->addConnection(conn);
+    });
 
     // ── Placeholder ──────────────────────────────────────────────────────
     m_emptyLabel = new QLabel(tr("Clique em + para adicionar um card à lousa"), this);
@@ -441,9 +508,22 @@ void LousaPanel::load()
     if (m_zoomLabel) m_zoomLabel->setText(QStringLiteral("%1%").arg(qRound(zoom * 100)));
 
     m_scene->clearCards();
+    m_scene->clearConnections();
     for (const auto& v : root.value(QStringLiteral("cards")).toArray()) {
         const CanvasCard c = cardFromJson(v.toObject());
         if (!c.id.isEmpty()) m_scene->addCard(c);
+    }
+    for (const auto& v : root.value(QStringLiteral("connections")).toArray()) {
+        const QJsonObject o = v.toObject();
+        CanvasConnection conn;
+        conn.id     = o.value(QStringLiteral("id")).toString();
+        conn.fromId = o.value(QStringLiteral("fromId")).toString();
+        conn.toId   = o.value(QStringLiteral("toId")).toString();
+        conn.color  = QColor(o.value(QStringLiteral("color")).toString(QStringLiteral("#ffffff")));
+        for (const auto& wv : o.value(QStringLiteral("waypointCardIds")).toArray())
+            conn.waypointCardIds.append(wv.toString());
+        if (!conn.id.isEmpty() && !conn.fromId.isEmpty() && !conn.toId.isEmpty())
+            m_scene->addConnection(conn);
     }
     refreshEmptyState();
 }
@@ -462,7 +542,19 @@ void LousaPanel::save() const
     root.insert(QStringLiteral("panX"), m_view->scrollPos().x());
     root.insert(QStringLiteral("panY"), m_view->scrollPos().y());
     root.insert(QStringLiteral("cards"),       cards);
-    root.insert(QStringLiteral("connections"), QJsonArray{});
+    QJsonArray connections;
+    for (const CanvasConnection& conn : m_scene->allConnectionData()) {
+        QJsonObject o;
+        o.insert(QStringLiteral("id"),     conn.id);
+        o.insert(QStringLiteral("fromId"), conn.fromId);
+        o.insert(QStringLiteral("toId"),   conn.toId);
+        o.insert(QStringLiteral("color"),  conn.color.name());
+        QJsonArray wpts;
+        for (const QString& wid : conn.waypointCardIds) wpts.append(wid);
+        o.insert(QStringLiteral("waypointCardIds"), wpts);
+        connections.append(o);
+    }
+    root.insert(QStringLiteral("connections"), connections);
     root.insert(QStringLiteral("zones"),       QJsonArray{});
 
     QSaveFile f(QDir::cleanPath(m_projectRoot + QStringLiteral("/canvas.json")));

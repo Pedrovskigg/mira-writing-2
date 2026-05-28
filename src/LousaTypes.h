@@ -14,6 +14,7 @@ struct CanvasCard {
     QString title;
     QString content;
     QColor  color   = QColor(QStringLiteral("#f7d070"));
+    QString linkedToConn;    // waypoint: ID da conexão à qual está ancorado ("" = livre)
     QString description;     // image: legenda/descrição
     QString photoDataUrl;    // character
     QString linkedItemId;    // doc, character

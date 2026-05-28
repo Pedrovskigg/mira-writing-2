@@ -485,6 +485,23 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
         return;
     }
 
+    // Glow de snap (waypoint snapping) — anel colorido ao redor do card
+    if (m_snapping && m_snapColor.isValid()) {
+        p->setPen(Qt::NoPen);
+        p->setBrush(Qt::NoBrush);
+        // Anel externo brilhante
+        QPen snapPen(m_snapColor, 3.0);
+        p->setPen(snapPen);
+        p->setOpacity(0.85);
+        p->drawRoundedRect(QRectF(-3, -3, w+6, h+6), kRadius+2, kRadius+2);
+        // Glow difuso
+        QPen glowPen(m_snapColor, 12.0);
+        p->setPen(glowPen);
+        p->setOpacity(0.22);
+        p->drawRoundedRect(QRectF(-6, -6, w+12, h+12), kRadius+4, kRadius+4);
+        p->setOpacity(1.0);
+    }
+
     // Sombra (note/comment)
     p->setPen(Qt::NoPen);
     p->setBrush(QColor(0, 0, 0, 40));
@@ -609,6 +626,27 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
 
 // ── Hit-test ────────────────────────────────────────────────────────────────
 
+void CardItem::setSnapping(bool active, const QColor& color)
+{
+    if (m_snapping == active && m_snapColor == color) return;
+    m_snapping  = active;
+    m_snapColor = color;
+    update();
+}
+
+QVariant CardItem::itemChange(GraphicsItemChange change, const QVariant& value)
+{
+    if (change == ItemPositionHasChanged)
+        emit positionChanged(m_data.id);
+    return QGraphicsObject::itemChange(change, value);
+}
+
+bool CardItem::isOnPin(const QPointF& p) const
+{
+    // Pin está em (w/2, 0) — hit zone raio 10
+    return QLineF(p, QPointF(m_data.width / 2.0, 0.0)).length() <= 10.0;
+}
+
 // Layout do header (da direita): [×@w-12] [colorDot@w-27] [doc+@w-42] [...] [grip]
 bool CardItem::isOnDeleteBtn(const QPointF& p) const
 {
@@ -661,6 +699,15 @@ void CardItem::showColorMenu(const QPoint& screenPos)
 void CardItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     if (e->button() != Qt::LeftButton) { e->ignore(); return; }
+
+    // Pin drag — tem prioridade sobre tudo (funciona em qualquer tipo de card)
+    if (isOnPin(e->pos())) {
+        m_draggingPin = true;
+        const QPointF pinScene = mapToScene(QPointF(m_data.width / 2.0, 0.0));
+        emit pinDragStarted(m_data.id, pinScene);
+        e->accept();
+        return;
+    }
 
     // Doc / character: drag de qualquer ponto, sem área de texto editável
     const bool isDarkCard = (m_data.type == QStringLiteral("doc") ||
@@ -729,6 +776,13 @@ void CardItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 
 void CardItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
+    if (m_draggingPin) {
+        // O LousaScene recebe o evento via pinDragStarted e controla a ghost line.
+        // O CardItem apenas propaga a posição atual do cursor em cena.
+        if (scene()) scene()->update();
+        e->accept();
+        return;
+    }
     if (m_dragging) {
         setPos(m_pressItemOrigin + (e->scenePos() - m_pressScene));
         e->accept();
@@ -749,6 +803,12 @@ void CardItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 
 void CardItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 {
+    if (m_draggingPin) {
+        m_draggingPin = false;
+        // LousaScene finalizará a conexão via o evento da view — não fazemos nada aqui.
+        e->accept();
+        return;
+    }
     if (m_dragging || m_resizing) {
         m_dragging = m_resizing = false;
         setCursor(Qt::ArrowCursor);
@@ -780,7 +840,8 @@ void CardItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
         m_hoverResize = onResize;
         update();
     }
-    if (onDel || onColor || onDoc) setCursor(Qt::PointingHandCursor);
+    if (isOnPin(lp))               setCursor(Qt::CrossCursor);
+    else if (onDel || onColor || onDoc) setCursor(Qt::PointingHandCursor);
     else if (onResize)             setCursor(Qt::SizeFDiagCursor);
     else if (onHeader)             setCursor(Qt::OpenHandCursor);
     else                           setCursor(Qt::ArrowCursor);
