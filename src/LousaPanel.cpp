@@ -2,6 +2,7 @@
 
 #include "CardItem.h"
 #include "IconUtils.h"
+#include "ProjectModel.h"
 #include "LousaScene.h"
 #include "LousaView.h"
 #include "Theme.h"
@@ -9,6 +10,10 @@
 #include <QBuffer>
 #include <QCloseEvent>
 #include <QColorDialog>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QLineEdit>
+#include <QListWidget>
 #include <QDir>
 #include <QFileDialog>
 #include <QImage>
@@ -91,7 +96,9 @@ void LousaPanel::buildUi()
     auto* btnImg  = makeIconBtn(tr("Imagem"),     m_toolbar);
     btnImg->setEnabled(true);
     auto* btnDoc  = makeIconBtn(tr("Documento"),  m_toolbar);
+    btnDoc->setEnabled(true);
     auto* btnChar = makeIconBtn(tr("Personagem"), m_toolbar);
+    btnChar->setEnabled(true);
     tl->addWidget(btnNote);
     tl->addWidget(btnCmt);
     tl->addWidget(btnImg);
@@ -124,6 +131,119 @@ void LousaPanel::buildUi()
         img.save(&buf, "JPEG", 82);
         CanvasCard c = nextCardData(QStringLiteral("image"));
         c.content = QString::fromLatin1(ba.toBase64());
+        m_scene->addCard(c);
+        refreshEmptyState();
+    });
+
+    // ── Doc picker ──────────────────────────────────────────────────────────
+    connect(btnDoc, &QToolButton::clicked, this, [this]() {
+        if (!m_scene || !m_projectModel) return;
+        // Coleta todos os itens com html de todas as gavetas
+        struct Entry { QString drawerKey, drawerName, itemId, title, html; };
+        QVector<Entry> entries;
+        for (const Drawer& d : m_projectModel->drawers())
+            for (const DrawerItem& it : d.items)
+                entries.append({d.key, d.title, it.id, it.title, it.html});
+        if (entries.isEmpty()) return;
+
+        QDialog dlg(this);
+        dlg.setWindowTitle(tr("Vincular documento"));
+        dlg.resize(400, 340);
+        auto* vl = new QVBoxLayout(&dlg);
+        auto* search = new QLineEdit(&dlg);
+        search->setPlaceholderText(tr("Buscar..."));
+        vl->addWidget(search);
+        auto* list = new QListWidget(&dlg);
+        list->setAlternatingRowColors(true);
+        auto populate = [&](const QString& q) {
+            list->clear();
+            const QString needle = q.trimmed().toLower();
+            for (const Entry& e : entries) {
+                if (!needle.isEmpty() && !e.title.toLower().contains(needle)
+                    && !e.drawerName.toLower().contains(needle)) continue;
+                auto* item = new QListWidgetItem(
+                    QStringLiteral("%1 — %2").arg(e.title.isEmpty() ? tr("(sem título)") : e.title, e.drawerName));
+                item->setData(Qt::UserRole, QVariant::fromValue<int>(int(&e - entries.data())));
+                list->addItem(item);
+            }
+        };
+        populate(QString());
+        connect(search, &QLineEdit::textChanged, list, [&](const QString& t) { populate(t); });
+        connect(list, &QListWidget::itemDoubleClicked, &dlg, &QDialog::accept);
+        vl->addWidget(list, 1);
+        auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+        connect(bb, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+        connect(bb, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+        vl->addWidget(bb);
+        if (dlg.exec() != QDialog::Accepted || !list->currentItem()) return;
+
+        const int idx = list->currentItem()->data(Qt::UserRole).toInt();
+        if (idx < 0 || idx >= entries.size()) return;
+        const Entry& e = entries[idx];
+        CanvasCard c = nextCardData(QStringLiteral("doc"));
+        c.title = e.title;
+        c.linkedDrawerKey = e.drawerKey;
+        c.linkedItemId    = e.itemId;
+        c.content         = e.html; // HTML em memória; não persiste no canvas.json
+        m_scene->addCard(c);
+        refreshEmptyState();
+    });
+
+    // ── Character picker ─────────────────────────────────────────────────────
+    connect(btnChar, &QToolButton::clicked, this, [this]() {
+        if (!m_scene || !m_projectModel) return;
+        struct CEntry { QString drawerKey, drawerName, itemId, title, photo; };
+        QVector<CEntry> entries;
+        for (const Drawer& d : m_projectModel->drawers()) {
+            if (d.drawerElementType != QStringLiteral("character")) continue;
+            for (const DrawerItem& it : d.items)
+                entries.append({d.key, d.title, it.id, it.title, it.role}); // role = photo url
+        }
+        // Fallback: all items with elementType=character
+        if (entries.isEmpty()) {
+            for (const Drawer& d : m_projectModel->drawers())
+                for (const DrawerItem& it : d.items)
+                    if (it.elementType == QStringLiteral("character"))
+                        entries.append({d.key, d.title, it.id, it.title, it.role});
+        }
+        if (entries.isEmpty()) return;
+
+        QDialog dlg(this);
+        dlg.setWindowTitle(tr("Adicionar personagem"));
+        dlg.resize(380, 320);
+        auto* vl = new QVBoxLayout(&dlg);
+        auto* search = new QLineEdit(&dlg);
+        search->setPlaceholderText(tr("Buscar personagem..."));
+        vl->addWidget(search);
+        auto* list = new QListWidget(&dlg);
+        auto populate = [&](const QString& q) {
+            list->clear();
+            const QString needle = q.trimmed().toLower();
+            for (const CEntry& e : entries) {
+                if (!needle.isEmpty() && !e.title.toLower().contains(needle)) continue;
+                auto* item = new QListWidgetItem(e.title.isEmpty() ? tr("(sem nome)") : e.title);
+                item->setData(Qt::UserRole, QVariant::fromValue<int>(int(&e - entries.data())));
+                list->addItem(item);
+            }
+        };
+        populate(QString());
+        connect(search, &QLineEdit::textChanged, list, [&](const QString& t) { populate(t); });
+        connect(list, &QListWidget::itemDoubleClicked, &dlg, &QDialog::accept);
+        vl->addWidget(list, 1);
+        auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+        connect(bb, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+        connect(bb, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+        vl->addWidget(bb);
+        if (dlg.exec() != QDialog::Accepted || !list->currentItem()) return;
+
+        const int idx = list->currentItem()->data(Qt::UserRole).toInt();
+        if (idx < 0 || idx >= entries.size()) return;
+        const CEntry& e = entries[idx];
+        CanvasCard c = nextCardData(QStringLiteral("character"));
+        c.title           = e.title;
+        c.linkedDrawerKey = e.drawerKey;
+        c.linkedItemId    = e.itemId;
+        c.photoDataUrl    = e.photo; // base64 da foto do personagem
         m_scene->addCard(c);
         refreshEmptyState();
     });
@@ -236,6 +356,26 @@ void LousaPanel::closeEvent(QCloseEvent* event)
     emit closeRequested();
 }
 
+void LousaPanel::setProjectModel(ProjectModel* model)
+{
+    m_projectModel = model;
+}
+
+void LousaPanel::refreshDocCards()
+{
+    if (!m_scene || !m_projectModel) return;
+    for (CardItem* item : m_scene->cardItems()) {
+        const CanvasCard d = item->cardData();
+        if (d.type != QStringLiteral("doc") && d.type != QStringLiteral("character")) continue;
+        const DrawerItem* di = m_projectModel->findDrawerItem(d.linkedItemId);
+        if (!di) continue;
+        if (d.type == QStringLiteral("doc"))
+            item->setLinkedHtml(di->html);
+        else
+            item->setLinkedHtml(di->html); // photo já está em photoDataUrl
+    }
+}
+
 void LousaPanel::setProjectRoot(const QString& root)
 {
     if (m_projectRoot == root) return;
@@ -252,6 +392,7 @@ static CanvasCard cardFromJson(const QJsonObject& o)
     c.y       = o.value(QStringLiteral("y")).toDouble();
     c.width   = o.value(QStringLiteral("width")).toDouble(200);
     c.height  = o.value(QStringLiteral("height")).toDouble(160);
+    c.title   = o.value(QStringLiteral("title")).toString();
     c.content = o.value(QStringLiteral("content")).toString();
     c.color   = QColor(o.value(QStringLiteral("color")).toString(QStringLiteral("#ffd060")));
     if (!c.color.isValid()) c.color = QColor(QStringLiteral("#ffd060"));
@@ -270,6 +411,7 @@ static QJsonObject cardToJson(const CanvasCard& c)
     o.insert(QStringLiteral("y"),               c.y);
     o.insert(QStringLiteral("width"),           c.width);
     o.insert(QStringLiteral("height"),          c.height);
+    o.insert(QStringLiteral("title"),           c.title);
     o.insert(QStringLiteral("content"),         c.content);
     o.insert(QStringLiteral("color"),           c.color.name());
     o.insert(QStringLiteral("description"),      c.description);
@@ -346,7 +488,13 @@ CanvasCard LousaPanel::nextCardData(const QString& type) const
         c.color  = QColor(QStringLiteral("#a78bfa"));
     } else if (type == QStringLiteral("image")) {
         c.width  = 220; c.height = 200;
-        c.color  = QColor(QStringLiteral("#34d399")); // não usado como bg
+        c.color  = QColor(QStringLiteral("#34d399"));
+    } else if (type == QStringLiteral("doc")) {
+        c.width  = 240; c.height = 220;
+        c.color  = QColor(QStringLiteral("#60a5fa"));
+    } else if (type == QStringLiteral("character")) {
+        c.width  = 160; c.height = 200;
+        c.color  = QColor(QStringLiteral("#f97316"));
     } else { // note (default)
         c.width  = 200; c.height = 170;
         c.color  = QColor(QStringLiteral("#ffd060"));

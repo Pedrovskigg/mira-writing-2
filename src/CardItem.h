@@ -18,6 +18,7 @@ public:
 
     CanvasCard cardData() const;
     void syncFromData();
+    void setLinkedHtml(const QString& html);
 
     QRectF       boundingRect() const override;
     QPainterPath shape()        const override;
@@ -61,9 +62,9 @@ private:
     bool   isDark() const;
 
     CanvasCard         m_data;
-    QGraphicsTextItem* m_textItem = nullptr;
-    QPixmap            m_pixmap;
-    bool               m_showDesc = false;
+    QGraphicsTextItem* m_textItem   = nullptr;
+    QPixmap            m_pixmap;      // image + character photo
+    bool               m_showDesc    = false;
 
     bool    m_dragging        = false;
     bool    m_resizing        = false;

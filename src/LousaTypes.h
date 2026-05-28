@@ -11,6 +11,7 @@ struct CanvasCard {
     qreal   y       = 0;
     qreal   width   = 200;
     qreal   height  = 160;
+    QString title;
     QString content;
     QColor  color   = QColor(QStringLiteral("#f7d070"));
     QString description;     // image: legenda/descrição

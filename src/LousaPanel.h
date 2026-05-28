@@ -20,6 +20,8 @@ public:
     explicit LousaPanel(QWidget* parent = nullptr);
 
     void setProjectRoot(const QString& root);
+    void setProjectModel(class ProjectModel* model);
+    void refreshDocCards();
     void refreshEmptyState();
 
 signals:
@@ -50,5 +52,6 @@ private:
     QLabel*      m_emptyLabel   = nullptr;
     QLabel*      m_zoomLabel    = nullptr;
 
-    QString m_projectRoot;
+    QString        m_projectRoot;
+    class ProjectModel* m_projectModel = nullptr;
 };

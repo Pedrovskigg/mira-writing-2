@@ -81,35 +81,43 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
     setAcceptHoverEvents(true);
     setPos(m_data.x, m_data.y);
 
-    auto* bti  = new BodyTextItem(this);
-    m_textItem = bti;
-    m_textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
-    m_textItem->setAcceptHoverEvents(false); // hover fica no CardItem
-    const QString initialText = (m_data.type == QStringLiteral("image"))
-        ? m_data.description : m_data.content;
-    m_textItem->document()->setPlainText(initialText);
+    const bool needsTextItem = (m_data.type != QStringLiteral("doc") &&
+                                m_data.type != QStringLiteral("character"));
+    if (needsTextItem) {
+        auto* bti  = new BodyTextItem(this);
+        m_textItem = bti;
+        m_textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
+        m_textItem->setAcceptHoverEvents(false);
+        const QString initialText = (m_data.type == QStringLiteral("image"))
+            ? m_data.description : m_data.content;
+        m_textItem->document()->setPlainText(initialText);
+        QTextOption opt;
+        opt.setAlignment(Qt::AlignLeft);
+        opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+        m_textItem->document()->setDefaultTextOption(opt);
+        m_textItem->document()->setDocumentMargin(0);
+        updateTextItem();
+        applyTextColor();
 
-    QTextOption opt;
-    opt.setAlignment(Qt::AlignLeft);
-    opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-    m_textItem->document()->setDefaultTextOption(opt);
-    m_textItem->document()->setDocumentMargin(0);
-
-    updateTextItem();
-    applyTextColor();
-
-    if (m_data.type == QStringLiteral("image")) {
-        loadPixmapFromContent();
-        m_textItem->setVisible(false); // começa escondido; aparece no duplo-clique
-        connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
-            m_data.description = m_textItem->document()->toPlainText();
-            emit dataChanged(m_data);
-        });
+        if (m_data.type == QStringLiteral("image")) {
+            loadPixmapFromContent();
+            m_textItem->setVisible(false);
+            connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+                m_data.description = m_textItem->document()->toPlainText();
+                emit dataChanged(m_data);
+            });
+        } else {
+            connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+                m_data.content = m_textItem->document()->toPlainText();
+                emit dataChanged(m_data);
+            });
+        }
     } else {
-        connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
-            m_data.content = m_textItem->document()->toPlainText();
-            emit dataChanged(m_data);
-        });
+        // doc / character: sem BodyTextItem — conteúdo renderizado pelo paint()
+        if (m_data.type == QStringLiteral("character") && !m_data.photoDataUrl.isEmpty()) {
+            const QByteArray ba = QByteArray::fromBase64(m_data.photoDataUrl.toLatin1());
+            m_pixmap.loadFromData(ba);
+        }
     }
 }
 
@@ -194,6 +202,12 @@ void CardItem::applyTextColor()
         ? QColor(255, 255, 255, 220)
         : contrastColor();
     m_textItem->setDefaultTextColor(tc);
+}
+
+void CardItem::setLinkedHtml(const QString& html)
+{
+    m_data.content = html;
+    update();
 }
 
 void CardItem::loadPixmapFromContent()
@@ -318,7 +332,157 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
         p->setOpacity(0.55);
         p->drawEllipse(QPointF(px, py), pr, pr);
         p->setOpacity(1.0);
-        return; // para aqui — não desenha o resto do paint()
+        return;
+    }
+
+    // ── Doc card ─────────────────────────────────────────────────────────────
+    if (m_data.type == QStringLiteral("doc")) {
+        const QColor accentColor = m_data.color; // #60a5fa
+        // Sombra
+        p->setPen(Qt::NoPen);
+        p->setBrush(QColor(0, 0, 0, 40));
+        p->drawRoundedRect(QRectF(3, 5, w, h), 10, 10);
+        // Fundo
+        p->setBrush(QColor(QStringLiteral("#1c1c24")));
+        p->setPen(QPen(QColor(255,255,255,25), 1));
+        p->drawRoundedRect(QRectF(0, 0, w, h), 10, 10);
+        // Borda top colorida (3px)
+        p->setPen(QPen(accentColor, 3));
+        p->setBrush(Qt::NoBrush);
+        p->drawLine(QPointF(kRadius, 1.5), QPointF(w - kRadius, 1.5));
+
+        // Header bar
+        constexpr qreal kDocH = 26.0;
+        p->setPen(Qt::NoPen);
+        p->setBrush(QColor(0,0,0,38));
+        p->drawRect(QRectF(0, 0, w, kDocH));
+
+        // Título em azul
+        p->setPen(accentColor);
+        p->setFont(QFont(QStringLiteral("Segoe UI"), 10, QFont::DemiBold));
+        p->drawText(QRectF(8, 0, w - 28, kDocH), Qt::AlignVCenter | Qt::AlignLeft,
+                    m_data.title.isEmpty() ? tr("Documento") : m_data.title);
+
+        // × button
+        const QColor xc(255,255,255, m_hoverDelete ? 220 : 76);
+        p->setPen(QPen(xc, 1.2, Qt::SolidLine, Qt::RoundCap));
+        const qreal xx = w-13, xy = kDocH/2;
+        p->drawLine(QPointF(xx-4,xy-4), QPointF(xx+4,xy+4));
+        p->drawLine(QPointF(xx+4,xy-4), QPointF(xx-4,xy+4));
+
+        // Drawer name badge
+        p->setPen(QColor(255,255,255,64));
+        p->setFont(QFont(QStringLiteral("Segoe UI"), 8, -1, true));
+        p->drawText(QRectF(8, kDocH, w-16, 18), Qt::AlignVCenter | Qt::AlignLeft,
+                    m_data.linkedDrawerKey.isEmpty() ? QString() : m_data.linkedDrawerKey);
+
+        // HTML content via QTextDocument
+        constexpr qreal kDocContentY = kDocH + 20.0;
+        if (!m_data.content.isEmpty()) {
+            QTextDocument doc;
+            doc.setDefaultFont(QFont(QStringLiteral("Segoe UI"), 9));
+            doc.setTextWidth(w - 18);
+            doc.setHtml(m_data.content);
+            p->save();
+            p->setClipRect(QRectF(0, kDocContentY, w, h - kDocContentY - 6));
+            p->setPen(QColor(255,255,255,217));
+            p->translate(9, kDocContentY);
+            doc.drawContents(p, QRectF(0, 0, w-18, h - kDocContentY - 6));
+            p->restore();
+        } else {
+            p->setPen(QColor(255,255,255,64));
+            p->setFont(QFont(QStringLiteral("Segoe UI"), 10));
+            p->drawText(QRectF(0, kDocH, w, h-kDocH), Qt::AlignCenter, tr("documento vazio"));
+        }
+        // Resize handle
+        const QColor rhD(255,255,255, int((m_hoverResize ? 0.7 : 0.25)*255));
+        p->setPen(QPen(rhD, 1.5, Qt::SolidLine, Qt::RoundCap));
+        const qreal ox = w-13, oy = h-13;
+        p->drawLine(QPointF(ox-7,oy), QPointF(ox,oy-7));
+        p->drawLine(QPointF(ox-4,oy), QPointF(ox,oy-4));
+        p->drawLine(QPointF(ox-1,oy), QPointF(ox,oy-1));
+        // Pin
+        const qreal px = w/2.0, py = 0.0, pr = 5.0;
+        QRadialGradient pg(px-pr*0.3, py-pr*0.3, pr*2.2);
+        pg.setColorAt(0, accentColor.lighter(130));
+        pg.setColorAt(1, accentColor.darker(160));
+        p->setPen(QPen(accentColor.darker(140), 2));
+        p->setBrush(pg); p->setOpacity(0.55);
+        p->drawEllipse(QPointF(px,py), pr, pr); p->setOpacity(1.0);
+        return;
+    }
+
+    // ── Character card ───────────────────────────────────────────────────────
+    if (m_data.type == QStringLiteral("character")) {
+        const QColor accent = m_data.color; // #f97316 orange
+        // Sombra
+        p->setPen(Qt::NoPen); p->setBrush(QColor(0,0,0,40));
+        p->drawRoundedRect(QRectF(3,5,w,h), 10, 10);
+        // Fundo escuro
+        p->setPen(QPen(QColor(255,255,255,25), 1));
+        p->setBrush(QColor(QStringLiteral("#111111")));
+        p->drawRoundedRect(QRectF(0,0,w,h), 10, 10);
+        // Borda top
+        p->setPen(QPen(accent, 3)); p->setBrush(Qt::NoBrush);
+        p->drawLine(QPointF(kRadius,1.5), QPointF(w-kRadius,1.5));
+
+        // Foto ou iniciais
+        p->save();
+        QPainterPath clip; clip.addRoundedRect(QRectF(0,0,w,h), 10, 10);
+        p->setClipPath(clip);
+        if (!m_pixmap.isNull()) {
+            const qreal iw=m_pixmap.width(), ih=m_pixmap.height();
+            const qreal scale=qMax(w/iw, h/ih);
+            const qreal sw=iw*scale, sh=ih*scale;
+            p->drawPixmap(QRectF((w-sw)/2,(h-sh)/2,sw,sh), m_pixmap, QRectF(0,0,iw,ih));
+        } else {
+            // Iniciais com fundo da cor accent
+            p->setBrush(accent); p->setPen(Qt::NoPen);
+            p->drawRect(QRectF(0,0,w,h));
+            const QString name = m_data.title;
+            const QStringList parts = name.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+            QString initials;
+            for (int i = 0; i < qMin(int(parts.size()), 2); ++i)
+                if (!parts[i].isEmpty()) initials += parts[i][0].toUpper();
+            if (initials.isEmpty()) initials = QStringLiteral("?");
+            p->setPen(calcIsDark(accent) ? QColor(255,255,255,220) : QColor(0,0,0,180));
+            p->setFont(QFont(QStringLiteral("Segoe UI"), 28, QFont::Bold));
+            p->drawText(QRectF(0,0,w,h), Qt::AlignCenter, initials);
+        }
+        p->restore();
+
+        // Overlay de nome no topo (se tem título)
+        if (!m_data.title.isEmpty()) {
+            QLinearGradient hg(0,0,0,32);
+            hg.setColorAt(0, QColor(0,0,0,115)); hg.setColorAt(1, QColor(0,0,0,0));
+            p->setPen(Qt::NoPen); p->setBrush(hg);
+            p->drawRect(QRectF(0,0,w,32));
+            p->setPen(QColor(255,255,255,220));
+            p->setFont(QFont(QStringLiteral("Segoe UI"), 10, QFont::DemiBold));
+            p->drawText(QRectF(8,0,w-28,28), Qt::AlignVCenter|Qt::AlignLeft, m_data.title);
+        }
+
+        // × no canto
+        const QColor xB = m_hoverDelete ? QColor(0,0,0,180) : QColor(0,0,0,115);
+        p->setPen(Qt::NoPen); p->setBrush(xB);
+        p->drawRoundedRect(QRectF(w-24,4,20,20),4,4);
+        const QColor xc(255,255,255, m_hoverDelete ? 220 : 127);
+        p->setPen(QPen(xc,1.2,Qt::SolidLine,Qt::RoundCap));
+        p->drawLine(QPointF(w-14-4,10),QPointF(w-14+4,18));
+        p->drawLine(QPointF(w-14+4,10),QPointF(w-14-4,18));
+        // Resize + pin
+        const QColor rhC(255,255,255, int((m_hoverResize?0.7:0.35)*255));
+        p->setPen(QPen(rhC,1.5,Qt::SolidLine,Qt::RoundCap));
+        const qreal ox=w-13, oy=h-13;
+        p->drawLine(QPointF(ox-7,oy),QPointF(ox,oy-7));
+        p->drawLine(QPointF(ox-4,oy),QPointF(ox,oy-4));
+        p->drawLine(QPointF(ox-1,oy),QPointF(ox,oy-1));
+        const qreal px=w/2.0, py=0.0, pr=5.0;
+        QRadialGradient pg(px-pr*0.3,py-pr*0.3,pr*2.2);
+        pg.setColorAt(0, accent.lighter(130)); pg.setColorAt(1, accent.darker(160));
+        p->setPen(QPen(accent.darker(140),2)); p->setBrush(pg);
+        p->setOpacity(0.55); p->drawEllipse(QPointF(px,py),pr,pr); p->setOpacity(1.0);
+        return;
     }
 
     // Sombra (note/comment)
@@ -497,6 +661,20 @@ void CardItem::showColorMenu(const QPoint& screenPos)
 void CardItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     if (e->button() != Qt::LeftButton) { e->ignore(); return; }
+
+    // Doc / character: drag de qualquer ponto, sem área de texto editável
+    const bool isDarkCard = (m_data.type == QStringLiteral("doc") ||
+                             m_data.type == QStringLiteral("character"));
+    if (isDarkCard) {
+        if (isOnDeleteBtn(e->pos())) { emit deleteRequested(m_data.id); e->accept(); return; }
+        if (isOnResizeZone(e->pos())) {
+            m_resizing = true; m_pressScene = e->scenePos();
+            m_pressSize = QSizeF(m_data.width, m_data.height);
+            e->accept(); return;
+        }
+        m_dragging = true; m_pressScene = e->scenePos(); m_pressItemOrigin = pos();
+        setCursor(Qt::ClosedHandCursor); e->accept(); return;
+    }
 
     // Imagem: interação própria
     if (m_data.type == QStringLiteral("image")) {

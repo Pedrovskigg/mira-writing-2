@@ -22,6 +22,7 @@ public:
     void      removeCard(const QString& id);
     void      clearCards();
     QList<CanvasCard> allCardData() const;
+    const QList<CardItem*>& cardItems() const { return m_cards; }
 
 signals:
     void cardDataChanged();
