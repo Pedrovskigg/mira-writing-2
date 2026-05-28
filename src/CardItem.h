@@ -26,6 +26,7 @@ public:
     static constexpr qreal kFoldSize = 20.0;
     static constexpr qreal kRadius   =  8.0;
     static constexpr qreal kShadow   =  6.0;
+    static constexpr qreal kTailH    = 12.0;  // comment: altura do rabinho
     static constexpr qreal kMinW     = 120.0;
     static constexpr qreal kMinH     =  80.0;
 
@@ -50,7 +51,8 @@ private:
     void   showColorMenu(const QPoint& screenPos);
     void   updateTextItem();
     void   applyTextColor();
-    QColor contrastColor() const;
+    QColor bodyColor() const;      // cor de fundo da área de texto
+    QColor contrastColor() const;  // cor de texto sobre bodyColor()
     bool   isDark() const;
 
     CanvasCard         m_data;

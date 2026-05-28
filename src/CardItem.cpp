@@ -23,6 +23,12 @@ const QColor kNotePalette[] = {
     QColor(QStringLiteral("#a8e6cf")), QColor(QStringLiteral("#87ceeb")),
     QColor(QStringLiteral("#c9b1ff")), QColor(QStringLiteral("#f8f8f8")),
 };
+const QColor kCommentPalette[] = {
+    QColor(QStringLiteral("#a78bfa")), QColor(QStringLiteral("#60a5fa")),
+    QColor(QStringLiteral("#f472b6")), QColor(QStringLiteral("#34d399")),
+    QColor(QStringLiteral("#fb923c")), QColor(QStringLiteral("#94a3b8")),
+    QColor(QStringLiteral("#fbbf24")), QColor(QStringLiteral("#f87171")),
+};
 
 // Subclasse com boundingRect fixo — garante que toda a área do card captura
 // cliques para edição, independente do tamanho real do texto.
@@ -115,9 +121,10 @@ void CardItem::syncFromData()
 
 QRectF CardItem::boundingRect() const
 {
+    const qreal extraH = (m_data.type == QStringLiteral("comment")) ? kTailH : 0.0;
     return QRectF(-kShadow, -kShadow,
                   m_data.width  + kShadow * 2,
-                  m_data.height + kShadow * 2);
+                  m_data.height + extraH + kShadow * 2);
 }
 
 QPainterPath CardItem::shape() const
@@ -143,11 +150,21 @@ void CardItem::updateTextItem()
 
 // ── Cores ──────────────────────────────────────────────────────────────────
 
-bool   CardItem::isDark() const { return calcIsDark(m_data.color); }
+bool CardItem::isDark() const { return calcIsDark(m_data.color); }
+
+QColor CardItem::bodyColor() const
+{
+    // comment: corpo tem cor levemente escurecida (igual Mira 1: darkenHex 0.28)
+    return (m_data.type == QStringLiteral("comment"))
+        ? m_data.color.darker(140)
+        : m_data.color;
+}
 
 QColor CardItem::contrastColor() const
 {
-    return isDark() ? QColor(255, 255, 255, 220) : QColor(0, 0, 0, 180);
+    // Contraste calculado sobre bodyColor (onde o texto está)
+    const QColor bg = bodyColor();
+    return calcIsDark(bg) ? QColor(255, 255, 255, 220) : QColor(0, 0, 0, 180);
 }
 
 void CardItem::applyTextColor()
@@ -174,6 +191,22 @@ void CardItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*)
     // Fundo
     p->setBrush(bg);
     p->drawRoundedRect(QRectF(0, 0, w, h), kRadius, kRadius);
+
+    // Comment: área de corpo com cor escurecida + rabinho abaixo
+    if (m_data.type == QStringLiteral("comment")) {
+        p->save();
+        p->setClipPath(shape()); // clips ao contorno arredondado do card
+        p->fillRect(QRectF(0, kHeaderH, w, h - kHeaderH), m_data.color.darker(140));
+        p->restore();
+
+        // Rabinho (CSS border trick → triângulo apontando para baixo)
+        const qreal tx = 22.0, tw = kTailH * 1.2, th = kTailH;
+        QPolygonF tail;
+        tail << QPointF(tx, h) << QPointF(tx + tw, h) << QPointF(tx + tw / 2.0, h + th);
+        p->setPen(Qt::NoPen);
+        p->setBrush(m_data.color);
+        p->drawPolygon(tail);
+    }
 
     // Separador do header
     const QColor sep = isDark() ? QColor(255,255,255,30) : QColor(0,0,0,18);
@@ -294,8 +327,11 @@ bool CardItem::isOnResizeZone(const QPointF& p) const
 
 void CardItem::showColorMenu(const QPoint& screenPos)
 {
+    const bool isComment = (m_data.type == QStringLiteral("comment"));
+    const QColor* palette = isComment ? kCommentPalette : kNotePalette;
     QMenu menu;
-    for (const QColor& c : kNotePalette) {
+    for (int i = 0; i < 8; ++i) {
+        const QColor& c = palette[i];
         QPixmap px(16, 16); px.fill(c);
         auto* act = menu.addAction(QIcon(px), QString());
         act->setData(c.name());

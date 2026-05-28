@@ -84,6 +84,7 @@ void LousaPanel::buildUi()
     auto* btnNote = makeIconBtn(tr("Post-it"),    m_toolbar);
     btnNote->setEnabled(true);
     auto* btnCmt  = makeIconBtn(tr("Comentário"), m_toolbar);
+    btnCmt->setEnabled(true);
     auto* btnImg  = makeIconBtn(tr("Imagem"),     m_toolbar);
     auto* btnDoc  = makeIconBtn(tr("Documento"),  m_toolbar);
     auto* btnChar = makeIconBtn(tr("Personagem"), m_toolbar);
@@ -96,6 +97,11 @@ void LousaPanel::buildUi()
     connect(btnNote, &QToolButton::clicked, this, [this]() {
         if (!m_scene) return;
         m_scene->addCard(nextCardData(QStringLiteral("note")));
+        refreshEmptyState();
+    });
+    connect(btnCmt, &QToolButton::clicked, this, [this]() {
+        if (!m_scene) return;
+        m_scene->addCard(nextCardData(QStringLiteral("comment")));
         refreshEmptyState();
     });
 
@@ -306,13 +312,19 @@ CanvasCard LousaPanel::nextCardData(const QString& type) const
         : QPointF(100, 100);
 
     CanvasCard c;
-    c.id      = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    c.type    = type;
-    c.x       = center.x() - 100;
-    c.y       = center.y() - 80;
-    c.width   = 200;
-    c.height  = 170;
-    c.color   = QColor(QStringLiteral("#ffd060"));
+    c.id   = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    c.type = type;
+
+    // Defaults por tipo (iguais ao Mira 1 CARD_DEFAULTS)
+    if (type == QStringLiteral("comment")) {
+        c.width  = 220; c.height = 140;
+        c.color  = QColor(QStringLiteral("#a78bfa"));
+    } else { // note (default)
+        c.width  = 200; c.height = 170;
+        c.color  = QColor(QStringLiteral("#ffd060"));
+    }
+    c.x = center.x() - c.width  / 2.0;
+    c.y = center.y() - c.height / 2.0;
     return c;
 }
 
