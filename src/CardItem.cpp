@@ -34,12 +34,14 @@ QTextEdit* makeCardEdit()
     auto* e = new QTextEdit();
     e->setFrameStyle(QFrame::NoFrame);
     e->setAcceptRichText(false);
-    e->setStyleSheet(QStringLiteral(
-        "QTextEdit { background: transparent; border: none; }"));
+    e->setAutoFillBackground(false);
     e->viewport()->setAutoFillBackground(false);
+    e->setStyleSheet(QStringLiteral(
+        "QTextEdit, QTextEdit > QAbstractScrollArea > QWidget { "
+        "  background: transparent; border: none; }"));
     e->setPlaceholderText(QObject::tr("Escreva aqui..."));
     e->setFont(QFont(QStringLiteral("Segoe UI"), 12));
-    // Alinhamento esquerdo explícito (sem isso Qt pode usar center em proxy)
+    e->setMinimumSize(0, 0);
     QTextOption opt;
     opt.setAlignment(Qt::AlignLeft);
     e->document()->setDefaultTextOption(opt);
@@ -119,13 +121,14 @@ QPainterPath CardItem::shape() const
 void CardItem::updateProxyGeometry()
 {
     if (!m_proxy) return;
-    // pos absorve o padding (Mira 1: padding "6px 10px 20px")
-    // bottom: 17px de zona de resize + 4px de margem = 21px livres
+    // setGeometry de uma vez — setPos+resize separados podem conflitar.
+    // padding igual Mira 1: top=6, sides=10, bottom=21 (17 resize + 4 margem)
     constexpr qreal kPadH = 10.0, kPadTop = 6.0, kPadBot = 21.0;
-    m_proxy->setPos(kPadH, kHeaderH + kPadTop);
+    const qreal x  = kPadH;
+    const qreal y  = kHeaderH + kPadTop;
     const qreal pw = qMax(10.0, m_data.width  - 2.0 * kPadH);
     const qreal ph = qMax(10.0, m_data.height - kHeaderH - kPadTop - kPadBot);
-    m_proxy->resize(pw, ph);
+    m_proxy->setGeometry(QRectF(x, y, pw, ph));
 }
 
 // ── Pintura ────────────────────────────────────────────────────────────────
