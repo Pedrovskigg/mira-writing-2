@@ -90,7 +90,22 @@ CardItem* LousaScene::addCard(const CanvasCard& data)
             [this](const QString& fromId, const QPointF& pinScene) {
         startPinDrag(fromId, pinScene);
     });
+    connect(item, &CardItem::cardPressed, this, [this, item]() {
+        selectOnlyCard(item);
+    });
     return item;
+}
+
+void LousaScene::selectOnlyCard(CardItem* sel)
+{
+    for (CardItem* c : m_cards)
+        c->setCardSelected(c == sel);
+}
+
+void LousaScene::clearCardSelection()
+{
+    for (CardItem* c : m_cards)
+        c->setCardSelected(false);
 }
 
 void LousaScene::removeCard(const QString& id)

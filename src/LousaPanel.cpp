@@ -91,8 +91,8 @@ void LousaPanel::buildUi()
     m_toolbar->setFixedHeight(kToolbarH);
 
     auto* tl = new QHBoxLayout(m_toolbar);
-    tl->setContentsMargins(10, 0, 10, 0);
-    tl->setSpacing(4);
+    tl->setContentsMargins(12, 0, 12, 0);
+    tl->setSpacing(8);
 
     // Grupo 1 — tipos de card
     auto* btnNote = makeIconBtn(tr("Post-it"),    m_toolbar);
@@ -105,11 +105,44 @@ void LousaPanel::buildUi()
     btnDoc->setEnabled(true);
     auto* btnChar = makeIconBtn(tr("Personagem"), m_toolbar);
     btnChar->setEnabled(true);
+    auto* btnText = makeIconBtn(tr("Texto livre"), m_toolbar);
+    btnText->setEnabled(true);
+    auto* btnSym  = makeIconBtn(tr("Símbolo"), m_toolbar);
+    btnSym->setEnabled(true);
     tl->addWidget(btnNote);
     tl->addWidget(btnCmt);
     tl->addWidget(btnImg);
     tl->addWidget(btnDoc);
     tl->addWidget(btnChar);
+    tl->addWidget(btnText);
+    tl->addWidget(btnSym);
+
+    connect(btnText, &QToolButton::clicked, this, [this]() {
+        if (!m_scene) return;
+        // Mesmo fluxo do símbolo: popup de texto + cor + fonte; o card nasce pronto.
+        QString txt;
+        QColor  col = QColor(QStringLiteral("#ffffff"));
+        QString fam;
+        if (!CardItem::pickText(this, txt, col, fam)) return; // cancelou → não cria
+        CanvasCard c = nextCardData(QStringLiteral("text"));
+        c.content = txt;
+        if (col.isValid()) c.color = col;
+        c.fontFamily = fam;
+        m_scene->addCard(c);
+        refreshEmptyState();
+    });
+    connect(btnSym, &QToolButton::clicked, this, [this]() {
+        if (!m_scene) return;
+        // Fluxo Mira 2: já abre o popup de símbolo + cor; o card nasce pronto.
+        QString sym = QStringLiteral("★");
+        QColor  col = QColor(QStringLiteral("#ffffff"));
+        if (!CardItem::pickSymbol(this, sym, col)) return; // cancelou → não cria
+        CanvasCard c = nextCardData(QStringLiteral("symbol"));
+        c.content = sym;
+        if (col.isValid()) c.color = col;
+        m_scene->addCard(c);
+        refreshEmptyState();
+    });
 
     connect(btnNote, &QToolButton::clicked, this, [this]() {
         if (!m_scene) return;
@@ -326,6 +359,8 @@ void LousaPanel::buildUi()
     m_iconBindings.append({btnImg,  QStringLiteral(":/icons/canvasicons/new-image.svg")});
     m_iconBindings.append({btnDoc,  QStringLiteral(":/icons/canvasicons/link-doc.svg")});
     m_iconBindings.append({btnChar, QStringLiteral(":/icons/elements/user.svg")});
+    m_iconBindings.append({btnText, QStringLiteral(":/icons/canvasicons/add-text.svg")});
+    m_iconBindings.append({btnSym,  QStringLiteral(":/icons/canvasicons/add-symbol.svg")});
 
     // Separador
     auto* sep1 = new QFrame(m_toolbar);
@@ -564,6 +599,11 @@ static CanvasCard cardFromJson(const QJsonObject& o)
     c.photoDataUrl    = o.value(QStringLiteral("photoDataUrl")).toString();
     c.linkedItemId    = o.value(QStringLiteral("linkedItemId")).toString();
     c.linkedDrawerKey = o.value(QStringLiteral("linkedDrawerName")).toString();
+    c.fontSize        = o.value(QStringLiteral("fontSize")).toInt(0);
+    c.bold            = o.value(QStringLiteral("bold")).toBool(false);
+    c.italic          = o.value(QStringLiteral("italic")).toBool(false);
+    c.rotation        = o.value(QStringLiteral("rotation")).toDouble(0.0);
+    c.fontFamily      = o.value(QStringLiteral("fontFamily")).toString();
     return c;
 }
 
@@ -583,6 +623,11 @@ static QJsonObject cardToJson(const CanvasCard& c)
     o.insert(QStringLiteral("photoDataUrl"), c.photoDataUrl);
     o.insert(QStringLiteral("linkedItemId"),    c.linkedItemId);
     o.insert(QStringLiteral("linkedDrawerName"), c.linkedDrawerKey);
+    if (c.fontSize > 0) o.insert(QStringLiteral("fontSize"), c.fontSize);
+    if (c.bold)         o.insert(QStringLiteral("bold"),   true);
+    if (c.italic)       o.insert(QStringLiteral("italic"), true);
+    if (!qFuzzyIsNull(c.rotation)) o.insert(QStringLiteral("rotation"), c.rotation);
+    if (!c.fontFamily.isEmpty()) o.insert(QStringLiteral("fontFamily"), c.fontFamily);
     return o;
 }
 
@@ -713,6 +758,15 @@ CanvasCard LousaPanel::nextCardData(const QString& type) const
     } else if (type == QStringLiteral("character")) {
         c.width  = 160; c.height = 200;
         c.color  = QColor(QStringLiteral("#f97316"));
+    } else if (type == QStringLiteral("text")) {
+        c.width  = 200; c.height = 80;
+        c.color  = QColor(QStringLiteral("#ffffff"));
+        c.fontSize = 120;
+    } else if (type == QStringLiteral("symbol")) {
+        c.width  = 100; c.height = 100;
+        c.color  = QColor(QStringLiteral("#ffffff"));
+        c.fontSize = 60;
+        c.content  = QStringLiteral("★"); // ★ default
     } else { // note (default)
         c.width  = 200; c.height = 170;
         c.color  = QColor(QStringLiteral("#ffd060"));

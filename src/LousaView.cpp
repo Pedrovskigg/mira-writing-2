@@ -1,5 +1,6 @@
 #include "LousaView.h"
 #include "LousaScene.h"
+#include "CardItem.h"
 
 #include <QGraphicsRectItem>
 #include <QMouseEvent>
@@ -42,6 +43,15 @@ void LousaView::applyZoomAndPan(qreal zoom, qreal panX, qreal panY)
 
 void LousaView::wheelEvent(QWheelEvent* event)
 {
+    // Regra do Mira 1: se o cursor está sobre um card com conteúdo rolável,
+    // o wheel rola o texto do card; caso contrário, dá zoom no canvas.
+    for (QGraphicsItem* it = itemAt(event->position().toPoint()); it; it = it->parentItem()) {
+        if (auto* card = dynamic_cast<CardItem*>(it)) {
+            if (card->wheelScroll(event->angleDelta().y())) { event->accept(); return; }
+            break;
+        }
+    }
+
     const qreal step     = event->angleDelta().y() > 0 ? 1.12 : (1.0 / 1.12);
     const qreal newZoom  = qBound(0.15, m_zoom * step, 4.0);
     if (qFuzzyCompare(newZoom, m_zoom)) { event->accept(); return; }
@@ -97,6 +107,10 @@ void LousaView::mousePressEvent(QMouseEvent* event)
     // Pan com botão do meio, ou arrastar o fundo vazio com botão esquerdo.
     const bool isMiddle = (event->button() == Qt::MiddleButton);
     const bool isBgLeft = (event->button() == Qt::LeftButton) && !itemAt(event->pos());
+    if (isBgLeft) {
+        if (auto* sc = qobject_cast<LousaScene*>(scene()))
+            sc->clearCardSelection(); // clicar no vazio desseleciona text/symbol
+    }
     if (isMiddle || isBgLeft) {
         m_panning = true;
         m_panLast = event->pos();

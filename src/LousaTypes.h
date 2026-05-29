@@ -6,7 +6,7 @@
 // Estrutura de dados de um card na lousa. Compat com canvas.json do Mira 1.
 struct CanvasCard {
     QString id;
-    QString type;            // "note" | "comment" | "image" | "doc" | "character"
+    QString type;            // "note" | "comment" | "image" | "doc" | "character" | "text" | "symbol"
     qreal   x       = 0;
     qreal   y       = 0;
     qreal   width   = 200;
@@ -19,6 +19,12 @@ struct CanvasCard {
     QString photoDataUrl;    // character
     QString linkedItemId;    // doc, character
     QString linkedDrawerKey; // doc, character
+    // text / symbol
+    int     fontSize = 0;    // 0 = default por tipo (text 18, symbol 60)
+    bool    bold     = false;
+    bool    italic   = false;
+    qreal   rotation = 0;    // graus
+    QString fontFamily;      // text: família da fonte ("" = Segoe UI)
 };
 
 struct CanvasConnection {

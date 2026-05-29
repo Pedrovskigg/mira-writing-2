@@ -71,6 +71,7 @@
         <file alias="canvasicons/link-doc.svg">../src/assets/icons/canvasicons/link-doc.svg</file>
         <file alias="canvasicons/add-plan-area.svg">../src/assets/icons/canvasicons/add-plan-area.svg</file>
         <file alias="canvasicons/add-symbol.svg">../src/assets/icons/canvasicons/add-symbol.svg</file>
+        <file alias="canvasicons/add-text.svg">../src/assets/icons/canvasicons/add-text.svg</file>
         <file alias="canvasicons/export-plan-area.svg">../src/assets/icons/canvasicons/export-plan-area.svg</file>
         <file alias="canvasicons/export-all-plan-areas.svg">../src/assets/icons/canvasicons/export-all-plan-areas.svg</file>
     </qresource>

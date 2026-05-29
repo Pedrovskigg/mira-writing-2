@@ -29,6 +29,8 @@ public:
     QList<CanvasCard> allCardData() const;
     const QList<CardItem*>& cardItems() const { return m_cards; }
     CardItem* findCard(const QString& id) const;
+    void      selectOnlyCard(CardItem* sel);   // seleciona um, desseleciona os outros
+    void      clearCardSelection();
 
     // ── Conexões ─────────────────────────────────────────────────────────────
     ConnectionItem* addConnection(const CanvasConnection& data);
