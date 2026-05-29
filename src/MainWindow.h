@@ -84,6 +84,7 @@ private:
     void applyEditorStyle();
     void applyTextColor();
     void applyEditorFont();
+    void updateDocCachePinnedKeys();
 
     // Camadas de ExtraSelections do editor — focus mode (cor do bloco focado)
     // e find (highlight da busca local) precisam coexistir. Cada chamador

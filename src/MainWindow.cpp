@@ -244,6 +244,9 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1100, 800);
     setWindowState(windowState() | Qt::WindowMaximized);
 
+    // Aplica limite de docs na RAM salvo nas configurações (default 6).
+    docCache->setMaxDocs(QSettings().value(QStringLiteral("docCache/maxDocs"), 6).toInt());
+
     setupEditor();
     setupToolbar();
     applyBackgroundFromTheme();
@@ -416,6 +419,7 @@ void MainWindow::setupEditor()
 
     // Persiste o último doc aberto por projeto — restaurado no próximo load.
     // Ignora Disabled (estado transitório durante troca de projeto).
+    connect(editorHost, &EditorHost::viewModeChanged, this, &MainWindow::updateDocCachePinnedKeys);
     connect(editorHost, &EditorHost::viewModeChanged, this, [this]() {
         if (projectRoot.isEmpty()) return;
         if (editorHost->viewMode().type == EditorHost::Disabled) return;
@@ -1194,6 +1198,7 @@ void MainWindow::setupEditor()
     refMenuPanel->setProjectRoot(projectRoot);
     refMenuPanel->raise();
     connect(refMenuPanel, &RefMenuPanel::geometryChanged, this, &MainWindow::positionWordCountPanel);
+    connect(refMenuPanel, &RefMenuPanel::selectedKeyChanged, this, &MainWindow::updateDocCachePinnedKeys);
     connect(toolbar, &TopToolbar::refMenuToggleRequested, this, [this]() {
         if (refMenuPanel) refMenuPanel->togglePanel();
     });
@@ -1962,6 +1967,21 @@ void MainWindow::setAvailableFontFamilies(const QStringList &families)
     currentFontFamily = preferredDefault;
     toolbar->setFontFamilies(families, currentFontFamily);
     applyEditorStyle();
+}
+
+void MainWindow::updateDocCachePinnedKeys()
+{
+    if (!docCache) return;
+    QSet<QString> pinned;
+    if (editorHost) {
+        const QString k = editorHost->activeKey();
+        if (!k.isEmpty()) pinned.insert(k);
+    }
+    if (refMenuPanel) {
+        const QString k = refMenuPanel->selectedCacheKey();
+        if (!k.isEmpty()) pinned.insert(k);
+    }
+    docCache->setPinnedKeys(pinned);
 }
 
 void MainWindow::applyEditorStyle()
@@ -3465,7 +3485,11 @@ void MainWindow::onSettingsRequested()
             QSettings().setValue(QStringLiteral("editor/autoNavEnabled"), enabled);
             if (!enabled) deactivateNavZone();
         });
-        // Lê preferência global (não por projeto)
+        connect(settingsPanel, &SettingsPanel::maxDocsChanged, this, [this](int n) {
+            QSettings().setValue(QStringLiteral("docCache/maxDocs"), n);
+            if (docCache) docCache->setMaxDocs(n);
+        });
+        // Lê preferências globais (não por projeto)
         m_autoNavEnabled = QSettings().value(QStringLiteral("editor/autoNavEnabled"), true).toBool();
     }
 
@@ -3476,6 +3500,7 @@ void MainWindow::onSettingsRequested()
     settingsPanel->setDetectionEnabled(detectionEnabled);
     settingsPanel->setDetectionMarkAll(detectionMarkAll);
     settingsPanel->setAutoNavEnabled(m_autoNavEnabled);
+    settingsPanel->setMaxDocs(QSettings().value(QStringLiteral("docCache/maxDocs"), 6).toInt());
 
     settingsPanel->show();
     settingsPanel->raise();

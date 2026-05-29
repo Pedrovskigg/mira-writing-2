@@ -9,6 +9,7 @@ class QCheckBox;
 class QComboBox;
 class QLabel;
 class QSlider;
+class QSpinBox;
 
 class SettingsPanel : public QDialog {
     Q_OBJECT
@@ -31,12 +32,16 @@ public:
     bool autoNavEnabled() const;
     void setAutoNavEnabled(bool enabled);
 
+    int maxDocs() const;
+    void setMaxDocs(int n);
+
 signals:
     void spellEnabledChanged(bool enabled);
     void spellLanguageChanged(const QString& code);
     void detectionEnabledChanged(bool enabled);
     void detectionMarkAllChanged(bool markAll);
     void autoNavEnabledChanged(bool enabled);
+    void maxDocsChanged(int n);
 
 private:
     void onCheckToggled(bool checked);
@@ -49,6 +54,7 @@ private:
     QCheckBox* m_detectionCheck    = nullptr;
     QCheckBox* m_detectionAllCheck = nullptr;
     QCheckBox* m_autoNavCheck      = nullptr;
+    QSpinBox*  m_maxDocsSpinBox   = nullptr;
     QSlider* m_pageWidthSlider = nullptr;
     QSlider* m_pageHeightSlider = nullptr;
     QSlider* m_hMarginSlider = nullptr;

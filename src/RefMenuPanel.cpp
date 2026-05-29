@@ -712,7 +712,7 @@ void RefMenuPanel::buildManuscriptsView()
             const QString id = key.mid(3);
             if (id != m_currentManuscriptId) {
                 m_currentManuscriptId = id;
-                m_selectedKey.clear();
+                changeSelectedKey(QString());
                 rebuildNavBody();
                 rebuildPreview();
             }
@@ -1132,7 +1132,7 @@ void RefMenuPanel::buildSearchAllView()
             if (!key.startsWith(QStringLiteral("ms:"))) return;
             m_currentManuscriptId = key.mid(3);
             m_sourceKind = SourceKind::Manuscript;
-            m_selectedKey.clear();
+            changeSelectedKey(QString());
             // sair do modo de busca pra revelar o manuscrito escolhido
             m_searchQuery.clear();
             if (m_searchInput) m_searchInput->clear();
@@ -1616,20 +1616,42 @@ void RefMenuPanel::enterDrawerMode(const QString& drawerKey)
     m_sourceKind = SourceKind::Drawer;
     m_currentDrawerKey = drawerKey;
     m_currentFolderId.clear();
-    m_selectedKey.clear();
+    changeSelectedKey(QString());
     refresh();
 }
 
 void RefMenuPanel::enterPlaceholderMode(SourceKind kind)
 {
     m_sourceKind = kind;
-    m_selectedKey.clear();
+    changeSelectedKey(QString());
     refresh();
+}
+
+void RefMenuPanel::changeSelectedKey(const QString& key)
+{
+    if (m_selectedKey == key) return;
+    m_selectedKey = key;
+    emit selectedKeyChanged(selectedCacheKey());
+}
+
+QString RefMenuPanel::selectedCacheKey() const
+{
+    if (m_selectedKey.isEmpty()) return QString();
+    // "ch:<ms>:<ch>" → já é chave de cache
+    if (m_selectedKey.startsWith(QStringLiteral("ch:"))) return m_selectedKey;
+    // "sc:<ms>:<ch>:<idx>" → cena vive no cache do capítulo pai
+    if (m_selectedKey.startsWith(QStringLiteral("sc:"))) {
+        const QStringList p = m_selectedKey.split(QLatin1Char(':'));
+        if (p.size() >= 3) return DocCache::chapterKey(p.at(1), p.at(2));
+    }
+    // "it:<id>" → já é chave de cache
+    if (m_selectedKey.startsWith(QStringLiteral("it:"))) return m_selectedKey;
+    return QString();
 }
 
 void RefMenuPanel::setSelected(const QString& key)
 {
-    m_selectedKey = key;
+    changeSelectedKey(key);
     rebuildPreview();
 }
 
@@ -1665,7 +1687,7 @@ void RefMenuPanel::openForDrawer(const QString& drawerKey, const QString& itemId
 {
     enterDrawerMode(drawerKey);
     if (!itemId.isEmpty()) {
-        m_selectedKey = QStringLiteral("it:%1").arg(itemId);
+        changeSelectedKey(QStringLiteral("it:%1").arg(itemId));
         rebuildPreview();
     }
     if (!isVisible()) openPanel();

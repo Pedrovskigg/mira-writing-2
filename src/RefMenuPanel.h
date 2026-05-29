@@ -52,8 +52,13 @@ public:
     // QTextBrowser do preview, com navegação anterior/próximo e contador.
     void openPreviewFind();
 
+    // Chave de cache do item selecionado no momento (para LRU pinning).
+    // Formato DocCache: "ch:<ms>:<ch>", "it:<id>", ou "" se nada selecionado.
+    QString selectedCacheKey() const;
+
 signals:
     void geometryChanged();
+    void selectedKeyChanged(QString cacheKey);
 
 public slots:
     void refresh();
@@ -101,6 +106,7 @@ private:
     void setupCharacterDrawerVisualDefault();
 
     QString resolveDocHtml(const QString& key) const;
+    void changeSelectedKey(const QString& key); // atribui + emite selectedKeyChanged
     void extractImagesFromHtml(const QString& html, QStringList* imagesOut, QString* restOut) const;
     QString resolveImageSrc(const QString& src) const;
     bool drawerIsVisual(const Drawer* d) const;

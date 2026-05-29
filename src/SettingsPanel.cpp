@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 SettingsPanel::SettingsPanel(QWidget* parent)
@@ -184,6 +185,38 @@ SettingsPanel::SettingsPanel(QWidget* parent)
 
     connect(m_autoNavCheck, &QCheckBox::toggled, this, [this](bool checked) {
         emit autoNavEnabledChanged(checked);
+    });
+
+    // ---- Seção: Memória ----
+    auto* memGroup = new QGroupBox(tr("Memória"), this);
+    auto* memLayout = new QVBoxLayout(memGroup);
+    memLayout->setContentsMargins(14, 8, 14, 14);
+    memLayout->setSpacing(8);
+
+    auto* memRow = new QHBoxLayout;
+    memRow->setSpacing(8);
+    auto* memLabel = new QLabel(tr("Documentos simultâneos na RAM:"), memGroup);
+    m_maxDocsSpinBox = new QSpinBox(memGroup);
+    m_maxDocsSpinBox->setRange(1, 20);
+    m_maxDocsSpinBox->setValue(6);
+    m_maxDocsSpinBox->setFixedWidth(60);
+    memRow->addWidget(memLabel);
+    memRow->addWidget(m_maxDocsSpinBox);
+    memRow->addStretch();
+    memLayout->addLayout(memRow);
+
+    auto* memHint = new QLabel(
+        tr("O app mantém os documentos abertos recentemente na memória para troca rápida. "
+           "Ao atingir o limite, o mais antigo (sem edições pendentes) é descarregado automaticamente."),
+        memGroup);
+    memHint->setObjectName(QStringLiteral("settingsHint"));
+    memHint->setWordWrap(true);
+    memLayout->addWidget(memHint);
+
+    root->addWidget(memGroup);
+
+    connect(m_maxDocsSpinBox, qOverload<int>(&QSpinBox::valueChanged), this, [this](int v) {
+        emit maxDocsChanged(v);
     });
 
     root->addStretch();
@@ -465,4 +498,14 @@ bool SettingsPanel::autoNavEnabled() const
 void SettingsPanel::setAutoNavEnabled(bool enabled)
 {
     if (m_autoNavCheck) m_autoNavCheck->setChecked(enabled);
+}
+
+int SettingsPanel::maxDocs() const
+{
+    return m_maxDocsSpinBox ? m_maxDocsSpinBox->value() : 6;
+}
+
+void SettingsPanel::setMaxDocs(int n)
+{
+    if (m_maxDocsSpinBox) m_maxDocsSpinBox->setValue(qBound(1, n, 20));
 }

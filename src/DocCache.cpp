@@ -16,7 +16,8 @@ bool DocCache::has(const QString& key) const {
     return m_content.contains(key);
 }
 
-QString DocCache::get(const QString& key) const {
+QString DocCache::get(const QString& key) {
+    touchKey(key);
     return m_content.value(key);
 }
 
@@ -24,10 +25,10 @@ void DocCache::set(const QString& key, const QString& html, bool markDirtyFlag) 
     const bool existed = m_content.contains(key);
     const bool changed = !existed || m_content.value(key) != html;
     m_content.insert(key, html);
+    touchKey(key);
     if (changed) emit contentChanged(key);
-    if (markDirtyFlag) {
-        markDirty(key);
-    }
+    if (markDirtyFlag) markDirty(key);
+    if (!existed) maybeEvict();
 }
 
 void DocCache::markClean(const QString& key) {
@@ -51,18 +52,53 @@ QStringList DocCache::dirtyKeys() const {
     return QStringList(m_dirty.cbegin(), m_dirty.cend());
 }
 
+void DocCache::setMaxDocs(int n) {
+    m_maxDocs = qMax(0, n);
+    maybeEvict();
+}
+
+void DocCache::setPinnedKeys(const QSet<QString>& keys) {
+    m_pinned = keys;
+}
+
 void DocCache::evict(const QString& key) {
     const bool removed = m_content.remove(key) > 0;
-    const bool wasDirty = m_dirty.remove(key) > 0;
-    if (removed) emit contentChanged(key);
-    if (wasDirty) emit dirtyChanged(key, false);
+    m_dirty.remove(key);
+    m_lruOrder.removeAll(key);
+    if (removed) {
+        emit contentChanged(key);
+        emit evicted(key);
+    }
 }
 
 void DocCache::clear() {
     const QList<QString> keys = m_content.keys();
-    m_content.clear();
     const QList<QString> dirties = QList<QString>(m_dirty.cbegin(), m_dirty.cend());
+    m_content.clear();
     m_dirty.clear();
+    m_lruOrder.clear();
     for (const auto& k : keys) emit contentChanged(k);
     for (const auto& k : dirties) emit dirtyChanged(k, false);
+}
+
+void DocCache::touchKey(const QString& key) {
+    m_lruOrder.removeAll(key);
+    m_lruOrder.prepend(key);
+}
+
+void DocCache::maybeEvict() {
+    if (m_maxDocs <= 0) return;
+    while (m_content.size() > m_maxDocs) {
+        bool evicted = false;
+        // Percorre do fim (mais antigo) pro início procurando doc evictável.
+        for (int i = m_lruOrder.size() - 1; i >= 0; --i) {
+            const QString& k = m_lruOrder.at(i);
+            if (!m_dirty.contains(k) && !m_pinned.contains(k)) {
+                evict(k);
+                evicted = true;
+                break;
+            }
+        }
+        if (!evicted) break; // todos restantes são dirty ou pinned
+    }
 }
