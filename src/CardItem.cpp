@@ -139,12 +139,18 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
                     emit dataChanged(m_data);
                 });
             } else {
+                // Mira 1: position absolute inset:0, padding:34px 10px 10px,
+                // fontSize:13, lineHeight:1.6, color:#fff, background rgba(0,0,0,0.10)
                 static const QRegularExpression kImg(
                     QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
-                const QString html = m_data.content.isEmpty()
-                    ? QStringLiteral("<p style='color:rgba(255,255,255,0.55)'><em>Doc vazio</em></p>")
+                const QString inner = m_data.content.isEmpty()
+                    ? QStringLiteral("<em style='color:rgba(255,255,255,0.55)'>Doc vazio</em>")
                     : QString(m_data.content).remove(kImg);
-                m_textItem->setHtml(html);
+                // Wrap com padding via HTML: 34px topo (protege overlay de nome), 10px lados
+                const QString wrapped = QStringLiteral(
+                    "<div style='padding:34px 10px 10px;font-size:13px;"
+                    "line-height:1.6;color:#ffffff;'>%1</div>").arg(inner);
+                m_textItem->setHtml(wrapped);
             }
         } else {
             // note/comment: editável, clippado ao shape do card via ItemClipsChildrenToShape
@@ -222,19 +228,29 @@ void CardItem::updateTextItem()
     const qreal th = qMax(10.0, m_data.height - padTop - padBot);
 
     if (m_textItem) {
-        if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
-            bti->bodyW = tw;
-            bti->bodyH = th;
-        }
-        m_textItem->setTextWidth(tw);
-        // note/comment: Y varia com scroll; image/char: fixo abaixo do overlay header
-        if (isImg || isChar)
+        if (isChar) {
+            // Mira 1: inset:0 — cobre o card inteiro; padding via HTML
+            if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
+                bti->bodyW = m_data.width;
+                bti->bodyH = m_data.height;
+            }
+            m_textItem->setTextWidth(m_data.width);
+            m_textItem->setPos(0.0, -m_scrollOffset);
+        } else if (isImg) {
+            if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
+                bti->bodyW = tw; bti->bodyH = th;
+            }
+            m_textItem->setTextWidth(tw);
             m_textItem->setPos(padL, padTop);
-        else
+        } else {
+            // note/comment: Y varia com scroll
+            if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
+                bti->bodyW = tw; bti->bodyH = th;
+            }
+            m_textItem->setTextWidth(tw);
             m_textItem->setPos(padL, padTop - m_scrollOffset);
+        }
     }
-
-    // m_overlayProxy foi removido — personagem usa BodyTextItem clippado
 }
 
 // ── Cores ──────────────────────────────────────────────────────────────────
@@ -268,14 +284,15 @@ void CardItem::applyTextColor()
 void CardItem::setLinkedHtml(const QString& html)
 {
     m_data.content = html;
-    // Para personagem: atualiza o BodyTextItem overlay se existir
     if (m_textItem && m_data.type == QStringLiteral("character")) {
         static const QRegularExpression kImg(
             QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
-        const QString clean = html.isEmpty()
-            ? QStringLiteral("<p><em style='color:rgba(255,255,255,0.55)'>Doc vazio</em></p>")
+        const QString inner = html.isEmpty()
+            ? QStringLiteral("<em style='color:rgba(255,255,255,0.55)'>Doc vazio</em>")
             : QString(html).remove(kImg);
-        m_textItem->setHtml(clean);
+        m_textItem->setHtml(QStringLiteral(
+            "<div style='padding:34px 10px 10px;font-size:13px;"
+            "line-height:1.6;color:#ffffff;'>%1</div>").arg(inner));
     }
     update();
 }
@@ -350,15 +367,22 @@ void CardItem::wheelEvent(QGraphicsSceneWheelEvent* e)
     // note/comment: sempre scrollável; image/character: só quando overlay aberto
     if ((isImg || isChar) && !m_showDesc) { e->ignore(); return; }
 
-    const qreal padTop = (isImg || isChar) ? 34.0 : (kHeaderH + 4.0);
-    const qreal cardH  = m_data.height - padTop - 17.0;
     const qreal contentH = m_textItem->boundingRect().height();
+    const qreal cardH = isChar ? m_data.height
+                                : (m_data.height - (isImg ? 34.0 : kHeaderH + 4.0) - 17.0);
     const qreal maxScroll = qMax(0.0, contentH - cardH);
     if (maxScroll < 1.0) { e->ignore(); return; }
 
     const qreal delta = (e->delta() / 120.0) * 24.0;
     m_scrollOffset = qBound(0.0, m_scrollOffset - delta, maxScroll);
-    m_textItem->setPos(10.0, padTop - m_scrollOffset);
+
+    // Reposiciona usando a mesma lógica do updateTextItem
+    if (isChar)
+        m_textItem->setPos(0.0, -m_scrollOffset);
+    else if (isImg)
+        m_textItem->setPos(10.0, 34.0 - m_scrollOffset);
+    else
+        m_textItem->setPos(10.0, kHeaderH + 4.0 - m_scrollOffset);
     e->accept();
 }
 
