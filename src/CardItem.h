@@ -10,8 +10,6 @@
 
 class QGraphicsProxyWidget;
 class QGraphicsTextItem;
-class QTextBrowser;
-class QTextEdit;
 
 class CardItem : public QGraphicsObject
 {
@@ -55,6 +53,7 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* e)        override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e)       override;
+    void wheelEvent(QGraphicsSceneWheelEvent* e)            override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* e) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
@@ -66,7 +65,6 @@ private:
     bool   isOnResizeZone(const QPointF& p) const;
     void   showColorMenu(const QPoint& screenPos);
     void   loadCharacterPhoto();
-    void   applyProxyTextColor();   // aplica cor de texto ao QTextEdit do proxy
     void   openImagePicker();
     void   loadPixmapFromContent();
     void   updateTextItem();
@@ -76,14 +74,10 @@ private:
     bool   isDark() const;
 
     CanvasCard            m_data;
-    // note/comment: proxy com QTextEdit scrollável
-    QGraphicsProxyWidget* m_proxy     = nullptr;
-    QTextEdit*            m_editProxy = nullptr;  // widget dentro do proxy de edição
+    QGraphicsTextItem*    m_textItem  = nullptr;   // note/comment/image overlay
     // image/character overlay: proxy com QTextBrowser (read-only, scroll, clip)
-    QGraphicsProxyWidget* m_overlayProxy  = nullptr;
-    QTextBrowser*         m_overlayBrowser = nullptr;
-    // legado — removido mas mantido null para não quebrar referências
-    QGraphicsTextItem*    m_textItem  = nullptr;
+    QGraphicsProxyWidget* m_overlayProxy   = nullptr;
+    class QTextBrowser*   m_overlayBrowser = nullptr;
     QPixmap            m_pixmap;       // image + character photo
     bool               m_showDesc     = false;
     // Snap glow (waypoint snapping)
@@ -92,6 +86,7 @@ private:
     // Pin drag state
     bool               m_draggingPin  = false;
 
+    qreal   m_scrollOffset    = 0.0;    // scroll da textarea (note/comment)
     bool    m_dragging        = false;
     bool    m_resizing        = false;
     QPointF m_pressScene;

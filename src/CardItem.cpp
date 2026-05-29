@@ -7,15 +7,14 @@
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneHoverEvent>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneWheelEvent>
 #include <QGraphicsTextItem>
 #include <QGraphicsView>
 #include <QImage>
 #include <QRadialGradient>
 #include <QRegularExpression>
-#include <QScrollBar>
 #include <QStyleOption>
 #include <QTextBrowser>
-#include <QTextEdit>
 #include <QMenu>
 #include <QPainter>
 #include <QPainterPath>
@@ -120,125 +119,77 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
     if (isImg)  loadPixmapFromContent();
     if (isChar) loadCharacterPhoto();
 
-    // BodyTextItem para types que têm overlay de texto (image: descrição; character: doc HTML)
-    // Doc: renderizado por paint(), sem BodyTextItem
+    // ── Texto editável (note/comment): BodyTextItem com clipping + scroll via wheel ──
+    // ── Overlay (image/character):    BodyTextItem read-only, começa escondido   ──
+    // ── Doc:                          renderizado por paint(), sem BodyTextItem   ──
     if (!isDoc) {
         auto* bti  = new BodyTextItem(this);
         m_textItem = bti;
-        // Para image e character o overlay começa escondido
-        m_textItem->setVisible(false);
 
-        if (isImg) {
-            m_textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
-            m_textItem->document()->setPlainText(m_data.description);
-        } else if (isChar) {
-            // Overlay do doc do personagem — rich text, read-only
-            m_textItem->setTextInteractionFlags(Qt::NoTextInteraction);
-            // Overlay do doc: texto sem imagens (QGraphicsTextItem não renderiza data-URL).
-            // Stripa <img> igual ao Mira 1 para o overlay do card.
-            static const QRegularExpression kImgTag(
-                QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
-            const QString docHtml = m_data.content.isEmpty()
-                ? QStringLiteral("<p style='color:rgba(255,255,255,0.55)'><em>Doc vazio</em></p>")
-                : QString(m_data.content).remove(kImgTag);
-            m_textItem->setHtml(docHtml);
+        if (isImg || isChar) {
+            // Overlay: começa escondido, double-click mostra
+            m_textItem->setVisible(false);
+            m_textItem->setTextInteractionFlags(isImg
+                ? Qt::TextEditorInteraction : Qt::NoTextInteraction);
+
+            if (isImg) {
+                m_textItem->document()->setPlainText(m_data.description);
+                connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+                    m_data.description = m_textItem->document()->toPlainText();
+                    emit dataChanged(m_data);
+                });
+            } else {
+                static const QRegularExpression kImg(
+                    QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
+                const QString html = m_data.content.isEmpty()
+                    ? QStringLiteral("<p style='color:rgba(255,255,255,0.55)'><em>Doc vazio</em></p>")
+                    : QString(m_data.content).remove(kImg);
+                m_textItem->setHtml(html);
+            }
         } else {
+            // note/comment: editável, clippado ao shape do card via ItemClipsChildrenToShape
+            setFlag(ItemClipsChildrenToShape, true);
             m_textItem->setTextInteractionFlags(Qt::TextEditorInteraction);
             m_textItem->document()->setPlainText(m_data.content);
+            connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
+                m_data.content = m_textItem->document()->toPlainText();
+                emit dataChanged(m_data);
+            });
         }
-        m_textItem->setAcceptHoverEvents(false);
 
+        m_textItem->setAcceptHoverEvents(false);
         QTextOption opt;
         opt.setAlignment(Qt::AlignLeft);
         opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
         m_textItem->document()->setDefaultTextOption(opt);
         m_textItem->document()->setDocumentMargin(0);
 
+        // Overlay do personagem: também usa QTextBrowser via proxy para scroll real
+        if (isChar) {
+            static const QRegularExpression kImg(
+                QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
+            const QString html = m_data.content.isEmpty()
+                ? QStringLiteral("<p><em style='color:rgba(255,255,255,0.55)'>Doc vazio</em></p>")
+                : QString(m_data.content).remove(kImg);
+            m_overlayBrowser = new QTextBrowser();
+            m_overlayBrowser->setFrameStyle(QFrame::NoFrame);
+            m_overlayBrowser->setOpenLinks(false);
+            m_overlayBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+            m_overlayBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            m_overlayBrowser->setAutoFillBackground(false);
+            m_overlayBrowser->viewport()->setAutoFillBackground(false);
+            m_overlayBrowser->setStyleSheet(QStringLiteral(
+                "QTextBrowser { background: rgba(0,0,0,40); border: none;"
+                " color: rgba(255,255,255,210); font-size: 12px; }"));
+            m_overlayBrowser->setHtml(html);
+            m_overlayProxy = new QGraphicsProxyWidget(this);
+            m_overlayProxy->setWidget(m_overlayBrowser);
+            m_overlayProxy->setZValue(2.0);
+            m_overlayProxy->setVisible(false);
+        }
+
         updateTextItem();
         applyTextColor();
-
-        // Só a textarea de imagem propaga edições para m_data
-        if (isImg) {
-            connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
-                m_data.description = m_textItem->document()->toPlainText();
-                emit dataChanged(m_data);
-            });
-        } else if (!isChar) {
-            connect(m_textItem->document(), &QTextDocument::contentsChanged, this, [this]() {
-                m_data.content = m_textItem->document()->toPlainText();
-                emit dataChanged(m_data);
-            });
-        }
-    }
-
-    // ── note / comment: QTextEdit scrollável via QGraphicsProxyWidget ────────
-    if (!isDoc && !isImg && !isChar) {
-        m_editProxy = new QTextEdit();
-        m_editProxy->setFrameStyle(QFrame::NoFrame);
-        m_editProxy->setAcceptRichText(false);
-        m_editProxy->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        m_editProxy->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        m_editProxy->setAutoFillBackground(false);
-        m_editProxy->viewport()->setAutoFillBackground(false);
-        m_editProxy->setStyleSheet(QStringLiteral(
-            "QTextEdit { background: transparent; border: none; }"));
-        m_editProxy->setPlaceholderText(tr("Escreva aqui..."));
-        m_editProxy->setFont(QFont(QStringLiteral("Segoe UI"), 12));
-        m_editProxy->setPlainText(m_data.content);
-        applyProxyTextColor();
-
-        m_proxy = new QGraphicsProxyWidget(this);
-        m_proxy->setWidget(m_editProxy);
-        m_proxy->setZValue(1.0);
-
-        connect(m_editProxy, &QTextEdit::textChanged, this, [this]() {
-            m_data.content = m_editProxy->toPlainText();
-            emit dataChanged(m_data);
-        });
-
-        updateTextItem();  // posiciona e dimensiona o proxy
-    }
-
-    // ── image / character: overlay QTextBrowser clippado pelo proxy ──────────
-    if (isImg || isChar) {
-        m_overlayBrowser = new QTextBrowser();
-        m_overlayBrowser->setFrameStyle(QFrame::NoFrame);
-        m_overlayBrowser->setOpenLinks(false);
-        m_overlayBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        m_overlayBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        m_overlayBrowser->setAutoFillBackground(false);
-        m_overlayBrowser->viewport()->setAutoFillBackground(false);
-        m_overlayBrowser->setStyleSheet(QStringLiteral(
-            "QTextBrowser { background: rgba(0,0,0,40); border: none; "
-            "  color: rgba(255,255,255,217); font-size: 12px; }"));
-
-        static const QRegularExpression kImgTag(
-            QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
-        const QString overlayContent = isImg
-            ? m_data.description
-            : (m_data.content.isEmpty()
-                ? QStringLiteral("Doc vazio")
-                : QString(m_data.content).remove(kImgTag));
-        if (isImg)
-            m_overlayBrowser->setPlainText(overlayContent);
-        else
-            m_overlayBrowser->setHtml(overlayContent.isEmpty()
-                ? QStringLiteral("<p><em style='color:rgba(255,255,255,0.55)'>Doc vazio</em></p>")
-                : overlayContent);
-
-        m_overlayProxy = new QGraphicsProxyWidget(this);
-        m_overlayProxy->setWidget(m_overlayBrowser);
-        m_overlayProxy->setZValue(2.0);
-        m_overlayProxy->setVisible(false);
-
-        if (isImg) {
-            connect(m_overlayBrowser, &QTextBrowser::textChanged, this, [this]() {
-                m_data.description = m_overlayBrowser->toPlainText();
-                emit dataChanged(m_data);
-            });
-        }
-
-        updateTextItem();
     }
 }
 
@@ -291,22 +242,20 @@ void CardItem::updateTextItem()
     const qreal tw = qMax(10.0, m_data.width  - 2.0 * padL);
     const qreal th = qMax(10.0, m_data.height - padTop - padBot);
 
-    // Legado BodyTextItem (character overlay usa QTextBrowser agora, mas mantém compatibilidade)
     if (m_textItem) {
         if (auto* bti = static_cast<BodyTextItem*>(m_textItem)) {
-            bti->bodyW = tw; bti->bodyH = th;
+            bti->bodyW = tw;
+            bti->bodyH = th;
         }
         m_textItem->setTextWidth(tw);
-        m_textItem->setPos(padL, padTop);
+        // note/comment: Y varia com scroll; image/char: fixo abaixo do overlay header
+        if (isImg || isChar)
+            m_textItem->setPos(padL, padTop);
+        else
+            m_textItem->setPos(padL, padTop - m_scrollOffset);
     }
 
-    // QTextEdit proxy para note/comment (Mira 1: textarea flex:1 + overflowY:auto)
-    if (m_proxy) {
-        m_proxy->setPos(padL, padTop);
-        m_proxy->resize(QSizeF(tw, th));   // QGraphicsWidget::resize → clipa e dimensiona
-    }
-
-    // QTextBrowser overlay para image/character (começa escondido, double-click mostra)
+    // Overlay do personagem (QTextBrowser via proxy) — posiciona cobrindo o card
     if (m_overlayProxy) {
         m_overlayProxy->setPos(0, padTop);
         m_overlayProxy->resize(QSizeF(m_data.width, th));
@@ -330,17 +279,6 @@ QColor CardItem::contrastColor() const
     // Contraste calculado sobre bodyColor (onde o texto está)
     const QColor bg = bodyColor();
     return calcIsDark(bg) ? QColor(255, 255, 255, 220) : QColor(0, 0, 0, 180);
-}
-
-void CardItem::applyProxyTextColor()
-{
-    if (!m_editProxy) return;
-    const QColor tc = contrastColor();
-    QPalette pal = m_editProxy->palette();
-    pal.setColor(QPalette::Text, tc);
-    pal.setColor(QPalette::PlaceholderText, QColor(tc.red(), tc.green(), tc.blue(), 90));
-    m_editProxy->setPalette(pal);
-    m_editProxy->viewport()->setPalette(pal);
 }
 
 void CardItem::applyTextColor()
@@ -420,15 +358,40 @@ void CardItem::openImagePicker()
 void CardItem::toggleImageDesc(bool show)
 {
     m_showDesc = show;
-    // Usa o QTextBrowser overlay (novo) se existir, senão o legado BodyTextItem
     if (m_overlayProxy) {
+        // Personagem: usa o QTextBrowser proxy (scroll real)
         m_overlayProxy->setVisible(show);
         if (show) m_overlayProxy->setFocus();
-    } else if (m_textItem) {
-        m_textItem->setVisible(show);
-        if (show) m_textItem->setFocus();
+    }
+    if (m_textItem) {
+        // Imagem: usa BodyTextItem (editável)
+        const bool isImg = (m_data.type == QStringLiteral("image"));
+        if (isImg) {
+            m_textItem->setVisible(show);
+            if (show) m_textItem->setFocus();
+        }
     }
     update();
+}
+
+void CardItem::wheelEvent(QGraphicsSceneWheelEvent* e)
+{
+    // Scroll da textarea nos cards note/comment via ItemClipsChildrenToShape
+    const bool isNote = (m_data.type == QStringLiteral("note") ||
+                         m_data.type == QStringLiteral("comment"));
+    if (!isNote || !m_textItem) { e->ignore(); return; }
+
+    constexpr qreal padTop = CardItem::kHeaderH + 4.0;
+    constexpr qreal padBot = 17.0;
+    const qreal contentH = m_textItem->boundingRect().height();
+    const qreal cardH    = m_data.height - padTop - padBot;
+    const qreal maxScroll = qMax(0.0, contentH - cardH);
+    if (maxScroll < 1.0) { e->ignore(); return; }
+
+    const qreal delta = (e->delta() / 120.0) * 24.0; // 24px por clique
+    m_scrollOffset = qBound(0.0, m_scrollOffset - delta, maxScroll);
+    m_textItem->setPos(10.0, padTop - m_scrollOffset);
+    e->accept();
 }
 
 // ── Pintura ────────────────────────────────────────────────────────────────
