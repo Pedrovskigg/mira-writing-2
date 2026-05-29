@@ -164,29 +164,8 @@ CardItem::CardItem(const CanvasCard& data, QGraphicsItem* parent)
         m_textItem->document()->setDefaultTextOption(opt);
         m_textItem->document()->setDocumentMargin(0);
 
-        // Overlay do personagem: também usa QTextBrowser via proxy para scroll real
-        if (isChar) {
-            static const QRegularExpression kImg(
-                QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
-            const QString html = m_data.content.isEmpty()
-                ? QStringLiteral("<p><em style='color:rgba(255,255,255,0.55)'>Doc vazio</em></p>")
-                : QString(m_data.content).remove(kImg);
-            m_overlayBrowser = new QTextBrowser();
-            m_overlayBrowser->setFrameStyle(QFrame::NoFrame);
-            m_overlayBrowser->setOpenLinks(false);
-            m_overlayBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-            m_overlayBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-            m_overlayBrowser->setAutoFillBackground(false);
-            m_overlayBrowser->viewport()->setAutoFillBackground(false);
-            m_overlayBrowser->setStyleSheet(QStringLiteral(
-                "QTextBrowser { background: rgba(0,0,0,40); border: none;"
-                " color: rgba(255,255,255,210); font-size: 12px; }"));
-            m_overlayBrowser->setHtml(html);
-            m_overlayProxy = new QGraphicsProxyWidget(this);
-            m_overlayProxy->setWidget(m_overlayBrowser);
-            m_overlayProxy->setZValue(2.0);
-            m_overlayProxy->setVisible(false);
-        }
+        // character: ItemClipsChildrenToShape clipa o overlay ao card (igual ao image)
+        if (isChar) setFlag(ItemClipsChildrenToShape, true);
 
         updateTextItem();
         applyTextColor();
@@ -255,11 +234,7 @@ void CardItem::updateTextItem()
             m_textItem->setPos(padL, padTop - m_scrollOffset);
     }
 
-    // Overlay do personagem (QTextBrowser via proxy) — posiciona cobrindo o card
-    if (m_overlayProxy) {
-        m_overlayProxy->setPos(0, padTop);
-        m_overlayProxy->resize(QSizeF(m_data.width, th));
-    }
+    // m_overlayProxy foi removido — personagem usa BodyTextItem clippado
 }
 
 // ── Cores ──────────────────────────────────────────────────────────────────
@@ -293,14 +268,14 @@ void CardItem::applyTextColor()
 void CardItem::setLinkedHtml(const QString& html)
 {
     m_data.content = html;
-    // Atualiza o overlay do personagem se existir
-    if (m_overlayBrowser && m_data.type == QStringLiteral("character")) {
+    // Para personagem: atualiza o BodyTextItem overlay se existir
+    if (m_textItem && m_data.type == QStringLiteral("character")) {
         static const QRegularExpression kImg(
             QStringLiteral("<img[^>]*>"), QRegularExpression::CaseInsensitiveOption);
         const QString clean = html.isEmpty()
-            ? QStringLiteral("<p><em>Doc vazio</em></p>")
+            ? QStringLiteral("<p><em style='color:rgba(255,255,255,0.55)'>Doc vazio</em></p>")
             : QString(html).remove(kImg);
-        m_overlayBrowser->setHtml(clean);
+        m_textItem->setHtml(clean);
     }
     update();
 }
@@ -358,37 +333,30 @@ void CardItem::openImagePicker()
 void CardItem::toggleImageDesc(bool show)
 {
     m_showDesc = show;
-    if (m_overlayProxy) {
-        // Personagem: usa o QTextBrowser proxy (scroll real)
-        m_overlayProxy->setVisible(show);
-        if (show) m_overlayProxy->setFocus();
-    }
     if (m_textItem) {
-        // Imagem: usa BodyTextItem (editável)
-        const bool isImg = (m_data.type == QStringLiteral("image"));
-        if (isImg) {
-            m_textItem->setVisible(show);
-            if (show) m_textItem->setFocus();
-        }
+        m_textItem->setVisible(show);
+        if (show) m_textItem->setFocus();
     }
+    if (!show) m_scrollOffset = 0.0; // reset scroll ao fechar
     update();
 }
 
 void CardItem::wheelEvent(QGraphicsSceneWheelEvent* e)
 {
-    // Scroll da textarea nos cards note/comment via ItemClipsChildrenToShape
-    const bool isNote = (m_data.type == QStringLiteral("note") ||
-                         m_data.type == QStringLiteral("comment"));
-    if (!isNote || !m_textItem) { e->ignore(); return; }
+    if (!m_textItem) { e->ignore(); return; }
 
-    constexpr qreal padTop = CardItem::kHeaderH + 4.0;
-    constexpr qreal padBot = 17.0;
+    const bool isImg  = (m_data.type == QStringLiteral("image"));
+    const bool isChar = (m_data.type == QStringLiteral("character"));
+    // note/comment: sempre scrollável; image/character: só quando overlay aberto
+    if ((isImg || isChar) && !m_showDesc) { e->ignore(); return; }
+
+    const qreal padTop = (isImg || isChar) ? 34.0 : (kHeaderH + 4.0);
+    const qreal cardH  = m_data.height - padTop - 17.0;
     const qreal contentH = m_textItem->boundingRect().height();
-    const qreal cardH    = m_data.height - padTop - padBot;
     const qreal maxScroll = qMax(0.0, contentH - cardH);
     if (maxScroll < 1.0) { e->ignore(); return; }
 
-    const qreal delta = (e->delta() / 120.0) * 24.0; // 24px por clique
+    const qreal delta = (e->delta() / 120.0) * 24.0;
     m_scrollOffset = qBound(0.0, m_scrollOffset - delta, maxScroll);
     m_textItem->setPos(10.0, padTop - m_scrollOffset);
     e->accept();
