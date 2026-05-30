@@ -42,6 +42,7 @@ signals:
     void eventEditRequested(const QString& id);
     void eventPinDragStarted(const QString& fromId, const QPointF& scenePos);
     void canvasDoubleClicked(const QPointF& scenePos); // clique duplo em área vazia
+    void exportEventAsDoc(TimelineEvent data);
 
 protected:
     void drawBackground(QPainter* painter, const QRectF& rect) override;

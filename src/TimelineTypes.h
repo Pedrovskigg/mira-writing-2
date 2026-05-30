@@ -14,7 +14,7 @@ struct TimelineEvent {
     QString timelineId;
     QString title;
     QString description;
-    QString shape       = QStringLiteral("square"); // square | circle | triangle | diamond
+    QString shape       = QStringLiteral("square"); // mantido para compat. JSON legado
     QColor  color;          // inválida = herda da timeline
     qreal   x           = 0;
     qreal   y           = 0;
@@ -22,6 +22,8 @@ struct TimelineEvent {
     QString linkedSceneId;
     QString linkedDocId;
     QString conclusion; // resumo da cena (texto livre)
+    bool    expanded    = false;
+    qreal   expandedH   = 160.0;
 };
 
 struct TimelineConn {

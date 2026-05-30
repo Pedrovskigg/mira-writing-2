@@ -1,4 +1,5 @@
 #include "TimelineView.h"
+#include "TimelineEventItem.h"
 
 #include <QMouseEvent>
 #include <QScrollBar>
@@ -60,6 +61,15 @@ void TimelineView::fitAll()
 
 void TimelineView::wheelEvent(QWheelEvent* event)
 {
+    // Mesma regra da Lousa: se o cursor estiver sobre um evento expandido com
+    // conteudo rolavel, o wheel rola o texto; senao, da zoom no canvas.
+    for (QGraphicsItem* it = itemAt(event->position().toPoint()); it; it = it->parentItem()) {
+        if (auto* ev = dynamic_cast<TimelineEventItem*>(it)) {
+            if (ev->wheelScroll(event->angleDelta().y())) { event->accept(); return; }
+            break;
+        }
+    }
+
     const qreal step    = event->angleDelta().y() > 0 ? 1.12 : (1.0 / 1.12);
     const qreal newZoom = qBound(0.1, m_zoom * step, 4.0);
     if (qFuzzyCompare(newZoom, m_zoom)) { event->accept(); return; }

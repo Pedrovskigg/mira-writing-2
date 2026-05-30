@@ -41,7 +41,7 @@ QPainterPath TimelineConnItem::computePath() const
     if (!from || !to) return QPainterPath();
 
     const QPointF a = from->mapToScene(from->pinPos());
-    const QPointF b = to->mapToScene(QPointF(-2.0, TimelineEventItem::kH / 2.0));
+    const QPointF b = to->mapToScene(QPointF(-2.0, to->currentH() / 2.0));
 
     QPainterPath path;
     path.moveTo(a);

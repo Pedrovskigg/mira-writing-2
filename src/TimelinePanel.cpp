@@ -3,6 +3,10 @@
 #include "IconUtils.h"
 #include "ProjectModel.h"
 #include "Theme.h"
+
+#include <QComboBox>
+#include <QMessageBox>
+#include <QRegularExpression>
 #include "TimelineEventItem.h"
 #include "TimelineEventPopup.h"
 #include "TimelineScene.h"
@@ -127,9 +131,10 @@ void TimelinePanel::buildUi()
     m_view  = new TimelineView(m_scene, this);
     root->addWidget(m_view, 1);
 
-    connect(m_scene, &TimelineScene::eventDataChanged, this, [this]() { save(); });
+    connect(m_scene, &TimelineScene::eventDataChanged,  this, [this]() { save(); });
     connect(m_scene, &TimelineScene::eventEditRequested, this, &TimelinePanel::openEditPopup);
     connect(m_scene, &TimelineScene::canvasDoubleClicked, this, &TimelinePanel::createEventAt);
+    connect(m_scene, &TimelineScene::exportEventAsDoc,   this, &TimelinePanel::onExportEventAsDoc);
 }
 
 void TimelinePanel::createTimeline()
@@ -228,16 +233,47 @@ void TimelinePanel::openEditPopup(const QString& id)
     auto* item = m_scene->findEvent(id);
     if (!item) return;
 
+    const QString oldTimelineId = item->eventData().timelineId;
+
     TimelineEventPopup dlg(m_timelines, this);
     dlg.setEventData(item->eventData());
     if (dlg.exec() != QDialog::Accepted) return;
 
     TimelineEvent updated = dlg.eventData();
-    updated.id = id;
-    updated.x  = item->eventData().x;
-    updated.y  = item->eventData().y;
+    updated.id        = id;
+    updated.x         = item->eventData().x;
+    updated.y         = item->eventData().y;
+    updated.expanded  = item->eventData().expanded;
+    updated.expandedH = item->eventData().expandedH;
 
-    // Atualiza no item gráfico
+    // Se mudou de timeline, reconectar
+    if (updated.timelineId != oldTimelineId) {
+        // Remove conexoes do evento na cena (removeEvent nao e chamado aqui,
+        // entao fazemos manualmente com a lista copiada antes de iterar)
+        const QList<TimelineConn> snapshot = m_scene->allConnectionData();
+        for (const auto& conn : snapshot) {
+            if (conn.fromEventId == id || conn.toEventId == id) {
+                m_scene->removeConnection(conn.id);
+                for (int i = m_connections.size() - 1; i >= 0; --i) {
+                    if (m_connections[i].id == conn.id) {
+                        m_connections.removeAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+        // Cria nova conexao automatica para a nova timeline
+        if (!updated.timelineId.isEmpty()) {
+            // Atualiza o dado do item antes de autoConnect para que o algoritmo
+            // enxergue a nova timelineId na busca pelo "ultimo evento anterior"
+            item->setEventData(updated);
+            const TimelineConn newConn = m_scene->autoConnect(id, updated.timelineId);
+            if (!newConn.id.isEmpty())
+                m_connections.append(newConn);
+        }
+    }
+
+    // Atualiza no item grafico
     item->setEventData(updated);
     item->setTimelineColor(m_scene->timelineColor(updated.timelineId));
 
@@ -306,6 +342,8 @@ void TimelinePanel::save() const
         o[QStringLiteral("linkedSceneId")] = e.linkedSceneId;
         o[QStringLiteral("linkedDocId")]   = e.linkedDocId;
         o[QStringLiteral("conclusion")]    = e.conclusion;
+        o[QStringLiteral("expanded")]      = e.expanded;
+        o[QStringLiteral("expandedH")]     = e.expandedH;
         evs.append(o);
     }
     root[QStringLiteral("events")] = evs;
@@ -371,6 +409,8 @@ void TimelinePanel::load()
         e.linkedSceneId = o[QStringLiteral("linkedSceneId")].toString();
         e.linkedDocId  = o[QStringLiteral("linkedDocId")].toString();
         e.conclusion   = o[QStringLiteral("conclusion")].toString();
+        e.expanded     = o[QStringLiteral("expanded")].toBool(false);
+        e.expandedH    = o[QStringLiteral("expandedH")].toDouble(160.0);
         m_events.append(e);
         if (m_scene) m_scene->addEvent(e);
     }
@@ -386,6 +426,86 @@ void TimelinePanel::load()
         m_connections.append(c);
         if (m_scene) m_scene->addConnection(c);
     }
+}
+
+void TimelinePanel::onExportEventAsDoc(const TimelineEvent& event)
+{
+    if (!m_projectModel) return;
+
+    const QList<Drawer>& drawers = m_projectModel->drawers();
+    if (drawers.isEmpty()) {
+        QMessageBox::information(this, tr("Exportar como documento"),
+            tr("Crie uma gaveta antes de usar este recurso."));
+        return;
+    }
+
+    // ── Diálogo de destino ────────────────────────────────────────────────────
+    auto* dlg = new QDialog(this, Qt::Dialog);
+    dlg->setWindowTitle(tr("Exportar como documento"));
+    dlg->setMinimumWidth(360);
+
+    auto* root = new QVBoxLayout(dlg);
+    root->setContentsMargins(16, 16, 16, 16);
+    root->setSpacing(10);
+
+    auto* nameLab = new QLabel(tr("Nome do documento:"), dlg);
+    root->addWidget(nameLab);
+    auto* nameEdit = new QLineEdit(event.title, dlg);
+    nameEdit->selectAll();
+    root->addWidget(nameEdit);
+
+    auto* drawerLab = new QLabel(tr("Gaveta de destino:"), dlg);
+    root->addWidget(drawerLab);
+    auto* drawerCombo = new QComboBox(dlg);
+    for (const auto& d : drawers) {
+        const QString label = d.title.isEmpty() ? tr("(sem nome)") : d.title;
+        drawerCombo->addItem(label, d.key);
+    }
+    root->addWidget(drawerCombo);
+    root->addStretch();
+
+    auto* btnRow = new QHBoxLayout;
+    btnRow->addStretch();
+    auto* cancel = new QPushButton(tr("Cancelar"), dlg);
+    auto* ok     = new QPushButton(tr("Criar"), dlg);
+    ok->setDefault(true);
+    btnRow->addWidget(cancel);
+    btnRow->addWidget(ok);
+    root->addLayout(btnRow);
+
+    connect(cancel, &QPushButton::clicked, dlg, &QDialog::reject);
+    connect(ok,     &QPushButton::clicked, dlg, &QDialog::accept);
+    dlg->setStyleSheet(styleSheet());
+
+    if (dlg->exec() != QDialog::Accepted) { dlg->deleteLater(); return; }
+
+    const QString title   = nameEdit->text().trimmed();
+    const QString destKey = drawerCombo->currentData().toString();
+    dlg->deleteLater();
+
+    if (title.isEmpty() || destKey.isEmpty()) return;
+
+    // ── Converte descrição em HTML básico ────────────────────────────────────
+    auto buildHtml = [](const QString& text) -> QString {
+        if (text.trimmed().isEmpty()) return QStringLiteral("<p></p>");
+        const QStringList paras = text.split(
+            QRegularExpression(QStringLiteral("\\n{2,}")), Qt::SkipEmptyParts);
+        QString out;
+        for (const QString& para : paras) {
+            QString chunk = para.trimmed().toHtmlEscaped();
+            chunk.replace(QChar('\n'), QStringLiteral("<br/>"));
+            if (!chunk.isEmpty())
+                out += QStringLiteral("<p>%1</p>").arg(chunk);
+        }
+        return out.isEmpty() ? QStringLiteral("<p></p>") : out;
+    };
+
+    DrawerItem it;
+    it.id           = ProjectModel::uid();
+    it.title        = title;
+    it.hasInlineHtml = true;
+    it.html         = buildHtml(event.description);
+    m_projectModel->addDrawerItem(destKey, it);
 }
 
 void TimelinePanel::applyTheme()

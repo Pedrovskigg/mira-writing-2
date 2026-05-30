@@ -56,6 +56,8 @@ TimelineEventItem* TimelineScene::addEvent(const TimelineEvent& data)
 
     connect(item, &TimelineEventItem::positionChanged,
             this, &TimelineScene::onEventPositionChanged);
+    connect(item, &TimelineEventItem::geometryChanged,
+            this, &TimelineScene::onEventPositionChanged);
     connect(item, &TimelineEventItem::deleteRequested,
             this, [this](const QString& id) {
                 removeEvent(id);
@@ -65,12 +67,24 @@ TimelineEventItem* TimelineScene::addEvent(const TimelineEvent& data)
             this, &TimelineScene::eventEditRequested);
     connect(item, &TimelineEventItem::pinDragStarted,
             this, &TimelineScene::eventPinDragStarted);
+    connect(item, &TimelineEventItem::exportAsDocRequested,
+            this, &TimelineScene::exportEventAsDoc);
 
     return item;
 }
 
 void TimelineScene::removeEvent(const QString& id)
 {
+    // Remove primeiro todas as conexoes que referenciam este evento
+    QStringList connIds;
+    for (const auto* conn : std::as_const(m_connections)) {
+        const auto& d = conn->connData();
+        if (d.fromEventId == id || d.toEventId == id)
+            connIds.append(d.id);
+    }
+    for (const QString& cid : std::as_const(connIds))
+        removeConnection(cid);
+
     auto* item = m_eventById.value(id, nullptr);
     if (!item) return;
     m_events.removeOne(item);

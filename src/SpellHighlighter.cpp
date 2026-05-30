@@ -31,6 +31,21 @@ void SpellHighlighter::setEnabled(bool enabled)
 
 void SpellHighlighter::highlightBlock(const QString& text)
 {
+    // Contraste em markers: fragmentos com background → foreground calculado por luminância.
+    // Roda sempre (mesmo suspenso) porque é visual e barato.
+    const QTextBlock blk = currentBlock();
+    for (auto fi = blk.begin(); !fi.atEnd(); ++fi) {
+        const QTextFragment frag = fi.fragment();
+        if (!frag.isValid()) continue;
+        const QBrush bg = frag.charFormat().background();
+        if (bg.style() == Qt::NoBrush || bg.color().alpha() == 0) continue;
+        const QColor c = bg.color();
+        const double lum = 0.299 * c.redF() + 0.587 * c.greenF() + 0.114 * c.blueF();
+        QTextCharFormat fmt;
+        fmt.setForeground(lum > 0.5 ? QColor(Qt::black) : QColor(Qt::white));
+        setFormat(frag.position() - blk.position(), frag.length(), fmt);
+    }
+
     if (!m_enabled || m_suspended || !m_checker || !m_checker->isEnabled()) return;
     if (text.isEmpty()) return;
 

@@ -20,6 +20,7 @@ public:
 
 signals:
     void closeRequested();
+    void exportEventAsDoc(TimelineEvent data);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -30,6 +31,7 @@ private slots:
     void createTimeline();
     void createEventAt(const QPointF& scenePos);
     void openEditPopup(const QString& eventId);
+    void onExportEventAsDoc(const TimelineEvent& event);
 
 private:
     void buildUi();
