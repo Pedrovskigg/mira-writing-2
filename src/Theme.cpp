@@ -3382,6 +3382,183 @@ void Manager::loadBundled()
         m_themes.append(t);
     }
 
+    // ============ MESAS (imagem de fundo: a página pousa na madeira) =========
+    {
+        // Escrivaninha — a mesa clássica: nogueira média e quente, papel creme
+        // pousado por cima. A madeira aparece nas margens, ao redor da folha.
+        MiraTheme t;
+        t.id = QStringLiteral("desk-oak");
+        t.name = QStringLiteral("Escrivaninha");
+        t.bundled = true;
+        t.appBackground = QStringLiteral("#241810");
+        t.panelBackground = QStringLiteral("#2e1f13");
+        t.panelBorder = QStringLiteral("#4a3320");
+        t.textPrimary = QStringLiteral("#e0cba8");
+        t.textMuted = QStringLiteral("#a8855f");
+        t.textBright = QStringLiteral("#f6e6c8");
+        t.hoverOverlay = QStringLiteral("rgba(224,203,168,0.06)");
+        t.pressedOverlay = QStringLiteral("rgba(224,203,168,0.04)");
+        t.subtleBorder = QStringLiteral("rgba(224,203,168,0.10)");
+        t.accentDefault = QStringLiteral("#d09850");
+        t.hoverStrong = QStringLiteral("rgba(224,203,168,0.12)");
+        t.borderStrong = QStringLiteral("rgba(224,203,168,0.22)");
+        t.focusBorder = QStringLiteral("rgba(224,203,168,0.32)");
+        t.inputBackground = QStringLiteral("rgba(0,0,0,0.30)");
+        t.disabledText = QStringLiteral("rgba(224,203,168,0.30)");
+        t.selectionRing = QStringLiteral("#f6e6c8");
+        t.accentSuccess = QStringLiteral("#8aa84e");
+        t.accentSuccessSoft = QStringLiteral("rgba(138,168,78,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(138,168,78,0.50)");
+        t.accentDanger = QStringLiteral("#c85540");
+        t.accentDangerSoft = QStringLiteral("rgba(200,85,64,0.14)");
+        t.accentDangerBorderSoft = QStringLiteral("rgba(200,85,64,0.50)");
+        t.accentWarning = QStringLiteral("#d8923c");
+        t.accentInfo = QStringLiteral("#7090b0");
+        t.accentInfoSoft = QStringLiteral("rgba(112,144,176,0.22)");
+        t.accentInfoBorderSoft = QStringLiteral("rgba(112,144,176,0.55)");
+        t.editorBackground = QStringLiteral("#f2e8d0");
+        t.editorTextColor = QStringLiteral("#3a2c1a");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,200)");
+        t.pageShadowRadius = 30;
+        t.pageShadowOffset = 8;
+        t.backgroundImage = bundledImagePath(QStringLiteral("wood-2.jpg"));
+        t.backgroundMode = BgZoom;
+        t.editorOpacity = 96;
+        m_themes.append(t);
+    }
+    {
+        // Mogno — mesa nobre de nogueira avermelhada, papel pergaminho quente.
+        MiraTheme t;
+        t.id = QStringLiteral("desk-mahogany");
+        t.name = QStringLiteral("Mogno");
+        t.bundled = true;
+        t.appBackground = QStringLiteral("#1e1410");
+        t.panelBackground = QStringLiteral("#281a14");
+        t.panelBorder = QStringLiteral("#432a1e");
+        t.textPrimary = QStringLiteral("#e2c8b4");
+        t.textMuted = QStringLiteral("#a87e68");
+        t.textBright = QStringLiteral("#f4e0cc");
+        t.hoverOverlay = QStringLiteral("rgba(226,200,180,0.06)");
+        t.pressedOverlay = QStringLiteral("rgba(226,200,180,0.04)");
+        t.subtleBorder = QStringLiteral("rgba(226,200,180,0.10)");
+        t.accentDefault = QStringLiteral("#c87a4a");
+        t.hoverStrong = QStringLiteral("rgba(226,200,180,0.12)");
+        t.borderStrong = QStringLiteral("rgba(226,200,180,0.22)");
+        t.focusBorder = QStringLiteral("rgba(226,200,180,0.32)");
+        t.inputBackground = QStringLiteral("rgba(0,0,0,0.30)");
+        t.disabledText = QStringLiteral("rgba(226,200,180,0.30)");
+        t.selectionRing = QStringLiteral("#f4e0cc");
+        t.accentSuccess = QStringLiteral("#8aa84e");
+        t.accentSuccessSoft = QStringLiteral("rgba(138,168,78,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(138,168,78,0.50)");
+        t.accentDanger = QStringLiteral("#c85040");
+        t.accentDangerSoft = QStringLiteral("rgba(200,80,64,0.14)");
+        t.accentDangerBorderSoft = QStringLiteral("rgba(200,80,64,0.50)");
+        t.accentWarning = QStringLiteral("#d8923c");
+        t.accentInfo = QStringLiteral("#7090b0");
+        t.accentInfoSoft = QStringLiteral("rgba(112,144,176,0.22)");
+        t.accentInfoBorderSoft = QStringLiteral("rgba(112,144,176,0.55)");
+        t.editorBackground = QStringLiteral("#efe2cc");
+        t.editorTextColor = QStringLiteral("#38271a");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,200)");
+        t.pageShadowRadius = 30;
+        t.pageShadowOffset = 8;
+        t.backgroundImage = bundledImagePath(QStringLiteral("wood-3.jpg"));
+        t.backgroundMode = BgZoom;
+        t.editorOpacity = 95;
+        m_themes.append(t);
+    }
+    {
+        // Bambu — mesa clara de bambu dourado, folha quase branca. Arejada,
+        // luz de manhã, a mais luminosa das mesas.
+        MiraTheme t;
+        t.id = QStringLiteral("desk-bamboo");
+        t.name = QStringLiteral("Bambu");
+        t.bundled = true;
+        t.appBackground = QStringLiteral("#3a2c14");
+        t.panelBackground = QStringLiteral("#463418");
+        t.panelBorder = QStringLiteral("#6a5028");
+        t.textPrimary = QStringLiteral("#ecdcb8");
+        t.textMuted = QStringLiteral("#b09864");
+        t.textBright = QStringLiteral("#fbf0d4");
+        t.hoverOverlay = QStringLiteral("rgba(236,220,184,0.06)");
+        t.pressedOverlay = QStringLiteral("rgba(236,220,184,0.04)");
+        t.subtleBorder = QStringLiteral("rgba(236,220,184,0.10)");
+        t.accentDefault = QStringLiteral("#c89030");
+        t.hoverStrong = QStringLiteral("rgba(236,220,184,0.12)");
+        t.borderStrong = QStringLiteral("rgba(236,220,184,0.22)");
+        t.focusBorder = QStringLiteral("rgba(236,220,184,0.32)");
+        t.inputBackground = QStringLiteral("rgba(0,0,0,0.26)");
+        t.disabledText = QStringLiteral("rgba(236,220,184,0.30)");
+        t.selectionRing = QStringLiteral("#fbf0d4");
+        t.accentSuccess = QStringLiteral("#6e9a3e");
+        t.accentSuccessSoft = QStringLiteral("rgba(110,154,62,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(110,154,62,0.50)");
+        t.accentDanger = QStringLiteral("#c05040");
+        t.accentDangerSoft = QStringLiteral("rgba(192,80,64,0.14)");
+        t.accentDangerBorderSoft = QStringLiteral("rgba(192,80,64,0.50)");
+        t.accentWarning = QStringLiteral("#c88a30");
+        t.accentInfo = QStringLiteral("#5a82a0");
+        t.accentInfoSoft = QStringLiteral("rgba(90,130,160,0.22)");
+        t.accentInfoBorderSoft = QStringLiteral("rgba(90,130,160,0.55)");
+        t.editorBackground = QStringLiteral("#fbf6e8");
+        t.editorTextColor = QStringLiteral("#3a3018");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(60,40,15,150)");
+        t.pageShadowRadius = 28;
+        t.pageShadowOffset = 7;
+        t.backgroundImage = bundledImagePath(QStringLiteral("wood-6.jpg"));
+        t.backgroundMode = BgZoom;
+        t.editorOpacity = 96;
+        m_themes.append(t);
+    }
+    {
+        // Vigília — escrever de madrugada numa mesa de ébano. A folha é escura e
+        // translúcida: a veia da madeira queimada vaza pelo papel. Luz baixa.
+        MiraTheme t;
+        t.id = QStringLiteral("desk-ebony");
+        t.name = QStringLiteral("Vigília");
+        t.bundled = true;
+        t.appBackground = QStringLiteral("#141009");
+        t.panelBackground = QStringLiteral("#1c160e");
+        t.panelBorder = QStringLiteral("#322618");
+        t.textPrimary = QStringLiteral("#d4c4a4");
+        t.textMuted = QStringLiteral("#8a7656");
+        t.textBright = QStringLiteral("#ece0c8");
+        t.hoverOverlay = QStringLiteral("rgba(212,196,164,0.06)");
+        t.pressedOverlay = QStringLiteral("rgba(212,196,164,0.04)");
+        t.subtleBorder = QStringLiteral("rgba(212,196,164,0.10)");
+        t.accentDefault = QStringLiteral("#c89858");
+        t.hoverStrong = QStringLiteral("rgba(212,196,164,0.12)");
+        t.borderStrong = QStringLiteral("rgba(212,196,164,0.22)");
+        t.focusBorder = QStringLiteral("rgba(212,196,164,0.32)");
+        t.inputBackground = QStringLiteral("rgba(0,0,0,0.34)");
+        t.disabledText = QStringLiteral("rgba(212,196,164,0.30)");
+        t.selectionRing = QStringLiteral("#ece0c8");
+        t.accentSuccess = QStringLiteral("#8aa84e");
+        t.accentSuccessSoft = QStringLiteral("rgba(138,168,78,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(138,168,78,0.50)");
+        t.accentDanger = QStringLiteral("#c85540");
+        t.accentDangerSoft = QStringLiteral("rgba(200,85,64,0.14)");
+        t.accentDangerBorderSoft = QStringLiteral("rgba(200,85,64,0.50)");
+        t.accentWarning = QStringLiteral("#d8923c");
+        t.accentInfo = QStringLiteral("#7090b0");
+        t.accentInfoSoft = QStringLiteral("rgba(112,144,176,0.22)");
+        t.accentInfoBorderSoft = QStringLiteral("rgba(112,144,176,0.55)");
+        t.editorBackground = QStringLiteral("#1a150e");
+        t.editorTextColor = QStringLiteral("#ddd0b6");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,210)");
+        t.pageShadowRadius = 32;
+        t.pageShadowOffset = 7;
+        t.backgroundImage = bundledImagePath(QStringLiteral("wood-1.jpg"));
+        t.backgroundMode = BgZoom;
+        t.editorOpacity = 82;
+        m_themes.append(t);
+    }
+
     // ---- Categorias pro filtro do painel de Temas ----
     // light = claros neutros/frios | warm = amarelados/quentes |
     // dark = escuros neutros | colorful = paletas vibrantes (azul/verde/roxo…)
@@ -3464,6 +3641,10 @@ void Manager::loadBundled()
         { QStringLiteral("ember-red"),        QStringLiteral("colorful") },
         { QStringLiteral("radioactive"),      QStringLiteral("colorful") },
         { QStringLiteral("royalty"),          QStringLiteral("colorful") },
+        { QStringLiteral("desk-oak"),         QStringLiteral("warm") },
+        { QStringLiteral("desk-mahogany"),    QStringLiteral("warm") },
+        { QStringLiteral("desk-bamboo"),      QStringLiteral("warm") },
+        { QStringLiteral("desk-ebony"),       QStringLiteral("dark") },
     };
     for (MiraTheme& t : m_themes)
         t.category = kCategory.value(t.id, QStringLiteral("colorful"));
