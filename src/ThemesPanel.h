@@ -37,6 +37,7 @@ private:
     enum Tab { TabBundled = 0, TabCustom = 1 };
 
     void buildUi();
+    QWidget* buildCategoryFilterRow(QWidget* parent);
     void rebuildGrids();
     void rebuildOneGrid(QWidget* gridContainer, const QList<Theme::MiraTheme>& themes, bool custom);
     void selectId(const QString& id);
@@ -62,5 +63,7 @@ private:
     QLabel* m_selectionInfo;
 
     QString m_selectedId;
+    // Filtro de categoria da aba Padrão: "all"|"light"|"warm"|"dark"|"colorful".
+    QString m_categoryFilter = QStringLiteral("all");
     QList<QPointer<QFrame>> m_cards; // todos os cards visíveis (ambas as abas)
 };

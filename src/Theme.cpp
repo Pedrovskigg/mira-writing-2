@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -1442,6 +1443,360 @@ void Manager::loadBundled()
         t.editorOpacity    = 78;
         m_themes.append(t);
     }
+    {
+        // Âmbar Noturno — a alma quente do Âmbar em versão escura. Mel dourado
+        // sobre marrom-quase-preto; calor sem o brilho da página clara.
+        MiraTheme t;
+        t.id = QStringLiteral("amber-night");
+        t.name = QStringLiteral("Âmbar Noturno");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#1c1408");
+        t.panelBackground  = QStringLiteral("#271c0e");
+        t.panelBorder      = QStringLiteral("#3d2e16");
+        t.textPrimary      = QStringLiteral("#e6d2a6");
+        t.textMuted        = QStringLiteral("#9a8050");
+        t.textBright       = QStringLiteral("#fbeccb");
+        t.hoverOverlay     = QStringLiteral("rgba(230,210,166,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(230,210,166,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(230,210,166,0.10)");
+        t.accentDefault    = QStringLiteral("#e0a23c");  // mel dourado
+
+        t.hoverStrong         = QStringLiteral("rgba(230,210,166,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(230,210,166,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(230,210,166,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.28)");
+        t.disabledText        = QStringLiteral("rgba(230,210,166,0.30)");
+        t.selectionRing       = QStringLiteral("#fbeccb");
+
+        t.accentSuccess           = QStringLiteral("#8aa84e");
+        t.accentSuccessSoft       = QStringLiteral("rgba(138,168,78,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(138,168,78,0.50)");
+        t.accentDanger            = QStringLiteral("#c8553f");
+        t.accentDangerSoft        = QStringLiteral("rgba(200,85,63,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(200,85,63,0.50)");
+        t.accentWarning           = QStringLiteral("#e0a23c");
+        t.accentInfo              = QStringLiteral("#6f9ac0");
+        t.accentInfoSoft          = QStringLiteral("rgba(111,154,192,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(111,154,192,0.55)");
+
+        t.editorBackground = QStringLiteral("#221809");
+        t.editorTextColor  = QStringLiteral("#ecdaab");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,185)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 6;
+        m_themes.append(t);
+    }
+    {
+        // Trigo — campo de trigo ao sol. Claro dourado-esverdeado, mais "vegetal"
+        // que o Âmbar; calor de palha seca.
+        MiraTheme t;
+        t.id = QStringLiteral("wheat");
+        t.name = QStringLiteral("Trigo");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#e9e1c4");
+        t.panelBackground  = QStringLiteral("#f3eed8");
+        t.panelBorder      = QStringLiteral("#cdc59c");
+        t.textPrimary      = QStringLiteral("#54502f");
+        t.textMuted        = QStringLiteral("#8a8456");
+        t.textBright       = QStringLiteral("#2c2912");
+        t.hoverOverlay     = QStringLiteral("rgba(84,80,47,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(84,80,47,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(84,80,47,0.14)");
+        t.accentDefault    = QStringLiteral("#9a7b2e");  // dourado-oliva
+
+        t.hoverStrong         = QStringLiteral("rgba(84,80,47,0.10)");
+        t.borderStrong        = QStringLiteral("rgba(84,80,47,0.24)");
+        t.focusBorder         = QStringLiteral("rgba(84,80,47,0.34)");
+        t.inputBackground     = QStringLiteral("rgba(84,80,47,0.05)");
+        t.disabledText        = QStringLiteral("rgba(84,80,47,0.32)");
+        t.selectionRing       = QStringLiteral("#2c2912");
+
+        t.accentSuccess           = QStringLiteral("#5e7a3a");
+        t.accentSuccessSoft       = QStringLiteral("rgba(94,122,58,0.14)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(94,122,58,0.45)");
+        t.accentDanger            = QStringLiteral("#a83333");
+        t.accentDangerSoft        = QStringLiteral("rgba(168,51,51,0.10)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(168,51,51,0.45)");
+        t.accentWarning           = QStringLiteral("#9a7b2e");
+        t.accentInfo              = QStringLiteral("#3a6b8a");
+        t.accentInfoSoft          = QStringLiteral("rgba(58,107,138,0.16)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(58,107,138,0.55)");
+
+        t.editorBackground = QStringLiteral("#f3eed8");
+        t.editorTextColor  = QStringLiteral("#353117");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(84,80,47,90)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 5;
+        m_themes.append(t);
+    }
+    {
+        // Oceano — azul profundo de mar aberto. Escuro com accent azul vivo;
+        // calmo e espaçoso.
+        MiraTheme t;
+        t.id = QStringLiteral("ocean");
+        t.name = QStringLiteral("Oceano");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#0c1a2a");
+        t.panelBackground  = QStringLiteral("#102438");
+        t.panelBorder      = QStringLiteral("#1d3550");
+        t.textPrimary      = QStringLiteral("#c2d4e6");
+        t.textMuted        = QStringLiteral("#6d8aa6");
+        t.textBright       = QStringLiteral("#eaf2fb");
+        t.hoverOverlay     = QStringLiteral("rgba(194,212,230,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(194,212,230,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(194,212,230,0.10)");
+        t.accentDefault    = QStringLiteral("#3d9be0");  // azul-oceano
+
+        t.hoverStrong         = QStringLiteral("rgba(194,212,230,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(194,212,230,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(194,212,230,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.28)");
+        t.disabledText        = QStringLiteral("rgba(194,212,230,0.30)");
+        t.selectionRing       = QStringLiteral("#eaf2fb");
+
+        t.accentSuccess           = QStringLiteral("#3fae8f");
+        t.accentSuccessSoft       = QStringLiteral("rgba(63,174,143,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(63,174,143,0.50)");
+        t.accentDanger            = QStringLiteral("#e0556a");
+        t.accentDangerSoft        = QStringLiteral("rgba(224,85,106,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(224,85,106,0.50)");
+        t.accentWarning           = QStringLiteral("#e0a23c");
+        t.accentInfo              = QStringLiteral("#3d9be0");
+        t.accentInfoSoft          = QStringLiteral("rgba(61,155,224,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(61,155,224,0.55)");
+
+        t.editorBackground = QStringLiteral("#0e2032");
+        t.editorTextColor  = QStringLiteral("#d6e4f0");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,190)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 6;
+        m_themes.append(t);
+    }
+    {
+        // Floresta — verde de mata fechada. Escuro com accent verde-folha;
+        // orgânico e tranquilo.
+        MiraTheme t;
+        t.id = QStringLiteral("forest");
+        t.name = QStringLiteral("Floresta");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#0e1a12");
+        t.panelBackground  = QStringLiteral("#14241a");
+        t.panelBorder      = QStringLiteral("#20382a");
+        t.textPrimary      = QStringLiteral("#c2d8c4");
+        t.textMuted        = QStringLiteral("#6f8a74");
+        t.textBright       = QStringLiteral("#e8f4ea");
+        t.hoverOverlay     = QStringLiteral("rgba(194,216,196,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(194,216,196,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(194,216,196,0.10)");
+        t.accentDefault    = QStringLiteral("#4fae5e");  // verde-folha
+
+        t.hoverStrong         = QStringLiteral("rgba(194,216,196,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(194,216,196,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(194,216,196,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.26)");
+        t.disabledText        = QStringLiteral("rgba(194,216,196,0.30)");
+        t.selectionRing       = QStringLiteral("#e8f4ea");
+
+        t.accentSuccess           = QStringLiteral("#6fbf5a");
+        t.accentSuccessSoft       = QStringLiteral("rgba(111,191,90,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(111,191,90,0.50)");
+        t.accentDanger            = QStringLiteral("#d8584a");
+        t.accentDangerSoft        = QStringLiteral("rgba(216,88,74,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(216,88,74,0.50)");
+        t.accentWarning           = QStringLiteral("#d8a23c");
+        t.accentInfo              = QStringLiteral("#4f9ad0");
+        t.accentInfoSoft          = QStringLiteral("rgba(79,154,208,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(79,154,208,0.55)");
+
+        t.editorBackground = QStringLiteral("#112018");
+        t.editorTextColor  = QStringLiteral("#d2e6d4");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,185)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 6;
+        m_themes.append(t);
+    }
+    {
+        // Ametista — roxo de pedra preciosa. Escuro com accent violeta;
+        // misterioso, noturno.
+        MiraTheme t;
+        t.id = QStringLiteral("amethyst");
+        t.name = QStringLiteral("Ametista");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#160f24");
+        t.panelBackground  = QStringLiteral("#1f1633");
+        t.panelBorder      = QStringLiteral("#322447");
+        t.textPrimary      = QStringLiteral("#d2c6e6");
+        t.textMuted        = QStringLiteral("#8574a6");
+        t.textBright       = QStringLiteral("#efe8fb");
+        t.hoverOverlay     = QStringLiteral("rgba(210,198,230,0.06)");
+        t.pressedOverlay   = QStringLiteral("rgba(210,198,230,0.04)");
+        t.subtleBorder     = QStringLiteral("rgba(210,198,230,0.10)");
+        t.accentDefault    = QStringLiteral("#a06ce0");  // violeta
+
+        t.hoverStrong         = QStringLiteral("rgba(210,198,230,0.12)");
+        t.borderStrong        = QStringLiteral("rgba(210,198,230,0.22)");
+        t.focusBorder         = QStringLiteral("rgba(210,198,230,0.32)");
+        t.inputBackground     = QStringLiteral("rgba(0,0,0,0.28)");
+        t.disabledText        = QStringLiteral("rgba(210,198,230,0.30)");
+        t.selectionRing       = QStringLiteral("#efe8fb");
+
+        t.accentSuccess           = QStringLiteral("#6fb58a");
+        t.accentSuccessSoft       = QStringLiteral("rgba(111,181,138,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(111,181,138,0.50)");
+        t.accentDanger            = QStringLiteral("#e0567a");
+        t.accentDangerSoft        = QStringLiteral("rgba(224,86,122,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(224,86,122,0.50)");
+        t.accentWarning           = QStringLiteral("#e0a23c");
+        t.accentInfo              = QStringLiteral("#6f8ae0");
+        t.accentInfoSoft          = QStringLiteral("rgba(111,138,224,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(111,138,224,0.55)");
+
+        t.editorBackground = QStringLiteral("#1b1230");
+        t.editorTextColor  = QStringLiteral("#ddd2ef");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(0,0,0,190)");
+        t.pageShadowRadius = 26;
+        t.pageShadowOffset = 6;
+        m_themes.append(t);
+    }
+    {
+        // Lavanda — claro lilás suave. Versão luminosa do roxo; delicado e
+        // calmo, alternativa colorida pros temas claros.
+        MiraTheme t;
+        t.id = QStringLiteral("lavender");
+        t.name = QStringLiteral("Lavanda");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#ece8f4");
+        t.panelBackground  = QStringLiteral("#f5f2fb");
+        t.panelBorder      = QStringLiteral("#d2c8e2");
+        t.textPrimary      = QStringLiteral("#4e4660");
+        t.textMuted        = QStringLiteral("#897ea0");
+        t.textBright       = QStringLiteral("#2c2440");
+        t.hoverOverlay     = QStringLiteral("rgba(60,50,80,0.05)");
+        t.pressedOverlay   = QStringLiteral("rgba(60,50,80,0.035)");
+        t.subtleBorder     = QStringLiteral("rgba(60,50,80,0.12)");
+        t.accentDefault    = QStringLiteral("#8a5fc0");  // lavanda
+
+        t.hoverStrong         = QStringLiteral("rgba(60,50,80,0.09)");
+        t.borderStrong        = QStringLiteral("rgba(60,50,80,0.20)");
+        t.focusBorder         = QStringLiteral("rgba(60,50,80,0.30)");
+        t.inputBackground     = QStringLiteral("rgba(60,50,80,0.04)");
+        t.disabledText        = QStringLiteral("rgba(60,50,80,0.30)");
+        t.selectionRing       = QStringLiteral("#2c2440");
+
+        t.accentSuccess           = QStringLiteral("#5e8a55");
+        t.accentSuccessSoft       = QStringLiteral("rgba(94,138,85,0.14)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(94,138,85,0.45)");
+        t.accentDanger            = QStringLiteral("#b04a5a");
+        t.accentDangerSoft        = QStringLiteral("rgba(176,74,90,0.10)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(176,74,90,0.45)");
+        t.accentWarning           = QStringLiteral("#c08a40");
+        t.accentInfo              = QStringLiteral("#5a6fc0");
+        t.accentInfoSoft          = QStringLiteral("rgba(90,111,192,0.15)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(90,111,192,0.50)");
+
+        t.editorBackground = QStringLiteral("#f5f2fb");
+        t.editorTextColor  = QStringLiteral("#38304a");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(78,70,96,70)");
+        t.pageShadowRadius = 24;
+        t.pageShadowOffset = 4;
+        m_themes.append(t);
+    }
+    {
+        // Esmeralda — claro verde-menta. Verde luminoso e fresco; alternativa
+        // colorida clara, ar de jardim ao amanhecer.
+        MiraTheme t;
+        t.id = QStringLiteral("emerald");
+        t.name = QStringLiteral("Esmeralda");
+        t.bundled = true;
+        t.appBackground    = QStringLiteral("#e0eee4");
+        t.panelBackground  = QStringLiteral("#eef7f0");
+        t.panelBorder      = QStringLiteral("#c2d8c8");
+        t.textPrimary      = QStringLiteral("#2f4a3c");
+        t.textMuted        = QStringLiteral("#6f8a78");
+        t.textBright       = QStringLiteral("#163026");
+        t.hoverOverlay     = QStringLiteral("rgba(47,74,60,0.05)");
+        t.pressedOverlay   = QStringLiteral("rgba(47,74,60,0.035)");
+        t.subtleBorder     = QStringLiteral("rgba(47,74,60,0.12)");
+        t.accentDefault    = QStringLiteral("#1f9e6e");  // esmeralda
+
+        t.hoverStrong         = QStringLiteral("rgba(47,74,60,0.09)");
+        t.borderStrong        = QStringLiteral("rgba(47,74,60,0.20)");
+        t.focusBorder         = QStringLiteral("rgba(47,74,60,0.30)");
+        t.inputBackground     = QStringLiteral("rgba(47,74,60,0.04)");
+        t.disabledText        = QStringLiteral("rgba(47,74,60,0.30)");
+        t.selectionRing       = QStringLiteral("#163026");
+
+        t.accentSuccess           = QStringLiteral("#2f8a4f");
+        t.accentSuccessSoft       = QStringLiteral("rgba(47,138,79,0.14)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(47,138,79,0.45)");
+        t.accentDanger            = QStringLiteral("#b04a40");
+        t.accentDangerSoft        = QStringLiteral("rgba(176,74,64,0.10)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(176,74,64,0.45)");
+        t.accentWarning           = QStringLiteral("#c08a40");
+        t.accentInfo              = QStringLiteral("#3a7390");
+        t.accentInfoSoft          = QStringLiteral("rgba(58,115,144,0.15)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(58,115,144,0.50)");
+
+        t.editorBackground = QStringLiteral("#eef7f0");
+        t.editorTextColor  = QStringLiteral("#20382c");
+        t.pageShadowEnabled = true;
+        t.pageShadowColor = QStringLiteral("rgba(47,74,60,70)");
+        t.pageShadowRadius = 24;
+        t.pageShadowOffset = 4;
+        m_themes.append(t);
+    }
+
+    // ---- Categorias pro filtro do painel de Temas ----
+    // light = claros neutros/frios | warm = amarelados/quentes |
+    // dark = escuros neutros | colorful = paletas vibrantes (azul/verde/roxo…)
+    static const QHash<QString, QString> kCategory = {
+        { QStringLiteral("full-white"),       QStringLiteral("light") },
+        { QStringLiteral("solarized-light"),  QStringLiteral("light") },
+        { QStringLiteral("nord-light"),       QStringLiteral("light") },
+        { QStringLiteral("marble"),           QStringLiteral("light") },
+        { QStringLiteral("brisa"),            QStringLiteral("light") },
+        { QStringLiteral("sepia"),            QStringLiteral("warm") },
+        { QStringLiteral("amber"),            QStringLiteral("warm") },
+        { QStringLiteral("parchment"),        QStringLiteral("warm") },
+        { QStringLiteral("caramel"),          QStringLiteral("warm") },
+        { QStringLiteral("camafeu"),          QStringLiteral("warm") },
+        { QStringLiteral("cafe"),             QStringLiteral("warm") },
+        { QStringLiteral("tangerine"),        QStringLiteral("warm") },
+        { QStringLiteral("gruvbox-dark"),     QStringLiteral("warm") },
+        { QStringLiteral("amber-night"),      QStringLiteral("warm") },
+        { QStringLiteral("wheat"),            QStringLiteral("warm") },
+        { QStringLiteral("full-black"),       QStringLiteral("dark") },
+        { QStringLiteral("solarized-dark"),   QStringLiteral("dark") },
+        { QStringLiteral("nord"),             QStringLiteral("dark") },
+        { QStringLiteral("high-contrast"),    QStringLiteral("dark") },
+        { QStringLiteral("tokyo-night"),      QStringLiteral("dark") },
+        { QStringLiteral("cerracao"),         QStringLiteral("dark") },
+        { QStringLiteral("petroleo"),         QStringLiteral("dark") },
+        { QStringLiteral("dracula"),          QStringLiteral("colorful") },
+        { QStringLiteral("catppuccin-mocha"), QStringLiteral("colorful") },
+        { QStringLiteral("nord-royal"),       QStringLiteral("colorful") },
+        { QStringLiteral("velvet-red"),       QStringLiteral("colorful") },
+        { QStringLiteral("veredas"),          QStringLiteral("colorful") },
+        { QStringLiteral("tokyo-velvet"),     QStringLiteral("colorful") },
+        { QStringLiteral("constelar"),        QStringLiteral("colorful") },
+        { QStringLiteral("mare"),             QStringLiteral("colorful") },
+        { QStringLiteral("rose-pine"),        QStringLiteral("colorful") },
+        { QStringLiteral("aurora"),           QStringLiteral("colorful") },
+        { QStringLiteral("hibisco"),          QStringLiteral("colorful") },
+        { QStringLiteral("ocean"),            QStringLiteral("colorful") },
+        { QStringLiteral("forest"),           QStringLiteral("colorful") },
+        { QStringLiteral("amethyst"),         QStringLiteral("colorful") },
+        { QStringLiteral("lavender"),         QStringLiteral("colorful") },
+        { QStringLiteral("emerald"),          QStringLiteral("colorful") },
+    };
+    for (MiraTheme& t : m_themes)
+        t.category = kCategory.value(t.id, QStringLiteral("colorful"));
 }
 
 void Manager::loadFromSettings()

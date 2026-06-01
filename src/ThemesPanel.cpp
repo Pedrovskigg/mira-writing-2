@@ -4,6 +4,7 @@
 #include "ThemePreviewWidget.h"
 
 #include <QApplication>
+#include <QButtonGroup>
 #include <QEvent>
 #include <QFrame>
 #include <QGridLayout>
@@ -237,7 +238,15 @@ void ThemesPanel::buildUi()
     };
     buildScrollWithGrid(m_bundledScroll, m_bundledGrid);
     buildScrollWithGrid(m_customScroll, m_customGrid);
-    m_tabs->addTab(m_bundledScroll, tr("Padrão"));
+
+    // Aba Padrão = barra de filtros de categoria + grid scrollável.
+    auto* bundledPage = new QWidget(m_tabs);
+    auto* bundledLay = new QVBoxLayout(bundledPage);
+    bundledLay->setContentsMargins(0, 0, 0, 0);
+    bundledLay->setSpacing(0);
+    bundledLay->addWidget(buildCategoryFilterRow(bundledPage));
+    bundledLay->addWidget(m_bundledScroll, 1);
+    m_tabs->addTab(bundledPage, tr("Padrão"));
     m_tabs->addTab(m_customScroll, tr("Personalizado"));
     connect(m_tabs, &QTabWidget::currentChanged, this, &ThemesPanel::onTabChanged);
 
@@ -370,11 +379,57 @@ void ThemesPanel::updateButtonsState()
     }
 }
 
+QWidget* ThemesPanel::buildCategoryFilterRow(QWidget* parent)
+{
+    auto* row = new QWidget(parent);
+    row->setObjectName(QStringLiteral("themesFilterRow"));
+    auto* lay = new QHBoxLayout(row);
+    lay->setContentsMargins(10, 8, 10, 4);
+    lay->setSpacing(6);
+
+    auto* group = new QButtonGroup(row);
+    group->setExclusive(true);
+
+    struct Chip { QString label; QString value; };
+    const QList<Chip> chips = {
+        { tr("Todos"),      QStringLiteral("all") },
+        { tr("Claros"),     QStringLiteral("light") },
+        { tr("Amarelados"), QStringLiteral("warm") },
+        { tr("Escuros"),    QStringLiteral("dark") },
+        { tr("Coloridos"),  QStringLiteral("colorful") },
+    };
+    for (const Chip& c : chips) {
+        auto* btn = new QPushButton(c.label, row);
+        btn->setObjectName(QStringLiteral("themesFilterChip"));
+        btn->setCheckable(true);
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setChecked(c.value == m_categoryFilter);
+        const QString value = c.value;
+        connect(btn, &QPushButton::clicked, this, [this, value]() {
+            if (m_categoryFilter == value) return;
+            m_categoryFilter = value;
+            rebuildGrids();
+        });
+        group->addButton(btn);
+        lay->addWidget(btn);
+    }
+    lay->addStretch(1);
+    return row;
+}
+
 void ThemesPanel::rebuildGrids()
 {
     auto* mgr = Theme::Manager::instance();
     m_cards.clear();
-    rebuildOneGrid(m_bundledGrid, mgr->bundledThemes(), false);
+    // Aba Padrão respeita o filtro de categoria.
+    QList<Theme::MiraTheme> bundled = mgr->bundledThemes();
+    if (m_categoryFilter != QStringLiteral("all")) {
+        QList<Theme::MiraTheme> filtered;
+        for (const auto& t : bundled)
+            if (t.category == m_categoryFilter) filtered.append(t);
+        bundled = filtered;
+    }
+    rebuildOneGrid(m_bundledGrid, bundled, false);
     rebuildOneGrid(m_customGrid, mgr->customThemes(), true);
     updateButtonsState();
 }
@@ -600,6 +655,21 @@ void ThemesPanel::applyDialogStyle()
         QPushButton#themesPanelCloseBtn:hover {
             background: %7;
             color: %3;
+        }
+        #themesFilterRow { background: transparent; }
+        QPushButton#themesFilterChip {
+            background: transparent;
+            color: %4;
+            border: 1px solid %6;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        QPushButton#themesFilterChip:hover { color: %3; border-color: %9; }
+        QPushButton#themesFilterChip:checked {
+            background: %9;
+            color: %3;
+            border-color: %9;
         }
     )").arg(
         Theme::appBackground(),     // 1

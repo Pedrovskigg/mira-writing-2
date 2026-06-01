@@ -23,6 +23,9 @@ struct MiraTheme {
     QString id;
     QString name;
     bool bundled = true;
+    // Categoria pro filtro do painel de Temas: "light" | "warm" | "dark" |
+    // "colorful". Vazio = sem filtro (temas personalizados).
+    QString category;
 
     // Cores principais (painéis, app)
     QString appBackground;
