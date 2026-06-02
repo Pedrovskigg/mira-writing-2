@@ -7,6 +7,7 @@
 #include "SceneUtils.h"
 
 #include <QDateTime>
+#include <QJsonArray>
 #include <QJsonValue>
 #include <QRegularExpression>
 #include <QTimer>
@@ -712,12 +713,22 @@ void WordCounter::setCompactShowGoalBar(bool show) {
     emit settingsChanged();
 }
 
-void WordCounter::updateGoalProgress(int deltaGoalWords, qint64 deltaTimeMs, int deltaSessionManuscript, int deltaSessionAll) {
+void WordCounter::updateGoalProgress(int deltaGoalWords, qint64 deltaTimeMs, int deltaSessionManuscript, int deltaSessionAll, const QString& editedKey) {
     const bool any = deltaGoalWords > 0 || deltaTimeMs > 0 || deltaSessionManuscript > 0 || deltaSessionAll > 0;
     if (!any) return;
     ensureCurrentDayKey();
     const QString key = m_settings.goalDayKey;
     QJsonObject today = m_settings.progress.value(key).toObject();
+
+    // Registra o documento editado hoje (sem duplicar). Só passa a valer dos dias
+    // em diante — dias anteriores não têm esse histórico.
+    if (!editedKey.isEmpty()) {
+        QJsonArray docs = today.value(QStringLiteral("docs")).toArray();
+        if (!docs.contains(editedKey)) {
+            docs.append(editedKey);
+            today.insert(QStringLiteral("docs"), docs);
+        }
+    }
     if (deltaGoalWords > 0)
         today.insert(QStringLiteral("words"),
             today.value(QStringLiteral("words")).toInt(0) + deltaGoalWords);
@@ -811,6 +822,24 @@ void WordCounter::onEditorContentFlushed(const QString& key) {
         countsForGoal ? delta : 0,
         0,
         isChapter ? delta : 0,   // wordsManuscript
-        delta                    // wordsAll (capítulos + gavetas)
+        delta,                   // wordsAll (capítulos + gavetas)
+        key                      // documento editado neste dia
     );
+}
+
+QString WordCounter::docDisplayName(const QString& docKey) const {
+    if (!m_model) return docKey;
+    if (docKey.startsWith(QStringLiteral("ch:"))) {
+        const QString chId = docKey.section(QChar(':'), 2); // "ch:ms:chId" → chId
+        if (const Chapter* ch = m_model->findChapter(chId))
+            return ch->title.trimmed().isEmpty() ? tr("Capítulo") : ch->title;
+        return tr("Capítulo removido");
+    }
+    if (docKey.startsWith(QStringLiteral("it:"))) {
+        const QString itemId = docKey.mid(3);
+        if (const DrawerItem* it = m_model->findDrawerItem(itemId))
+            return it->title.trimmed().isEmpty() ? tr("Documento") : it->title;
+        return tr("Documento removido");
+    }
+    return docKey;
 }

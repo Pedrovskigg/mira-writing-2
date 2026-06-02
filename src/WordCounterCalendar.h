@@ -18,6 +18,9 @@ public:
 public slots:
     void refresh();
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private slots:
     void applyThemeStyle();
 
@@ -29,6 +32,8 @@ private:
     void shiftMonth(int delta);
     void goToToday();
     int starsForDay(const QString& dateKey) const;
+    QString tooltipForDay(const QString& dateKey) const;
+    void showDayDetails(const QString& dateKey);
 
     WordCounter* m_counter;
     QToolButton* m_prevBtn;

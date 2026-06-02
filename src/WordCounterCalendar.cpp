@@ -6,12 +6,18 @@
 #include <QAction>
 #include <QContextMenuEvent>
 #include <QDate>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QEvent>
+#include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -277,6 +283,9 @@ void WordCounterCalendar::refresh()
             "<div style='color:%4; font-size:10px; line-height:1; margin-top:2px;'>%5</div>")
             .arg(numColor).arg(d).arg(moon).arg(starColor).arg(starsStr));
 
+        cell->setToolTip(tooltipForDay(key));
+        cell->installEventFilter(this); // clique esquerdo → detalhes do dia
+
         // Context menu: marcar / folga roubada / desmarcar
         connect(cell, &QLabel::customContextMenuRequested, this, [this, cell, key](const QPoint& pos) {
             if (!m_counter) return;
@@ -312,4 +321,159 @@ void WordCounterCalendar::refresh()
         if (col >= 7) { col = 0; ++row; }
     }
     emit geometryChanged();
+}
+
+QString WordCounterCalendar::tooltipForDay(const QString& key) const
+{
+    if (!m_counter) return QString();
+    const auto offType = m_counter->offDayType(key);
+    if (offType == WordCounter::OffDayType::Legit)  return tr("Você folgou esse dia");
+    if (offType == WordCounter::OffDayType::Stolen) return tr("A folga deste dia foi trapaceada");
+
+    const auto s = m_counter->settings();
+    const QJsonObject day = s.progress.value(key).toObject();
+    if (day.isEmpty()) return tr("Nenhuma escrita neste dia");
+
+    const QString type = day.value(QStringLiteral("goalType")).toString(s.goalType);
+    int pct = 0;
+    if (type == QStringLiteral("time")) {
+        const qint64 timeMs = static_cast<qint64>(day.value(QStringLiteral("timeMs")).toDouble(0));
+        const int tMin = day.value(QStringLiteral("goalTargetMinutes")).toInt(s.goalTargetMinutes);
+        const qint64 target = static_cast<qint64>(tMin) * 60000;
+        pct = target > 0 ? static_cast<int>(timeMs * 100 / target) : 0;
+    } else {
+        const int words = day.value(QStringLiteral("words")).toInt(0);
+        const int tWords = day.value(QStringLiteral("goalTargetWords")).toInt(s.goalTargetWords);
+        pct = tWords > 0 ? words * 100 / tWords : 0;
+    }
+    return tr("%1% da meta diária").arg(pct);
+}
+
+bool WordCounterCalendar::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::MouseButtonRelease) {
+        auto* me = static_cast<QMouseEvent*>(event);
+        auto* lbl = qobject_cast<QLabel*>(watched);
+        if (me->button() == Qt::LeftButton && lbl
+            && lbl->objectName() == QLatin1String("wcpCalDay")) {
+            const QString key = lbl->property("dateKey").toString();
+            if (!key.isEmpty() && lbl->rect().contains(me->pos())) {
+                showDayDetails(key);
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void WordCounterCalendar::showDayDetails(const QString& key)
+{
+    if (!m_counter) return;
+    const auto s = m_counter->settings();
+    const QJsonObject day = s.progress.value(key).toObject();
+    const auto offType = m_counter->offDayType(key);
+
+    const QDate date = QDate::fromString(key, QStringLiteral("yyyy-MM-dd"));
+    QLocale loc(QLocale::Portuguese, QLocale::Brazil);
+    const QString dateStr = date.isValid()
+        ? tr("%1 de %2 de %3").arg(date.day())
+              .arg(loc.monthName(date.month(), QLocale::LongFormat)).arg(date.year())
+        : key;
+
+    const int words = day.value(QStringLiteral("words")).toInt(0);
+    const qint64 timeMs = static_cast<qint64>(day.value(QStringLiteral("timeMs")).toDouble(0));
+    const int stars = starsForDay(key);
+
+    // Tempo de sessão formatado.
+    const qint64 totalSec = timeMs / 1000;
+    const int hrs = static_cast<int>(totalSec / 3600);
+    const int mins = static_cast<int>((totalSec % 3600) / 60);
+    QString timeStr;
+    if (hrs > 0)        timeStr = tr("%1 h %2 min").arg(hrs).arg(mins);
+    else if (mins > 0)  timeStr = tr("%1 min").arg(mins);
+    else if (timeMs > 0) timeStr = tr("menos de 1 min");
+    else                timeStr = tr("—");
+
+    // % da meta.
+    const QString type = day.value(QStringLiteral("goalType")).toString(s.goalType);
+    int pct = 0;
+    if (type == QStringLiteral("time")) {
+        const int tMin = day.value(QStringLiteral("goalTargetMinutes")).toInt(s.goalTargetMinutes);
+        const qint64 target = static_cast<qint64>(tMin) * 60000;
+        pct = target > 0 ? static_cast<int>(timeMs * 100 / target) : 0;
+    } else {
+        const int tWords = day.value(QStringLiteral("goalTargetWords")).toInt(s.goalTargetWords);
+        pct = tWords > 0 ? words * 100 / tWords : 0;
+    }
+    QString starsStr;
+    for (int i = 0; i < stars; ++i) starsStr += QStringLiteral("★");
+
+    auto* dlg = new QDialog(this);
+    dlg->setObjectName(QStringLiteral("wcpDayDialog"));
+    dlg->setWindowTitle(dateStr);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModal(true);
+
+    auto* lay = new QVBoxLayout(dlg);
+    lay->setContentsMargins(18, 16, 18, 14);
+    lay->setSpacing(8);
+
+    auto* title = new QLabel(dateStr, dlg);
+    title->setObjectName(QStringLiteral("wcpDayTitle"));
+    lay->addWidget(title);
+
+    auto addRow = [&](const QString& label, const QString& value) {
+        auto* row = new QLabel(QStringLiteral("<span style='opacity:0.7;'>%1:</span>  <b>%2</b>")
+                                   .arg(label, value.toHtmlEscaped()), dlg);
+        row->setTextFormat(Qt::RichText);
+        lay->addWidget(row);
+    };
+
+    if (offType == WordCounter::OffDayType::Legit) {
+        addRow(tr("Status"), tr("Folga ☾"));
+    } else if (offType == WordCounter::OffDayType::Stolen) {
+        addRow(tr("Status"), tr("Folga roubada ☾"));
+    }
+    addRow(tr("Palavras escritas"), QString::number(words));
+    addRow(tr("Tempo de sessão"), timeStr);
+    addRow(tr("Meta do dia"), starsStr.isEmpty()
+        ? tr("%1%").arg(pct)
+        : tr("%1%  %2").arg(pct).arg(starsStr));
+
+    // Documentos editados no dia (registrado a partir de quando a feature entrou).
+    const QJsonArray docs = day.value(QStringLiteral("docs")).toArray();
+    if (!docs.isEmpty()) {
+        auto* sep = new QFrame(dlg);
+        sep->setFrameShape(QFrame::HLine);
+        sep->setStyleSheet(QStringLiteral("color: %1;").arg(Theme::subtleBorder()));
+        lay->addWidget(sep);
+        auto* docsTitle = new QLabel(tr("Documentos editados:"), dlg);
+        docsTitle->setStyleSheet(QStringLiteral("opacity: 0.7;"));
+        lay->addWidget(docsTitle);
+        for (const QJsonValue& v : docs) {
+            auto* d = new QLabel(QStringLiteral("• %1")
+                .arg(m_counter->docDisplayName(v.toString()).toHtmlEscaped()), dlg);
+            d->setStyleSheet(QStringLiteral("margin-left: 6px;"));
+            lay->addWidget(d);
+        }
+    }
+
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, dlg);
+    connect(buttons, &QDialogButtonBox::rejected, dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::accepted, dlg, &QDialog::accept);
+    lay->addSpacing(4);
+    lay->addWidget(buttons);
+
+    dlg->setStyleSheet(QStringLiteral(R"(
+        #wcpDayDialog { background: %1; }
+        #wcpDayDialog QLabel { color: %2; font-size: 12px; }
+        #wcpDayDialog QLabel#wcpDayTitle { color: %3; font-size: 15px; font-weight: bold; }
+        #wcpDayDialog QPushButton {
+            background: %4; color: %2; border: none; padding: 6px 16px; border-radius: 5px; font-size: 12px;
+        }
+        #wcpDayDialog QPushButton:hover { background: %5; color: %3; }
+    )").arg(Theme::panelBackground(), Theme::textPrimary(), Theme::textBright(),
+            Theme::hoverOverlay(), Theme::hoverStrong()));
+
+    dlg->exec();
 }

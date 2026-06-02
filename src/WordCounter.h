@@ -108,6 +108,9 @@ public:
     // Dia bateu meta (considerando snapshot do dia).
     bool dayMetGoal(const QString& dateKey) const;
 
+    // Nome legível de uma chave de doc editado ("ch:ms:chId" / "it:itemId").
+    QString docDisplayName(const QString& docKey) const;
+
     // Estatísticas
     int currentStreak() const;
     int longestStreak() const;
@@ -151,7 +154,7 @@ private:
     void loadSettingsFromModel();
     void writeSettingsToModel();
     void ensureCurrentDayKey();
-    void updateGoalProgress(int deltaGoalWords, qint64 deltaTimeMs, int deltaSessionManuscript = 0, int deltaSessionAll = 0);
+    void updateGoalProgress(int deltaGoalWords, qint64 deltaTimeMs, int deltaSessionManuscript = 0, int deltaSessionAll = 0, const QString& editedKey = QString());
     bool shouldCountTimeNow() const;
     QString viewModeScope() const; // scope name pra rastrear baseline
     QString keyForCurrentEdit() const; // chapter ou item
