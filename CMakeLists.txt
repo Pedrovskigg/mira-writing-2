@@ -18,6 +18,12 @@ qt_add_executable(mira-writing
     src/main.cpp
     src/MainWindow.cpp
     src/MainWindow.h
+    src/ExportPanel.cpp
+    src/ExportPanel.h
+    src/Exporter.cpp
+    src/Exporter.h
+    src/ZipWriter.cpp
+    src/ZipWriter.h
     src/TopToolbar.cpp
     src/TopToolbar.h
     src/IconUtils.cpp

@@ -123,6 +123,7 @@ private:
     void onNewProjectRequested();
     void onOpenProjectRequested();
     void onSettingsRequested();
+    void onExportRequested();
     void onThemePanelRequested();
     void onThemeChanged();
     void onEditorLayoutChanged();

@@ -35,6 +35,7 @@
         <file alias="edit.svg">../src/assets/icons/edit.svg</file>
         <file alias="trash.svg">../src/assets/icons/trash.svg</file>
         <file alias="doc-plus.svg">../src/assets/icons/doc-plus.svg</file>
+        <file alias="download.svg">../src/assets/icons/download.svg</file>
         <file alias="create-bond.svg">../src/assets/icons/create-bond.svg</file>
         <file alias="close.svg">../src/assets/icons/close.svg</file>
         <file alias="drag-handle.svg">../src/assets/icons/drag-handle.svg</file>

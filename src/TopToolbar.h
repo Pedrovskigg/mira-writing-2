@@ -56,6 +56,7 @@ signals:
     void newProjectRequested();
     void openProjectRequested();
     void saveProjectRequested();
+    void exportRequested();
     void refMenuToggleRequested();
     void boldToggled(bool enabled);
     void italicToggled(bool enabled);
@@ -76,6 +77,7 @@ private:
     QToolButton *newProjectButton;
     QToolButton *openProjectButton;
     QToolButton *saveProjectButton;
+    QToolButton *exportButton;
     QToolButton *boldButton;
     QToolButton *italicButton;
     QToolButton *underlineButton;

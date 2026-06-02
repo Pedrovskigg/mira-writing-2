@@ -78,6 +78,7 @@ TopToolbar::TopToolbar(QWidget *parent)
     , newProjectButton(makeIconButton(this))
     , openProjectButton(makeIconButton(this))
     , saveProjectButton(makeIconButton(this))
+    , exportButton(makeIconButton(this))
     , boldButton(makeIconButton(this))
     , italicButton(makeIconButton(this))
     , underlineButton(makeIconButton(this))
@@ -144,6 +145,11 @@ TopToolbar::TopToolbar(QWidget *parent)
     bindIcon(saveProjectButton, QStringLiteral("save-project.svg"));
     saveProjectButton->setToolTip(tr("Salvar projeto (Ctrl+S)"));
     connect(saveProjectButton, &QToolButton::clicked, this, &TopToolbar::saveProjectRequested);
+
+    exportButton->setObjectName(QStringLiteral("ttbProject"));
+    bindIcon(exportButton, QStringLiteral("download.svg"));
+    exportButton->setToolTip(tr("Exportar projeto"));
+    connect(exportButton, &QToolButton::clicked, this, &TopToolbar::exportRequested);
 
     // ---------------- Grupo B: Formatação inline ----------------
     boldButton->setObjectName(QStringLiteral("ttbInline"));
@@ -306,6 +312,7 @@ TopToolbar::TopToolbar(QWidget *parent)
     layout->addWidget(newProjectButton);
     layout->addWidget(openProjectButton);
     layout->addWidget(saveProjectButton);
+    layout->addWidget(exportButton);
     layout->addWidget(makeVSeparator(this));
 
     // --- Esquerda: Editor (tipografia + inline) ---

@@ -103,6 +103,8 @@
 #include "PresencePopup.h"
 #include "SelectionPopup.h"
 #include "SettingsPanel.h"
+#include "ExportPanel.h"
+#include "Exporter.h"
 #include "SpellChecker.h"
 #include "SpellEditor.h"
 #include "SpellHighlighter.h"
@@ -2058,6 +2060,7 @@ void MainWindow::setupToolbar()
         if (projectSaver) projectSaver->saveProject();
     });
     connect(toolbar, &TopToolbar::settingsRequested, this, &MainWindow::onSettingsRequested);
+    connect(toolbar, &TopToolbar::exportRequested, this, &MainWindow::onExportRequested);
     connect(toolbar, &TopToolbar::themePanelRequested, this, &MainWindow::onThemePanelRequested);
     connect(Theme::Manager::instance(), &Theme::Manager::themeChanged,
             this, &MainWindow::onThemeChanged);
@@ -3720,6 +3723,48 @@ void MainWindow::onSettingsRequested()
     settingsPanel->show();
     settingsPanel->raise();
     settingsPanel->activateWindow();
+}
+
+void MainWindow::onExportRequested()
+{
+    if (!projectModel || !hasProjectLoaded()) return;
+
+    // Garante que o disco reflete as edições atuais antes de ler pra exportar.
+    if (projectSaver) projectSaver->saveProject();
+
+    auto* panel = new ExportPanel(projectModel, this);
+    panel->setAttribute(Qt::WA_DeleteOnClose);
+    connect(panel, &ExportPanel::exportRequested, this,
+            [this](const Exporter::Selection& sel) {
+        Exporter exporter(projectModel, projectRoot);
+        QString err;
+        bool nothing = false;
+        const bool ok = exporter.run(sel, this, &err, &nothing);
+        if (ok) {
+            // Toast flutuante de sucesso (mesmo padrão da "Nova cena criada").
+            if (editorContainer) {
+                auto* toast = new QLabel(tr("Exportado com sucesso"), editorContainer);
+                toast->setObjectName(QStringLiteral("sceneToast"));
+                toast->setAlignment(Qt::AlignCenter);
+                toast->setStyleSheet(QStringLiteral(
+                    "QLabel#sceneToast { background: %1; color: %2; border: 1px solid %3;"
+                    " border-radius: 6px; padding: 6px 16px;"
+                    " font-family: 'Lora','Crimson Text',serif; font-size: 12px; }")
+                    .arg(Theme::panelBackground(), Theme::textBright(), Theme::panelBorder()));
+                toast->adjustSize();
+                const QPoint center = editorContainer->rect().center();
+                toast->move(center.x() - toast->width() / 2,
+                            editorContainer->height() - toast->height() - 32);
+                toast->show();
+                toast->raise();
+                QTimer::singleShot(1800, toast, [toast]() { toast->deleteLater(); });
+            }
+        } else if (!nothing && !err.isEmpty()) {
+            QMessageBox::warning(this, tr("Exportar"), err);
+        }
+        // Cancelado no diálogo de destino: silêncio.
+    });
+    panel->exec();
 }
 
 void MainWindow::onThemePanelRequested()
