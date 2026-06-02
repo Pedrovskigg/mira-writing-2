@@ -42,27 +42,41 @@ constexpr quint16 kDosDate = ((2020 - 1980) << 9) | (1 << 5) | 1;
 
 } // namespace
 
-void ZipWriter::addFile(const QString& path, const QByteArray& data) {
+void ZipWriter::addFile(const QString& path, const QByteArray& data, bool compress) {
     Entry e;
     e.name = path.toUtf8();
     e.crc = crc32(data);
-    e.size = quint32(data.size());
+    e.uncompSize = quint32(data.size());
     e.offset = quint32(m_local.size());
+
+    // Deflate via qCompress: ele devolve [4 bytes tamanho][stream zlib][adler32].
+    // O ZIP (method 8) quer o DEFLATE cru — removemos os 4 bytes do Qt + 2 do
+    // cabeçalho zlib do início e os 4 do adler32 do fim.
+    QByteArray payload = data;
+    e.method = 0;
+    if (compress && !data.isEmpty()) {
+        const QByteArray z = qCompress(data, 9);
+        if (z.size() > 10) {
+            const QByteArray raw = z.mid(6, z.size() - 10);
+            if (raw.size() < data.size()) { payload = raw; e.method = 8; }
+        }
+    }
+    e.compSize = quint32(payload.size());
 
     // Local file header.
     putU32(m_local, 0x04034b50);
     putU16(m_local, 20);            // version needed
     putU16(m_local, kFlagUtf8);     // general purpose flag
-    putU16(m_local, 0);             // method: stored
+    putU16(m_local, e.method);      // 0 = stored, 8 = deflate
     putU16(m_local, kDosTime);
     putU16(m_local, kDosDate);
     putU32(m_local, e.crc);
-    putU32(m_local, e.size);        // compressed == uncompressed (stored)
-    putU32(m_local, e.size);
+    putU32(m_local, e.compSize);
+    putU32(m_local, e.uncompSize);
     putU16(m_local, quint16(e.name.size()));
     putU16(m_local, 0);             // extra field length
     m_local.append(e.name);
-    m_local.append(data);
+    m_local.append(payload);
 
     m_entries.append(e);
 }
@@ -74,12 +88,12 @@ QByteArray ZipWriter::finish() {
         putU16(central, 20);            // version made by
         putU16(central, 20);            // version needed
         putU16(central, kFlagUtf8);
-        putU16(central, 0);             // method: stored
+        putU16(central, e.method);      // 0 = stored, 8 = deflate
         putU16(central, kDosTime);
         putU16(central, kDosDate);
         putU32(central, e.crc);
-        putU32(central, e.size);
-        putU32(central, e.size);
+        putU32(central, e.compSize);
+        putU32(central, e.uncompSize);
         putU16(central, quint16(e.name.size()));
         putU16(central, 0);             // extra length
         putU16(central, 0);             // comment length

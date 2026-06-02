@@ -9,15 +9,20 @@
 #include <QApplication>
 #include <QBrush>
 #include <QColor>
+#include <QDateTime>
 #include <QFile>
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QFont>
+#include <QImage>
 #include <QMarginsF>
+#include <QPainter>
 #include <QPageLayout>
 #include <QPageSize>
 #include <QPdfWriter>
 #include <QRegularExpression>
+#include <QStringList>
+#include <QUuid>
 #include <QTextBlock>
 #include <QTextCharFormat>
 #include <QTextCursor>
@@ -64,6 +69,36 @@ void stripMarkers(QTextDocument& doc) {
         c.setPosition(r.to, QTextCursor::KeepAnchor);
         c.setCharFormat(r.fmt);
     }
+}
+
+// ── Helpers do EPUB ──
+QString escXml(const QString& s) {
+    QString o = s;
+    o.replace(QChar('&'), QStringLiteral("&amp;"));
+    o.replace(QChar('<'), QStringLiteral("&lt;"));
+    o.replace(QChar('>'), QStringLiteral("&gt;"));
+    o.replace(QChar('"'), QStringLiteral("&quot;"));
+    return o;
+}
+
+QString mimeToExt(const QString& mime) {
+    if (mime == QLatin1String("image/png")) return QStringLiteral("png");
+    if (mime == QLatin1String("image/gif")) return QStringLiteral("gif");
+    if (mime == QLatin1String("image/webp")) return QStringLiteral("webp");
+    if (mime == QLatin1String("image/svg+xml")) return QStringLiteral("svg");
+    return QStringLiteral("jpg");
+}
+
+// "data:<mime>;base64,<b64>" → (mime, bytes). false se não for data-url base64.
+bool parseDataUrl(const QString& url, QString& mimeOut, QByteArray& bytesOut) {
+    if (!url.startsWith(QLatin1String("data:"))) return false;
+    const int comma = url.indexOf(QChar(','));
+    if (comma < 0) return false;
+    const QString header = url.mid(5, comma - 5); // ex: "image/jpeg;base64"
+    if (!header.contains(QLatin1String("base64"))) return false;
+    mimeOut = header.section(QChar(';'), 0, 0);
+    bytesOut = QByteArray::fromBase64(url.mid(comma + 1).toLatin1());
+    return !bytesOut.isEmpty();
 }
 }
 
@@ -128,7 +163,11 @@ QString Exporter::itemHtml(const DrawerItem& it) const {
 }
 
 QString Exporter::formatExt(Format fmt) {
-    return fmt == Format::Pdf ? QStringLiteral("pdf") : QStringLiteral("odt");
+    switch (fmt) {
+        case Format::Pdf:  return QStringLiteral("pdf");
+        case Format::Epub: return QStringLiteral("epub");
+        default:           return QStringLiteral("odt");
+    }
 }
 
 QByteArray Exporter::writeDoc(QTextDocument& doc, Format fmt) const {
@@ -197,6 +236,14 @@ QList<Exporter::OutFile> Exporter::buildFiles(const Selection& sel) const {
     QList<OutFile> files;
     if (!m_model) return files;
 
+    // EPUB: um único arquivo com tudo dentro (ignora documento único/separado).
+    if (sel.format == Format::Epub) {
+        const QByteArray epub = buildEpub(sel);
+        if (!epub.isEmpty())
+            files.append({ safeName(m_model->projectName()) + QStringLiteral(".epub"), epub });
+        return files;
+    }
+
     // ── Manuscritos ──
     for (const Manuscript& ms : m_model->manuscripts()) {
         QList<const Chapter*> selected;
@@ -251,6 +298,289 @@ QList<Exporter::OutFile> Exporter::buildFiles(const Selection& sel) const {
     return files;
 }
 
+QString Exporter::itemBodyXhtml(const QString& rawHtml, bool includeMarkers,
+                                QList<QPair<QString, QByteArray>>& imagesOut,
+                                QStringList& imageMimesOut, int& imgCounter) const {
+    QTextDocument doc;
+    doc.setHtml(rawHtml.isEmpty() ? QStringLiteral("<p></p>") : rawHtml);
+    forceBlackText(doc);
+    if (!includeMarkers) stripMarkers(doc);
+    QString html = doc.toHtml();
+
+    // Extrai só o conteúdo de dentro do <body>.
+    QString body;
+    const int bs = html.indexOf(QLatin1String("<body"), 0, Qt::CaseInsensitive);
+    const int be = html.lastIndexOf(QLatin1String("</body>"), -1, Qt::CaseInsensitive);
+    if (bs >= 0 && be > bs) {
+        const int gt = html.indexOf(QChar('>'), bs);
+        body = html.mid(gt + 1, be - gt - 1);
+    } else {
+        body = html;
+    }
+
+    // Extrai imagens embutidas (data: URL) para arquivos e reescreve o src.
+    static const QRegularExpression imgRe(
+        QStringLiteral("<img[^>]*\\bsrc=\"(data:[^\"]+)\"[^>]*>"),
+        QRegularExpression::CaseInsensitiveOption);
+    QString rebuilt;
+    int last = 0;
+    auto it = imgRe.globalMatch(body);
+    while (it.hasNext()) {
+        const auto m = it.next();
+        rebuilt += body.mid(last, m.capturedStart() - last);
+        const QString dataUrl = m.captured(1);
+        QString mime;
+        QByteArray bytes;
+        if (parseDataUrl(dataUrl, mime, bytes)) {
+            const QString fn = QStringLiteral("images/img%1.%2")
+                .arg(++imgCounter).arg(mimeToExt(mime));
+            imagesOut.append({ fn, bytes });
+            imageMimesOut.append(mime);
+            QString tag = m.captured(0);
+            tag.replace(dataUrl, fn);
+            if (!tag.endsWith(QLatin1String("/>")))
+                tag.chop(1), tag += QStringLiteral("/>");
+            rebuilt += tag;
+        } else {
+            rebuilt += m.captured(0);
+        }
+        last = m.capturedEnd();
+    }
+    rebuilt += body.mid(last);
+    body = rebuilt;
+
+    // Normalizações para XHTML bem-formado.
+    body.replace(QLatin1String("&nbsp;"), QLatin1String("&#160;"));
+    body.replace(QRegularExpression(QStringLiteral("<br>"), QRegularExpression::CaseInsensitiveOption),
+                 QStringLiteral("<br/>"));
+    body.replace(QRegularExpression(QStringLiteral("<hr>"), QRegularExpression::CaseInsensitiveOption),
+                 QStringLiteral("<hr/>"));
+    return body;
+}
+
+QByteArray Exporter::buildEpub(const Selection& sel) const {
+    struct Item { QString id; QString title; QString filename; QString body; };
+    QList<Item> items;
+    QList<QPair<QString, QByteArray>> images; // path relativo (OEBPS/...) → bytes
+    QStringList imageMimes;
+    int imgCounter = 0;
+    int counter = 0;
+
+    // Capítulos por manuscrito, em ordem.
+    for (const Manuscript& ms : m_model->manuscripts()) {
+        QList<const Chapter*> chaps;
+        for (const Chapter& ch : m_model->chapters()) {
+            const QString msId = ch.manuscriptId.isEmpty() ? ms.id : ch.manuscriptId;
+            if (msId == ms.id && sel.chapterIds.contains(ch.id)) chaps.append(&ch);
+        }
+        std::sort(chaps.begin(), chaps.end(),
+                  [](const Chapter* a, const Chapter* b) { return a->order < b->order; });
+        for (const Chapter* ch : chaps) {
+            ++counter;
+            Item it;
+            it.id = QStringLiteral("ch_%1").arg(counter);
+            it.title = ch->title.trimmed().isEmpty() ? QStringLiteral("Capítulo") : ch->title;
+            it.filename = it.id + QStringLiteral(".xhtml");
+            it.body = itemBodyXhtml(chapterHtmlPrimary(*ch), sel.includeMarkers,
+                                    images, imageMimes, imgCounter);
+            items.append(it);
+        }
+    }
+
+    // Documentos de gaveta selecionados (recursivo nas pastas).
+    for (const Drawer& d : m_model->drawers()) {
+        std::function<void(const QString&)> walk = [&](const QString& folderId) {
+            for (const DrawerItem& di : d.items) {
+                if ((di.folderId.isEmpty() ? QString() : di.folderId) != folderId) continue;
+                if (!sel.itemIds.contains(di.id)) continue;
+                ++counter;
+                Item it;
+                it.id = QStringLiteral("doc_%1").arg(counter);
+                it.title = di.title.trimmed().isEmpty() ? QStringLiteral("Documento") : di.title;
+                it.filename = it.id + QStringLiteral(".xhtml");
+                it.body = itemBodyXhtml(itemHtml(di), sel.includeMarkers,
+                                        images, imageMimes, imgCounter);
+                items.append(it);
+            }
+            for (const Folder& f : d.folders)
+                if ((f.parentId.isEmpty() ? QString() : f.parentId) == folderId) walk(f.id);
+        };
+        walk(QString());
+    }
+
+    if (items.isEmpty()) return {};
+
+    // ── Metadados ──
+    const QString title = m_model->projectName().trimmed().isEmpty()
+        ? QStringLiteral("Projeto") : m_model->projectName();
+    const QString author = m_model->projectAuthor();
+    const QString synopsis = m_model->projectSynopsis();
+    const QString genres = m_model->projectGenres();
+    const QString bookId = QStringLiteral("urn:uuid:")
+        + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString now = QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyy-MM-ddThh:mm:ss"))
+        + QStringLiteral("Z");
+
+    // ── Capa ──
+    bool hasCover = false;
+    QString coverFilename, coverMime;
+    QByteArray coverBytes;
+    if (parseDataUrl(m_model->projectCoverDataUrl(), coverMime, coverBytes)) {
+        // Capa de e-book tem teto útil ~1600px no lado maior (recomendação
+        // Amazon/Kobo). Reduz só pra baixo + re-encoda em JPEG q90 (ou mantém PNG
+        // se tiver transparência) — derruba o tamanho sem perda visível em tela.
+        QImage img = QImage::fromData(coverBytes);
+        if (!img.isNull()) {
+            if (img.height() > 1600)
+                img = img.scaledToHeight(1600, Qt::SmoothTransformation);
+            // Capa não precisa de transparência: achata sobre fundo branco (se
+            // houver alpha) e grava JPEG q90 — bem mais leve que PNG, sem perda
+            // visível. O achatamento evita lixo em pixels semitransparentes.
+            if (img.hasAlphaChannel()) {
+                QImage flat(img.size(), QImage::Format_RGB32);
+                flat.fill(Qt::white);
+                QPainter p(&flat);
+                p.drawImage(0, 0, img);
+                p.end();
+                img = flat;
+            }
+            QByteArray out;
+            QBuffer ob(&out);
+            ob.open(QIODevice::WriteOnly);
+            if (img.save(&ob, "JPEG", 90)) {
+                ob.close();
+                if (!out.isEmpty() && out.size() < coverBytes.size()) {
+                    coverBytes = out;
+                    coverMime = QStringLiteral("image/jpeg");
+                }
+            }
+        }
+        coverFilename = QStringLiteral("images/cover.") + mimeToExt(coverMime);
+        hasCover = true;
+    }
+
+    // ── CSS ──
+    const QString lh = QString::number(m_style.lineHeightPercent / 100.0, 'f', 2);
+    const QString indent = m_style.firstLineIndent ? QStringLiteral("1.5em") : QStringLiteral("0");
+    const QString css =
+        QStringLiteral("body { font-family: Georgia, 'Times New Roman', serif; line-height: ")
+        + lh + QStringLiteral("; margin: 0 5%; color: #1a1a1a; }\n")
+        + QStringLiteral("p { margin: 0 0 0.4em; text-indent: ") + indent + QStringLiteral("; }\n")
+        + QStringLiteral("h1.chapter-title { text-align: center; font-weight: bold; margin: 1em 0 1.5em; text-indent: 0; }\n")
+        + QStringLiteral("strong, b { font-weight: bold; } em, i { font-style: italic; }\n")
+        + QStringLiteral("u { text-decoration: underline; } s, del { text-decoration: line-through; }\n")
+        + QStringLiteral("img { max-width: 100%; height: auto; display: block; margin: 1em auto; }\n");
+
+    // ── Monta os XMLs ──
+    QString manifest, spine, navList, ncxNav;
+    for (int i = 0; i < items.size(); ++i) {
+        const Item& it = items.at(i);
+        manifest += QStringLiteral("    <item id=\"%1\" href=\"%2\" media-type=\"application/xhtml+xml\"/>\n")
+            .arg(it.id, it.filename);
+        spine += QStringLiteral("    <itemref idref=\"%1\"/>\n").arg(it.id);
+        navList += QStringLiteral("      <li><a href=\"%1\">%2</a></li>\n").arg(it.filename, escXml(it.title));
+        ncxNav += QStringLiteral("    <navPoint id=\"%1\" playOrder=\"%2\"><navLabel><text>%3</text></navLabel><content src=\"%4\"/></navPoint>\n")
+            .arg(it.id, QString::number(i + 1), escXml(it.title), it.filename);
+    }
+    for (int i = 0; i < images.size(); ++i) {
+        manifest += QStringLiteral("    <item id=\"bimg_%1\" href=\"%2\" media-type=\"%3\"/>\n")
+            .arg(QString::number(i + 1), images.at(i).first, imageMimes.at(i));
+    }
+    if (hasCover) {
+        manifest += QStringLiteral("    <item id=\"cover-image\" href=\"%1\" media-type=\"%2\" properties=\"cover-image\"/>\n")
+            .arg(coverFilename, coverMime);
+        manifest += QStringLiteral("    <item id=\"cover-page\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n");
+    }
+
+    QString metaExtra;
+    if (hasCover) metaExtra += QStringLiteral("    <meta name=\"cover\" content=\"cover-image\"/>\n");
+    if (!author.trimmed().isEmpty())
+        metaExtra += QStringLiteral("    <dc:creator>%1</dc:creator>\n").arg(escXml(author));
+    if (!synopsis.trimmed().isEmpty())
+        metaExtra += QStringLiteral("    <dc:description>%1</dc:description>\n").arg(escXml(synopsis));
+    for (const QString& g : genres.split(QChar(','), Qt::SkipEmptyParts))
+        metaExtra += QStringLiteral("    <dc:subject>%1</dc:subject>\n").arg(escXml(g.trimmed()));
+
+    const QString opf =
+        QStringLiteral("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<package version=\"3.0\" xmlns=\"http://www.idpf.org/2007/opf\" unique-identifier=\"book-id\" xml:lang=\"pt-BR\">\n"
+        "  <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
+        "    <dc:identifier id=\"book-id\">") + bookId + QStringLiteral("</dc:identifier>\n"
+        "    <dc:title>") + escXml(title) + QStringLiteral("</dc:title>\n"
+        "    <dc:language>pt-BR</dc:language>\n"
+        "    <meta property=\"dcterms:modified\">") + now + QStringLiteral("</meta>\n")
+        + metaExtra + QStringLiteral("  </metadata>\n"
+        "  <manifest>\n"
+        "    <item id=\"nav\" href=\"nav.xhtml\" media-type=\"application/xhtml+xml\" properties=\"nav\"/>\n"
+        "    <item id=\"ncx\" href=\"toc.ncx\" media-type=\"application/x-dtbncx+xml\"/>\n"
+        "    <item id=\"style\" href=\"style.css\" media-type=\"text/css\"/>\n")
+        + manifest + QStringLiteral("  </manifest>\n"
+        "  <spine toc=\"ncx\">\n")
+        + (hasCover ? QStringLiteral("    <itemref idref=\"cover-page\" linear=\"no\"/>\n") : QString())
+        + spine + QStringLiteral("  </spine>\n"
+        "</package>\n");
+
+    const QString nav =
+        QStringLiteral("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<!DOCTYPE html>\n"
+        "<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\" xml:lang=\"pt-BR\" lang=\"pt-BR\">\n"
+        "<head><meta charset=\"UTF-8\"/><title>Índice</title></head>\n"
+        "<body>\n  <nav epub:type=\"toc\" id=\"toc\">\n    <h1>Índice</h1>\n    <ol>\n")
+        + navList + QStringLiteral("    </ol>\n  </nav>\n</body>\n</html>\n");
+
+    const QString ncx =
+        QStringLiteral("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<ncx xmlns=\"http://www.daisy.org/z3986/2005/ncx/\" version=\"2005-1\">\n"
+        "  <head>\n    <meta name=\"dtb:uid\" content=\"") + bookId + QStringLiteral("\"/>\n"
+        "    <meta name=\"dtb:depth\" content=\"1\"/>\n"
+        "    <meta name=\"dtb:totalPageCount\" content=\"0\"/>\n"
+        "    <meta name=\"dtb:maxPageNumber\" content=\"0\"/>\n  </head>\n"
+        "  <docTitle><text>") + escXml(title) + QStringLiteral("</text></docTitle>\n  <navMap>\n")
+        + ncxNav + QStringLiteral("  </navMap>\n</ncx>\n");
+
+    auto pageXhtml = [](const QString& t, const QString& body) {
+        return QStringLiteral("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<!DOCTYPE html>\n"
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"pt-BR\" lang=\"pt-BR\">\n"
+            "<head><meta charset=\"UTF-8\"/><title>") + escXml(t)
+            + QStringLiteral("</title><link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/></head>\n"
+            "<body>\n<h1 class=\"chapter-title\">") + escXml(t) + QStringLiteral("</h1>\n")
+            + body + QStringLiteral("\n</body>\n</html>\n");
+    };
+
+    // ── Empacota (mimetype PRIMEIRO e sem compressão — ZipWriter é stored) ──
+    ZipWriter zip;
+    zip.addFile(QStringLiteral("mimetype"), QByteArrayLiteral("application/epub+zip"),
+                /*compress=*/false);
+    zip.addFile(QStringLiteral("META-INF/container.xml"), QByteArrayLiteral(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">\n"
+        "  <rootfiles>\n"
+        "    <rootfile full-path=\"OEBPS/content.opf\" media-type=\"application/oebps-package+xml\"/>\n"
+        "  </rootfiles>\n"
+        "</container>\n"));
+    zip.addFile(QStringLiteral("OEBPS/style.css"), css.toUtf8());
+    for (const Item& it : items)
+        zip.addFile(QStringLiteral("OEBPS/") + it.filename, pageXhtml(it.title, it.body).toUtf8());
+    for (const auto& img : images)
+        zip.addFile(QStringLiteral("OEBPS/") + img.first, img.second, /*compress=*/false);
+    if (hasCover) {
+        zip.addFile(QStringLiteral("OEBPS/") + coverFilename, coverBytes, /*compress=*/false);
+        const QString coverPage =
+            QStringLiteral("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<!DOCTYPE html>\n"
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"pt-BR\" lang=\"pt-BR\">\n"
+            "<head><meta charset=\"UTF-8\"/><title>Capa</title>\n"
+            "<style>html,body{margin:0;padding:0;text-align:center;}img{max-width:100%;max-height:100vh;height:auto;}</style>\n"
+            "</head>\n<body><img src=\"") + coverFilename + QStringLiteral("\" alt=\"Capa\"/></body>\n</html>\n");
+        zip.addFile(QStringLiteral("OEBPS/cover.xhtml"), coverPage.toUtf8());
+    }
+    zip.addFile(QStringLiteral("OEBPS/content.opf"), opf.toUtf8());
+    zip.addFile(QStringLiteral("OEBPS/nav.xhtml"), nav.toUtf8());
+    zip.addFile(QStringLiteral("OEBPS/toc.ncx"), ncx.toUtf8());
+    return zip.finish();
+}
+
 bool Exporter::run(const Selection& sel, QWidget* dialogParent,
                    QString* error, bool* nothingExported) {
     if (nothingExported) *nothingExported = false;
@@ -283,15 +613,21 @@ bool Exporter::run(const Selection& sel, QWidget* dialogParent,
     if (files.size() == 1) {
         // Único arquivo → salva direto no formato escolhido.
         const QString ext = formatExt(sel.format);
-        const bool pdf = (sel.format == Format::Pdf);
+        QString filter, dlgTitle;
+        switch (sel.format) {
+            case Format::Pdf:
+                filter = QStringLiteral("Documento PDF (*.pdf)");
+                dlgTitle = QStringLiteral("Exportar como PDF"); break;
+            case Format::Epub:
+                filter = QStringLiteral("Livro EPUB (*.epub)");
+                dlgTitle = QStringLiteral("Exportar como EPUB"); break;
+            default:
+                filter = QStringLiteral("Documento ODF (*.odt)");
+                dlgTitle = QStringLiteral("Exportar como ODT"); break;
+        }
         const QString suggested = projName + QStringLiteral(".") + ext;
-        const QString filter = pdf
-            ? QStringLiteral("Documento PDF (*.pdf)")
-            : QStringLiteral("Documento ODF (*.odt)");
         const QString dest = QFileDialog::getSaveFileName(
-            dialogParent,
-            pdf ? QStringLiteral("Exportar como PDF") : QStringLiteral("Exportar como ODT"),
-            suggested, filter);
+            dialogParent, dlgTitle, suggested, filter);
         if (dest.isEmpty()) return false; // cancelado
         QFile f(dest);
         if (!f.open(QIODevice::WriteOnly)) {

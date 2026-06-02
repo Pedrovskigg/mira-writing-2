@@ -14,7 +14,7 @@ struct DrawerItem;
 // chamar, garantindo que o disco reflita as edições atuais.
 class Exporter {
 public:
-    enum class Format { Odt, Pdf };
+    enum class Format { Odt, Pdf, Epub };
     enum class ManuscriptMode { SingleDocument, SeparateChapters };
 
     // Estilo de parágrafo do projeto — não fica no HTML salvo, o editor aplica em
@@ -60,6 +60,13 @@ private:
     QByteArray writeDoc(QTextDocument& doc, Format fmt) const;
 
     QList<OutFile> buildFiles(const Selection& sel) const;
+
+    // EPUB 3: um único arquivo com todos os itens selecionados como capítulos
+    // navegáveis (ignora manuscriptMode), capa, metadados e índice.
+    QByteArray buildEpub(const Selection& sel) const;
+    QString itemBodyXhtml(const QString& rawHtml, bool includeMarkers,
+                          QList<QPair<QString, QByteArray>>& imagesOut,
+                          QStringList& imageMimesOut, int& imgCounter) const;
 
     static QString safeName(const QString& s);
     static QString formatExt(Format fmt);

@@ -11,7 +11,9 @@
 class ZipWriter {
 public:
     // path usa "/" como separador de pastas. data é o conteúdo bruto do arquivo.
-    void addFile(const QString& path, const QByteArray& data);
+    // compress=true usa deflate (texto/HTML encolhe muito); false = stored
+    // (obrigatório p/ o "mimetype" do EPUB e bom p/ dados já comprimidos).
+    void addFile(const QString& path, const QByteArray& data, bool compress = true);
 
     // Monta e devolve o arquivo .zip completo.
     QByteArray finish();
@@ -20,7 +22,9 @@ private:
     struct Entry {
         QByteArray name;   // UTF-8
         quint32 crc = 0;
-        quint32 size = 0;
+        quint32 compSize = 0;
+        quint32 uncompSize = 0;
+        quint16 method = 0;
         quint32 offset = 0;
     };
     QByteArray m_local;        // local headers + dados, na ordem de inserção
