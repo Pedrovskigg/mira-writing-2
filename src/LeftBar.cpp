@@ -230,7 +230,15 @@ LeftBar::LeftBar(ProjectModel* model, QWidget* parent)
 void LeftBar::applyTheme() {
     setStyleSheet(Theme::panelQss(QStringLiteral("leftBar")));
     for (auto it = m_fixedButtons.constBegin(); it != m_fixedButtons.constEnd(); ++it) {
-        if (auto* btn = it.value()) btn->setStyleSheet(fixedButtonQss());
+        if (auto* btn = it.value()) {
+            btn->setStyleSheet(fixedButtonQss());
+            // Re-tinta o ícone com as cores do novo tema.
+            const QString res = btn->property("iconRes").toString();
+            if (!res.isEmpty()) {
+                const QIcon ic = loadLeftbarIcon(res);
+                if (!ic.isNull()) btn->setIcon(ic);
+            }
+        }
     }
     if (m_newDrawerBtn) m_newDrawerBtn->setStyleSheet(newDrawerQss());
     for (auto* sep : m_groupSeparators) {
@@ -312,6 +320,9 @@ QToolButton* LeftBar::makeFixedButton(const QString& iconResource,
     btn->setCheckable(true);
     btn->setAutoRaise(true);
     btn->setStyleSheet(fixedButtonQss());
+    // Guarda o recurso do ícone pra recarregá-lo (recolorido) ao trocar de tema —
+    // o IconUtils tinta o SVG no load, então o ícone precisa ser re-tintado.
+    btn->setProperty("iconRes", iconResource);
 
     if (!iconResource.isEmpty()) {
         QIcon ic = loadLeftbarIcon(iconResource);
