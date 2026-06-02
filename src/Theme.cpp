@@ -888,7 +888,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 6;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-njeromin-14367404.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 86;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -935,7 +935,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 6;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-rui-wang-16615369-11216105.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 82;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -982,7 +982,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-samara-hammer-209546937-11737041.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 78;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1029,7 +1029,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 8;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-damodigital-2274725.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 88;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1076,7 +1076,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-vinixhc-19924751.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 76;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1299,7 +1299,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-moments-11738628.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 80;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1346,7 +1346,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 6;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-what-640488395-19558160.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 80;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1393,7 +1393,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 5;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-griffinw-34480262.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 84;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -1440,7 +1440,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage  = bundledImagePath(QStringLiteral("pexels-pixabay-316093.jpg"));
         t.backgroundMode   = BgZoom;
-        t.editorOpacity    = 78;
+        t.editorOpacity    = 100;
         m_themes.append(t);
     }
     {
@@ -3424,7 +3424,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 8;
         t.backgroundImage = bundledImagePath(QStringLiteral("wood-2.jpg"));
         t.backgroundMode = BgZoom;
-        t.editorOpacity = 96;
+        t.editorOpacity = 100;
         m_themes.append(t);
     }
     {
@@ -3467,7 +3467,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 8;
         t.backgroundImage = bundledImagePath(QStringLiteral("wood-3.jpg"));
         t.backgroundMode = BgZoom;
-        t.editorOpacity = 95;
+        t.editorOpacity = 100;
         m_themes.append(t);
     }
     {
@@ -3511,7 +3511,7 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage = bundledImagePath(QStringLiteral("wood-6.jpg"));
         t.backgroundMode = BgZoom;
-        t.editorOpacity = 96;
+        t.editorOpacity = 100;
         m_themes.append(t);
     }
     {
@@ -3555,9 +3555,200 @@ void Manager::loadBundled()
         t.pageShadowOffset = 7;
         t.backgroundImage = bundledImagePath(QStringLiteral("wood-1.jpg"));
         t.backgroundMode = BgZoom;
-        t.editorOpacity = 82;
+        t.editorOpacity = 100;
         m_themes.append(t);
     }
+
+    // ---- Estampados — temas com imagem de fundo ----
+    // A página do editor é SEMPRE opaca (editorOpacity 100): a foto aparece só
+    // nas margens, em volta da folha, sem nunca atrapalhar a leitura. Helper
+    // local pra não repetir os ~28 campos por tema; deriva os overlays rgba do
+    // tom-base `tint` ("r,g,b" — claro pra UI escura, escuro pra UI clara).
+    auto estampado = [&](const QString& id, const QString& name, const QString& image,
+                         bool dark, const QString& tint,
+                         const QString& appBg, const QString& panelBg, const QString& panelBorder,
+                         const QString& textPrim, const QString& textMut, const QString& textBr,
+                         const QString& accent, const QString& editorBg, const QString& editorText,
+                         const QString& shadow, int shadowRadius, int shadowOffset) {
+        MiraTheme t;
+        t.id = id;
+        t.name = name;
+        t.bundled = true;
+        t.appBackground    = appBg;
+        t.panelBackground  = panelBg;
+        t.panelBorder      = panelBorder;
+        t.textPrimary      = textPrim;
+        t.textMuted        = textMut;
+        t.textBright       = textBr;
+        t.hoverOverlay     = QStringLiteral("rgba(%1,0.06)").arg(tint);
+        t.pressedOverlay   = QStringLiteral("rgba(%1,0.04)").arg(tint);
+        t.subtleBorder     = QStringLiteral("rgba(%1,0.10)").arg(tint);
+        t.accentDefault    = accent;
+        t.hoverStrong      = QStringLiteral("rgba(%1,0.12)").arg(tint);
+        t.borderStrong     = QStringLiteral("rgba(%1,0.22)").arg(tint);
+        t.focusBorder      = QStringLiteral("rgba(%1,0.32)").arg(tint);
+        t.inputBackground  = dark ? QStringLiteral("rgba(0,0,0,0.30)")
+                                  : QStringLiteral("rgba(0,0,0,0.05)");
+        t.disabledText     = QStringLiteral("rgba(%1,0.30)").arg(tint);
+        t.selectionRing    = textBr;
+        t.accentSuccess           = QStringLiteral("#7da855");
+        t.accentSuccessSoft       = QStringLiteral("rgba(125,168,85,0.18)");
+        t.accentSuccessBorderSoft = QStringLiteral("rgba(125,168,85,0.50)");
+        t.accentDanger            = QStringLiteral("#c8504a");
+        t.accentDangerSoft        = QStringLiteral("rgba(200,80,74,0.14)");
+        t.accentDangerBorderSoft  = QStringLiteral("rgba(200,80,74,0.50)");
+        t.accentWarning           = QStringLiteral("#c89860");
+        t.accentInfo              = QStringLiteral("#5e8fbf");
+        t.accentInfoSoft          = QStringLiteral("rgba(94,143,191,0.22)");
+        t.accentInfoBorderSoft    = QStringLiteral("rgba(94,143,191,0.55)");
+        t.editorBackground = editorBg;
+        t.editorTextColor  = editorText;
+        t.pageShadowEnabled = true;
+        t.pageShadowColor   = shadow;
+        t.pageShadowRadius  = shadowRadius;
+        t.pageShadowOffset  = shadowOffset;
+        t.backgroundImage   = bundledImagePath(image);
+        t.backgroundMode    = BgZoom;
+        t.editorOpacity     = 100;
+        m_themes.append(t);
+    };
+
+    // Galáxias e cosmos
+    estampado(QStringLiteral("via-lactea"), QStringLiteral("Via Láctea"),
+              QStringLiteral("galaxy-texture.jpg"), true, QStringLiteral("196,204,224"),
+              QStringLiteral("#060812"), QStringLiteral("#0c1020"), QStringLiteral("#20283f"),
+              QStringLiteral("#c4cce0"), QStringLiteral("#6a7390"), QStringLiteral("#eef2fb"),
+              QStringLiteral("#6c7cff"), QStringLiteral("#0a0e1a"), QStringLiteral("#d8deec"),
+              QStringLiteral("rgba(0,0,0,210)"), 32, 7);
+
+    estampado(QStringLiteral("cosmos"), QStringLiteral("Cosmos"),
+              QStringLiteral("galaxy-texture-2.jpg"), true, QStringLiteral("191,224,221"),
+              QStringLiteral("#061014"), QStringLiteral("#0a1820"), QStringLiteral("#18313a"),
+              QStringLiteral("#bfe0dd"), QStringLiteral("#6a8a8c"), QStringLiteral("#e8f6f4"),
+              QStringLiteral("#34c0b0"), QStringLiteral("#081418"), QStringLiteral("#d4e8e6"),
+              QStringLiteral("rgba(0,0,0,200)"), 32, 7);
+
+    estampado(QStringLiteral("firmamento"), QStringLiteral("Firmamento"),
+              QStringLiteral("pexels-francian0-12940327.jpg"), true, QStringLiteral("207,196,224"),
+              QStringLiteral("#08060f"), QStringLiteral("#0e0b1a"), QStringLiteral("#261d3a"),
+              QStringLiteral("#cfc4e0"), QStringLiteral("#746688"), QStringLiteral("#efe8f6"),
+              QStringLiteral("#9a6cd8"), QStringLiteral("#0a0814"), QStringLiteral("#ddd4ea"),
+              QStringLiteral("rgba(0,0,0,210)"), 32, 7);
+
+    estampado(QStringLiteral("quasar"), QStringLiteral("Quasar"),
+              QStringLiteral("pexels-incrediblerafa-4737522.jpg"), true, QStringLiteral("198,206,224"),
+              QStringLiteral("#060810"), QStringLiteral("#0c0f1c"), QStringLiteral("#202a40"),
+              QStringLiteral("#c6cee0"), QStringLiteral("#6e7690"), QStringLiteral("#eceffa"),
+              QStringLiteral("#e88a2e"), QStringLiteral("#080b16"), QStringLiteral("#d8deec"),
+              QStringLiteral("rgba(0,0,0,215)"), 34, 7);
+
+    estampado(QStringLiteral("abismo"), QStringLiteral("Abismo"),
+              QStringLiteral("pexels-enginakyurt-6138036.jpg"), true, QStringLiteral("192,204,224"),
+              QStringLiteral("#050a14"), QStringLiteral("#0a1322"), QStringLiteral("#182640"),
+              QStringLiteral("#c0cce0"), QStringLiteral("#6a7690"), QStringLiteral("#e6eefa"),
+              QStringLiteral("#d8a83a"), QStringLiteral("#07101e"), QStringLiteral("#d6dfee"),
+              QStringLiteral("rgba(0,0,0,215)"), 34, 7);
+
+    // Cidades e metrópoles
+    estampado(QStringLiteral("metropole"), QStringLiteral("Metrópole"),
+              QStringLiteral("pexels-2150015030-31016869.jpg"), true, QStringLiteral("194,210,230"),
+              QStringLiteral("#08111e"), QStringLiteral("#0d1a2c"), QStringLiteral("#1e3048"),
+              QStringLiteral("#c2d2e6"), QStringLiteral("#6a7c94"), QStringLiteral("#e8f0fa"),
+              QStringLiteral("#4aa8e0"), QStringLiteral("#0a1726"), QStringLiteral("#d6e2f0"),
+              QStringLiteral("rgba(0,0,0,200)"), 30, 7);
+
+    estampado(QStringLiteral("vertigem"), QStringLiteral("Vertigem"),
+              QStringLiteral("pexels-apyfz-30136066.jpg"), true, QStringLiteral("212,200,230"),
+              QStringLiteral("#0a0818"), QStringLiteral("#120e24"), QStringLiteral("#2a2046"),
+              QStringLiteral("#d4c8e6"), QStringLiteral("#7a6a92"), QStringLiteral("#f0e8fa"),
+              QStringLiteral("#d24aa8"), QStringLiteral("#0d0a1c"), QStringLiteral("#e2d8ee"),
+              QStringLiteral("rgba(0,0,0,210)"), 32, 7);
+
+    estampado(QStringLiteral("distrito"), QStringLiteral("Distrito"),
+              QStringLiteral("pexels-digital-phase-2150191459-31008030.jpg"), true, QStringLiteral("192,218,218"),
+              QStringLiteral("#08161a"), QStringLiteral("#0c2024"), QStringLiteral("#184048"),
+              QStringLiteral("#c0dada"), QStringLiteral("#688688"), QStringLiteral("#e6f4f4"),
+              QStringLiteral("#e0524a"), QStringLiteral("#0a1c20"), QStringLiteral("#d6e8e6"),
+              QStringLiteral("rgba(0,0,0,200)"), 30, 7);
+
+    estampado(QStringLiteral("cidade-baixa"), QStringLiteral("Cidade Baixa"),
+              QStringLiteral("pexels-einfoto-2130505.jpg"), true, QStringLiteral("214,204,198"),
+              QStringLiteral("#0e0c0c"), QStringLiteral("#161212"), QStringLiteral("#2e2622"),
+              QStringLiteral("#d6ccc6"), QStringLiteral("#8a7c74"), QStringLiteral("#f2ebe6"),
+              QStringLiteral("#c25a44"), QStringLiteral("#14100e"), QStringLiteral("#e4dcd4"),
+              QStringLiteral("rgba(0,0,0,210)"), 30, 7);
+
+    estampado(QStringLiteral("babilonia"), QStringLiteral("Babilônia"),
+              QStringLiteral("pexels-jimmy-liao-3615017-16705982.jpg"), true, QStringLiteral("224,208,192"),
+              QStringLiteral("#100a08"), QStringLiteral("#1a120c"), QStringLiteral("#34261a"),
+              QStringLiteral("#e0d0c0"), QStringLiteral("#927e6c"), QStringLiteral("#f4e8d8"),
+              QStringLiteral("#e07a30"), QStringLiteral("#140d09"), QStringLiteral("#e6d8c8"),
+              QStringLiteral("rgba(0,0,0,210)"), 32, 7);
+
+    estampado(QStringLiteral("concreto"), QStringLiteral("Concreto"),
+              QStringLiteral("pexels-water-white-1436785-5132764.jpg"), true, QStringLiteral("205,210,216"),
+              QStringLiteral("#14161a"), QStringLiteral("#1c1f24"), QStringLiteral("#32373e"),
+              QStringLiteral("#cdd2d8"), QStringLiteral("#828891"), QStringLiteral("#eef1f4"),
+              QStringLiteral("#7a8a9a"), QStringLiteral("#1a1d22"), QStringLiteral("#dce0e6"),
+              QStringLiteral("rgba(0,0,0,205)"), 30, 7);
+
+    estampado(QStringLiteral("horizonte"), QStringLiteral("Horizonte"),
+              QStringLiteral("pexels-kaique-lopes-3899395-9304147.jpg"), false, QStringLiteral("30,42,54"),
+              QStringLiteral("#dce8f2"), QStringLiteral("#eaf2f8"), QStringLiteral("#c2d4e2"),
+              QStringLiteral("#2c3a48"), QStringLiteral("#748494"), QStringLiteral("#16202c"),
+              QStringLiteral("#3a8ec8"), QStringLiteral("#f8fbfe"), QStringLiteral("#1e2a36"),
+              QStringLiteral("rgba(40,60,80,80)"), 26, 6);
+
+    estampado(QStringLiteral("cidade-clara"), QStringLiteral("Cidade Clara"),
+              QStringLiteral("pexels-wenchengphoto-6650574.jpg"), false, QStringLiteral("40,38,32"),
+              QStringLiteral("#e8e6e0"), QStringLiteral("#f4f2ec"), QStringLiteral("#d4d0c6"),
+              QStringLiteral("#38362f"), QStringLiteral("#8a8578"), QStringLiteral("#20201a"),
+              QStringLiteral("#d8923a"), QStringLiteral("#fbf9f3"), QStringLiteral("#2a2820"),
+              QStringLiteral("rgba(70,60,40,80)"), 26, 6);
+
+    // Natureza — florestas, mar, céu
+    estampado(QStringLiteral("selva"), QStringLiteral("Selva"),
+              QStringLiteral("pexels-dongdilac-29556194.jpg"), true, QStringLiteral("196,220,194"),
+              QStringLiteral("#0a140c"), QStringLiteral("#102014"), QStringLiteral("#1e3a24"),
+              QStringLiteral("#c4dcc2"), QStringLiteral("#6c8a6c"), QStringLiteral("#e8f4e6"),
+              QStringLiteral("#5aa84a"), QStringLiteral("#0d1c10"), QStringLiteral("#d6e8d2"),
+              QStringLiteral("rgba(0,0,0,200)"), 30, 7);
+
+    estampado(QStringLiteral("clareira"), QStringLiteral("Clareira"),
+              QStringLiteral("pexels-elif-lale-a-1708563292-32445422.jpg"), true, QStringLiteral("202,220,200"),
+              QStringLiteral("#0c160e"), QStringLiteral("#122016"), QStringLiteral("#213824"),
+              QStringLiteral("#cadcc8"), QStringLiteral("#708c70"), QStringLiteral("#ecf6e8"),
+              QStringLiteral("#88c060"), QStringLiteral("#f4faef"), QStringLiteral("#16240f"),
+              QStringLiteral("rgba(10,24,12,150)"), 30, 7);
+
+    estampado(QStringLiteral("alvorada"), QStringLiteral("Alvorada"),
+              QStringLiteral("pexels-hoang-hai-72150707-8468801.jpg"), true, QStringLiteral("224,210,188"),
+              QStringLiteral("#161009"), QStringLiteral("#20180e"), QStringLiteral("#3a2c18"),
+              QStringLiteral("#e0d2bc"), QStringLiteral("#94836a"), QStringLiteral("#f4ead6"),
+              QStringLiteral("#d89a40"), QStringLiteral("#faf3e6"), QStringLiteral("#2a2014"),
+              QStringLiteral("rgba(20,14,6,150)"), 30, 7);
+
+    estampado(QStringLiteral("ressaca"), QStringLiteral("Ressaca"),
+              QStringLiteral("pexels-aulsh99-2860703.jpg"), true, QStringLiteral("191,216,230"),
+              QStringLiteral("#06141f"), QStringLiteral("#0a1e2e"), QStringLiteral("#16384c"),
+              QStringLiteral("#bfd8e6"), QStringLiteral("#688398"), QStringLiteral("#e6f2f8"),
+              QStringLiteral("#2a9ad8"), QStringLiteral("#f2f9fc"), QStringLiteral("#0a1e2e"),
+              QStringLiteral("rgba(6,20,31,160)"), 32, 8);
+
+    estampado(QStringLiteral("estratosfera"), QStringLiteral("Estratosfera"),
+              QStringLiteral("pexels-kumud-tripathi-434373-10556427.jpg"), false, QStringLiteral("32,44,56"),
+              QStringLiteral("#dde8f0"), QStringLiteral("#ecf3f8"), QStringLiteral("#c6d6e2"),
+              QStringLiteral("#2e3c48"), QStringLiteral("#76838f"), QStringLiteral("#18222c"),
+              QStringLiteral("#5a9ad0"), QStringLiteral("#f9fcfe"), QStringLiteral("#202c38"),
+              QStringLiteral("rgba(50,70,90,80)"), 26, 6);
+
+    // Estampa decorativa
+    estampado(QStringLiteral("azulejo"), QStringLiteral("Azulejo"),
+              QStringLiteral("pattern-texture-10.jpg"), false, QStringLiteral("40,40,56"),
+              QStringLiteral("#ede6da"), QStringLiteral("#f6f1e8"), QStringLiteral("#d8cdb8"),
+              QStringLiteral("#3a3a44"), QStringLiteral("#8a8275"), QStringLiteral("#1e1e26"),
+              QStringLiteral("#e07a2e"), QStringLiteral("#fbf7ef"), QStringLiteral("#2a2a30"),
+              QStringLiteral("rgba(60,50,30,90)"), 28, 6);
 
     // ---- Categorias pro filtro do painel de Temas ----
     // light = claros neutros/frios | warm = amarelados/quentes |
@@ -3567,7 +3758,7 @@ void Manager::loadBundled()
         { QStringLiteral("solarized-light"),  QStringLiteral("light") },
         { QStringLiteral("nord-light"),       QStringLiteral("light") },
         { QStringLiteral("marble"),           QStringLiteral("light") },
-        { QStringLiteral("brisa"),            QStringLiteral("light") },
+        { QStringLiteral("brisa"),            QStringLiteral("estampados") },
         { QStringLiteral("sepia"),            QStringLiteral("warm") },
         { QStringLiteral("amber"),            QStringLiteral("warm") },
         { QStringLiteral("parchment"),        QStringLiteral("warm") },
@@ -3583,19 +3774,19 @@ void Manager::loadBundled()
         { QStringLiteral("nord"),             QStringLiteral("dark") },
         { QStringLiteral("high-contrast"),    QStringLiteral("dark") },
         { QStringLiteral("tokyo-night"),      QStringLiteral("dark") },
-        { QStringLiteral("cerracao"),         QStringLiteral("dark") },
-        { QStringLiteral("petroleo"),         QStringLiteral("dark") },
+        { QStringLiteral("cerracao"),         QStringLiteral("estampados") },
+        { QStringLiteral("petroleo"),         QStringLiteral("estampados") },
         { QStringLiteral("dracula"),          QStringLiteral("colorful") },
         { QStringLiteral("catppuccin-mocha"), QStringLiteral("colorful") },
         { QStringLiteral("nord-royal"),       QStringLiteral("colorful") },
         { QStringLiteral("velvet-red"),       QStringLiteral("colorful") },
-        { QStringLiteral("veredas"),          QStringLiteral("colorful") },
-        { QStringLiteral("tokyo-velvet"),     QStringLiteral("colorful") },
-        { QStringLiteral("constelar"),        QStringLiteral("colorful") },
-        { QStringLiteral("mare"),             QStringLiteral("colorful") },
+        { QStringLiteral("veredas"),          QStringLiteral("estampados") },
+        { QStringLiteral("tokyo-velvet"),     QStringLiteral("estampados") },
+        { QStringLiteral("constelar"),        QStringLiteral("estampados") },
+        { QStringLiteral("mare"),             QStringLiteral("estampados") },
         { QStringLiteral("rose-pine"),        QStringLiteral("colorful") },
-        { QStringLiteral("aurora"),           QStringLiteral("colorful") },
-        { QStringLiteral("hibisco"),          QStringLiteral("colorful") },
+        { QStringLiteral("aurora"),           QStringLiteral("estampados") },
+        { QStringLiteral("hibisco"),          QStringLiteral("estampados") },
         { QStringLiteral("ocean"),            QStringLiteral("colorful") },
         { QStringLiteral("forest"),           QStringLiteral("colorful") },
         { QStringLiteral("amethyst"),         QStringLiteral("colorful") },
@@ -3641,10 +3832,30 @@ void Manager::loadBundled()
         { QStringLiteral("ember-red"),        QStringLiteral("colorful") },
         { QStringLiteral("radioactive"),      QStringLiteral("colorful") },
         { QStringLiteral("royalty"),          QStringLiteral("colorful") },
-        { QStringLiteral("desk-oak"),         QStringLiteral("warm") },
-        { QStringLiteral("desk-mahogany"),    QStringLiteral("warm") },
-        { QStringLiteral("desk-bamboo"),      QStringLiteral("warm") },
-        { QStringLiteral("desk-ebony"),       QStringLiteral("dark") },
+        { QStringLiteral("desk-oak"),         QStringLiteral("estampados") },
+        { QStringLiteral("desk-mahogany"),    QStringLiteral("estampados") },
+        { QStringLiteral("desk-bamboo"),      QStringLiteral("estampados") },
+        { QStringLiteral("desk-ebony"),       QStringLiteral("estampados") },
+        // Estampados novos (helper estampado() acima)
+        { QStringLiteral("via-lactea"),       QStringLiteral("estampados") },
+        { QStringLiteral("cosmos"),           QStringLiteral("estampados") },
+        { QStringLiteral("firmamento"),       QStringLiteral("estampados") },
+        { QStringLiteral("quasar"),           QStringLiteral("estampados") },
+        { QStringLiteral("abismo"),           QStringLiteral("estampados") },
+        { QStringLiteral("metropole"),        QStringLiteral("estampados") },
+        { QStringLiteral("vertigem"),         QStringLiteral("estampados") },
+        { QStringLiteral("distrito"),         QStringLiteral("estampados") },
+        { QStringLiteral("cidade-baixa"),     QStringLiteral("estampados") },
+        { QStringLiteral("babilonia"),        QStringLiteral("estampados") },
+        { QStringLiteral("concreto"),         QStringLiteral("estampados") },
+        { QStringLiteral("horizonte"),        QStringLiteral("estampados") },
+        { QStringLiteral("cidade-clara"),     QStringLiteral("estampados") },
+        { QStringLiteral("selva"),            QStringLiteral("estampados") },
+        { QStringLiteral("clareira"),         QStringLiteral("estampados") },
+        { QStringLiteral("alvorada"),         QStringLiteral("estampados") },
+        { QStringLiteral("ressaca"),          QStringLiteral("estampados") },
+        { QStringLiteral("estratosfera"),     QStringLiteral("estampados") },
+        { QStringLiteral("azulejo"),          QStringLiteral("estampados") },
     };
     for (MiraTheme& t : m_themes)
         t.category = kCategory.value(t.id, QStringLiteral("colorful"));

@@ -397,6 +397,7 @@ QWidget* ThemesPanel::buildCategoryFilterRow(QWidget* parent)
         { tr("Amarelados"), QStringLiteral("warm") },
         { tr("Escuros"),    QStringLiteral("dark") },
         { tr("Coloridos"),  QStringLiteral("colorful") },
+        { tr("Estampados"), QStringLiteral("estampados") },
     };
     for (const Chip& c : chips) {
         auto* btn = new QPushButton(c.label, row);
