@@ -449,21 +449,16 @@ void WordCounter::setGoalTargetMinutes(int minutes) {
 }
 
 void WordCounter::ensureCurrentDayKey() {
-    const qint64 now = QDateTime::currentMSecsSinceEpoch();
-    if (m_settings.goalDayStartAt == 0 || (now - m_settings.goalDayStartAt) >= kGoalDayMs) {
-        m_settings.goalDayStartAt = now;
-        m_settings.goalDayKey = dateKey(now);
-    } else if (m_settings.goalDayKey.isEmpty()) {
-        m_settings.goalDayKey = dateKey(m_settings.goalDayStartAt);
+    const QString todayKey = QDate::currentDate().toString(QStringLiteral("yyyy-MM-dd"));
+    if (m_settings.goalDayKey != todayKey) {
+        // Novo dia de calendário: registra quando começou a escrever hoje.
+        m_settings.goalDayStartAt = QDateTime::currentMSecsSinceEpoch();
+        m_settings.goalDayKey = todayKey;
     }
 }
 
 QString WordCounter::currentGoalDayKey() const {
-    const qint64 now = QDateTime::currentMSecsSinceEpoch();
-    if (m_settings.goalDayStartAt == 0 || (now - m_settings.goalDayStartAt) >= kGoalDayMs) {
-        return dateKey(now);
-    }
-    return m_settings.goalDayKey.isEmpty() ? dateKey(m_settings.goalDayStartAt) : m_settings.goalDayKey;
+    return QDate::currentDate().toString(QStringLiteral("yyyy-MM-dd"));
 }
 
 qint64 WordCounter::currentGoalDayStartAt() const {
@@ -471,10 +466,8 @@ qint64 WordCounter::currentGoalDayStartAt() const {
 }
 
 qint64 WordCounter::goalDayRemainingMs() const {
-    if (m_settings.goalDayStartAt == 0) return kGoalDayMs;
-    const qint64 now = QDateTime::currentMSecsSinceEpoch();
-    const qint64 elapsed = now - m_settings.goalDayStartAt;
-    return qMax<qint64>(0, kGoalDayMs - elapsed);
+    const QDateTime midnight(QDate::currentDate().addDays(1), QTime(0, 0, 0));
+    return qMax<qint64>(0, midnight.toMSecsSinceEpoch() - QDateTime::currentMSecsSinceEpoch());
 }
 
 int WordCounter::progressWords() const {
