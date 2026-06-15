@@ -2,6 +2,7 @@
 
 #include "MainMenuDialog.h"
 #include "NewProjectFlow.h"
+#include "UpdateChecker.h"
 
 #ifdef Q_OS_WIN
 #include <dwmapi.h>
@@ -52,6 +53,14 @@
 #include <QHash>
 #include <QUrl>
 #include <QWidget>
+#include <QFile>
+#include <QIODevice>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QProcess>
+#include <QProgressBar>
+#include <QStandardPaths>
 
 #include <QDir>
 #include <QDialogButtonBox>
@@ -341,6 +350,17 @@ MainWindow::MainWindow(QWidget *parent)
             markerHoverPopup->hide();
             markerHoverId.clear();
         }
+    });
+
+    // Checagem de atualização: silenciosa, em background, alguns segundos
+    // após o startup pra não competir com o carregamento do projeto.
+    m_updateChecker = new UpdateChecker(this);
+    connect(m_updateChecker, &UpdateChecker::updateAvailable, this,
+            [this](const QString& version, const QString& downloadUrl, const QString&) {
+                showUpdateToast(version, downloadUrl);
+            });
+    QTimer::singleShot(3000, this, [this]() {
+        if (m_updateChecker) m_updateChecker->check();
     });
 }
 
@@ -3337,6 +3357,170 @@ void MainWindow::positionReminderToast()
         r.bottom() - m_reminderToast->height() - margin);
 }
 
+void MainWindow::showUpdateToast(const QString& version, const QString& downloadUrl)
+{
+    m_updateVersion = version;
+    m_updateDownloadUrl = downloadUrl;
+
+    if (!m_updateToast) {
+        m_updateToast = new QFrame(this);
+        m_updateToast->setObjectName(QStringLiteral("updateToast"));
+        m_updateToast->setFixedWidth(300);
+
+        auto* shadow = new QGraphicsDropShadowEffect(m_updateToast);
+        shadow->setBlurRadius(18);
+        shadow->setColor(QColor(0, 0, 0, 160));
+        shadow->setOffset(0, 3);
+        m_updateToast->setGraphicsEffect(shadow);
+
+        auto* root = new QVBoxLayout(m_updateToast);
+        root->setContentsMargins(14, 10, 14, 10);
+        root->setSpacing(8);
+
+        auto* topRow = new QHBoxLayout();
+        topRow->setSpacing(6);
+        m_updateToastLabel = new QLabel(m_updateToast);
+        m_updateToastLabel->setObjectName(QStringLiteral("utTitle"));
+        m_updateToastLabel->setWordWrap(true);
+        topRow->addWidget(m_updateToastLabel, 1);
+        auto* closeBtn = new QToolButton(m_updateToast);
+        closeBtn->setText(QStringLiteral("×"));
+        closeBtn->setObjectName(QStringLiteral("utClose"));
+        closeBtn->setCursor(Qt::PointingHandCursor);
+        connect(closeBtn, &QToolButton::clicked, m_updateToast, &QFrame::hide);
+        topRow->addWidget(closeBtn);
+        root->addLayout(topRow);
+
+        m_updateToastProgress = new QProgressBar(m_updateToast);
+        m_updateToastProgress->setObjectName(QStringLiteral("utProgress"));
+        m_updateToastProgress->setRange(0, 100);
+        m_updateToastProgress->setTextVisible(false);
+        m_updateToastProgress->setFixedHeight(6);
+        m_updateToastProgress->hide();
+        root->addWidget(m_updateToastProgress);
+
+        m_updateToastBtn = new QToolButton(m_updateToast);
+        m_updateToastBtn->setObjectName(QStringLiteral("utAction"));
+        m_updateToastBtn->setCursor(Qt::PointingHandCursor);
+        connect(m_updateToastBtn, &QToolButton::clicked, this, &MainWindow::startUpdateDownload);
+        root->addWidget(m_updateToastBtn);
+
+        m_updateToast->hide();
+    }
+
+    m_updateToast->setStyleSheet(QStringLiteral(
+        "QFrame#updateToast {"
+        "  background: %1; border: 1px solid %2; border-radius: 10px;"
+        "}"
+        "QLabel#utTitle { color: %3; font-size: 13px; font-weight: 600; }"
+        "QToolButton#utClose {"
+        "  background: transparent; border: none;"
+        "  color: %4; font-size: 16px; font-weight: 300;"
+        "}"
+        "QToolButton#utClose:hover { color: %3; }"
+        "QToolButton#utAction {"
+        "  background: %5; color: %6; border: none; border-radius: 6px;"
+        "  padding: 6px 10px; font-size: 12px; font-weight: 600;"
+        "}"
+        "QToolButton#utAction:hover { background: %7; }"
+        "QProgressBar#utProgress {"
+        "  background: %2; border: none; border-radius: 3px;"
+        "}"
+        "QProgressBar#utProgress::chunk { background: %5; border-radius: 3px; }"
+    ).arg(Theme::panelBackground(),
+         Theme::panelBorder(),
+         Theme::textPrimary(),
+         Theme::textMuted(),
+         Theme::accentInfo(),
+         Theme::panelBackground(),
+         Theme::accentInfo()));
+
+    m_updateToastLabel->setText(tr("Nova versão disponível: %1").arg(version));
+    m_updateToastBtn->setText(tr("Baixar e instalar"));
+    m_updateToastBtn->setEnabled(true);
+    m_updateToastProgress->setValue(0);
+    m_updateToastProgress->hide();
+
+    m_updateToast->adjustSize();
+    positionUpdateToast();
+    m_updateToast->show();
+    m_updateToast->raise();
+}
+
+void MainWindow::positionUpdateToast()
+{
+    if (!m_updateToast) return;
+    const int margin = 16;
+    const QRect r = rect();
+    int bottom = r.bottom() - margin;
+    if (m_reminderToast && m_reminderToast->isVisible()) {
+        bottom = m_reminderToast->y() - margin;
+    }
+    m_updateToast->move(
+        r.right() - m_updateToast->width() - margin,
+        bottom - m_updateToast->height());
+}
+
+void MainWindow::startUpdateDownload()
+{
+    if (m_updateDownloadUrl.isEmpty() || !m_updateToastBtn || !m_updateToastProgress) return;
+
+    m_updateToastBtn->setEnabled(false);
+    m_updateToastBtn->setText(tr("Baixando…"));
+    m_updateToastProgress->setValue(0);
+    m_updateToastProgress->show();
+    m_updateToast->adjustSize();
+    positionUpdateToast();
+
+    if (!m_updateNam) m_updateNam = new QNetworkAccessManager(this);
+
+    const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    const QString fileName = QStringLiteral("mira-writing-setup-%1.exe").arg(m_updateVersion);
+    const QString destPath = QDir(tempDir).filePath(fileName);
+
+    auto* file = new QFile(destPath, this);
+    if (!file->open(QIODevice::WriteOnly)) {
+        delete file;
+        m_updateToastBtn->setEnabled(true);
+        m_updateToastBtn->setText(tr("Baixar e instalar"));
+        m_updateToastProgress->hide();
+        return;
+    }
+
+    QNetworkRequest req{QUrl(m_updateDownloadUrl)};
+    req.setHeader(QNetworkRequest::UserAgentHeader, QByteArray("mira-writing-update-checker"));
+    QNetworkReply* reply = m_updateNam->get(req);
+
+    connect(reply, &QNetworkReply::readyRead, this, [reply, file]() {
+        file->write(reply->readAll());
+    });
+    connect(reply, &QNetworkReply::downloadProgress, this,
+            [this](qint64 received, qint64 total) {
+                if (total <= 0 || !m_updateToastProgress) return;
+                m_updateToastProgress->setValue(static_cast<int>(received * 100 / total));
+            });
+    connect(reply, &QNetworkReply::finished, this, [this, reply, file, destPath]() {
+        file->write(reply->readAll());
+        file->close();
+        const bool ok = reply->error() == QNetworkReply::NoError;
+        reply->deleteLater();
+        file->deleteLater();
+
+        if (!ok) {
+            QFile::remove(destPath);
+            if (m_updateToastBtn) {
+                m_updateToastBtn->setEnabled(true);
+                m_updateToastBtn->setText(tr("Baixar e instalar"));
+            }
+            if (m_updateToastProgress) m_updateToastProgress->hide();
+            return;
+        }
+
+        QProcess::startDetached(destPath, {});
+        qApp->quit();
+    });
+}
+
 void MainWindow::openMainMenu()
 {
     if (!mainMenuDialog) {
@@ -3751,6 +3935,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     positionFindBar();
     positionGlobalSearchPanel();
     if (m_reminderToast && m_reminderToast->isVisible()) positionReminderToast();
+    if (m_updateToast && m_updateToast->isVisible()) positionUpdateToast();
     if (readModeEnabled) positionReadModeHotzones();
     if (toolbar && editor) {
         const QPoint editorCenterGlobal =

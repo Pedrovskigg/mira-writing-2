@@ -68,6 +68,10 @@ class RemindersPanel;
 class GroupsPanel;
 class LousaPanel;
 class TimelinePanel;
+class UpdateChecker;
+class QNetworkAccessManager;
+class QNetworkReply;
+class QProgressBar;
 class AutoNavHint;
 class QToolButton;
 class FindBar;
@@ -166,6 +170,12 @@ private:
     void showReminderToast(const QString& title, const QString& body);
     void positionReminderToast();
 
+    // Atualizações (GitHub Releases): checagem silenciosa no startup; se
+    // houver versão nova, mostra um toast com botão pra baixar+instalar.
+    void showUpdateToast(const QString& version, const QString& downloadUrl);
+    void positionUpdateToast();
+    void startUpdateDownload();
+
     void closeBondPopup();
     void closeBondViewPanel();
     void openBondCreatePopup(const QString& drawerKey, const QString& fromItemId,
@@ -255,6 +265,15 @@ private:
     QLabel  *m_reminderToastTitle = nullptr;
     QLabel  *m_reminderToastBody  = nullptr;
     QTimer  *m_reminderToastTimer = nullptr;
+
+    UpdateChecker *m_updateChecker = nullptr;
+    QFrame   *m_updateToast       = nullptr;
+    QLabel   *m_updateToastLabel  = nullptr;
+    QToolButton *m_updateToastBtn = nullptr;
+    QProgressBar *m_updateToastProgress = nullptr;
+    QNetworkAccessManager *m_updateNam = nullptr;
+    QString m_updateDownloadUrl;
+    QString m_updateVersion;
     MainMenuDialog *mainMenuDialog = nullptr;
     BackgroundWidget *backgroundWidget = nullptr;
     FindBar *findBar = nullptr;

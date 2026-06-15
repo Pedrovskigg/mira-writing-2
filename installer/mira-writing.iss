@@ -3,7 +3,9 @@
 ;   "C:\Users\pedro\AppData\Local\Programs\Inno Setup 6\ISCC.exe" mira-writing.iss
 
 #define MyAppName       "Mira Writing"
-#define MyAppVersion    "0.1.0-preview"
+; Versão única lida do arquivo VERSION na raiz do projeto (mesma fonte que o
+; CMake usa para APP_VERSION) — evita bumpar a versão em dois lugares.
+#define MyAppVersion    Trim(FileRead(FileOpen("..\VERSION")))
 #define MyAppPublisher  "Pedro"
 #define MyAppExeName    "mira-writing.exe"
 #define BuildDir        "..\build-release"

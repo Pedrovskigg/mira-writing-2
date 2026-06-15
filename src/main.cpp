@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QApplication::setApplicationName("Mira Writing");
-    QApplication::setApplicationVersion("0.1.0");
+    QApplication::setApplicationVersion(QStringLiteral(APP_VERSION));
     QApplication::setOrganizationName("Mira Writing");
     QApplication::setWindowIcon(QIcon(":/app/mira.png"));
 

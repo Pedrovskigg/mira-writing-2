@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-project(mira-writing VERSION 0.1.0 LANGUAGES CXX)
+
+# Versão única do app — também lida pelo installer (mira-writing.iss) via ISPP,
+# pra não precisar bumpar em dois lugares.
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" APP_VERSION_STRING)
+string(STRIP "${APP_VERSION_STRING}" APP_VERSION_STRING)
+
+project(mira-writing VERSION ${APP_VERSION_STRING} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,7 +13,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Svg Multimedia LinguistTools)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Widgets Svg Multimedia Network LinguistTools)
 
 qt_standard_project_setup()
 
@@ -184,6 +190,8 @@ qt_add_executable(mira-writing
     src/MainMenuDialog.h
     src/NewProjectFlow.cpp
     src/NewProjectFlow.h
+    src/UpdateChecker.cpp
+    src/UpdateChecker.h
     resources/icons.qrc
     resources/geo.qrc
     resources/flags.qrc
@@ -203,6 +211,7 @@ target_link_libraries(mira-writing PRIVATE
     Qt6::Widgets
     Qt6::Svg
     Qt6::Multimedia
+    Qt6::Network
     hunspell
 )
 
@@ -212,6 +221,7 @@ endif()
 
 target_compile_definitions(mira-writing PRIVATE
     DEV_ASSETS_DIR="${CMAKE_SOURCE_DIR}/src/assets"
+    APP_VERSION="${APP_VERSION_STRING}"
 )
 
 set_target_properties(mira-writing PROPERTIES
