@@ -75,6 +75,11 @@ public:
     int countActiveScopeWords() const;
     int countActiveScopeChars() const;
 
+    // Ficha aberta no painel: enquanto setado, a contagem ativa reflete essa
+    // ficha (independe do escopo). Passar "" ao fechar. Reconta ao re-setar.
+    void setActiveSheetItem(const QString& itemId);
+    QString activeSheetItem() const { return m_activeSheetItem; }
+
     // Settings — getters e setters granulares (escrevem em project.settings.wordCounter)
     WordCounterSettings settings() const { return m_settings; }
     void setScope(const QString& scope);
@@ -169,6 +174,7 @@ private:
     mutable QHash<QString, int> m_chapterCharCounts;   // chapterId -> chars
     mutable QHash<QString, int> m_itemCharCounts;      // itemId -> chars
     QHash<QString, int> m_goalWordSnapshot;            // key -> last known word count, pra diff
+    QString m_activeSheetItem;                          // ficha em foco no painel (override de contagem)
     QTimer* m_emitDebounce;
     QTimer* m_timeTickTimer;
     qint64 m_lastTimeTickAt = 0;

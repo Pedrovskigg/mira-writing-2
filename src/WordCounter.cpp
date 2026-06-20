@@ -239,6 +239,14 @@ QString WordCounter::itemHtml(const QString& itemId) const {
     if (!m_model) return QString();
     const DrawerItem* item = m_model->findDrawerItem(itemId);
     if (!item) return QString();
+    // Ficha: conta só o que o usuário escreveu (valores dos campos), não os
+    // rótulos fixos (Idade, História...) nem nome/foto vindos do Element.
+    if (item->isSheet) {
+        QString h;
+        for (const SheetField& f : item->sheet.fields)
+            h += f.value + QLatin1Char(' ');
+        return h;
+    }
     const QString key = DocCache::itemKey(itemId);
     if (m_cache && m_cache->has(key)) return m_cache->get(key);
     if (!item->file.isEmpty() && !m_root.isEmpty()) {
@@ -326,8 +334,24 @@ int WordCounter::countProjectChars() const {
     return total;
 }
 
+void WordCounter::setActiveSheetItem(const QString& itemId) {
+    // Invalida o cache do item (atual e novo) pra forçar recontagem do conteúdo.
+    if (!m_activeSheetItem.isEmpty()) {
+        m_itemCounts.remove(m_activeSheetItem);
+        m_itemCharCounts.remove(m_activeSheetItem);
+    }
+    m_activeSheetItem = itemId;
+    if (!itemId.isEmpty()) {
+        m_itemCounts.remove(itemId);
+        m_itemCharCounts.remove(itemId);
+    }
+    emit countsChanged();
+}
+
 int WordCounter::countActiveScopeWords() const {
     if (!m_model) return 0;
+    // Ficha aberta: o contador reflete a ficha enquanto ela está em foco.
+    if (!m_activeSheetItem.isEmpty()) return countItem(m_activeSheetItem);
     const QString sc = m_settings.scope;
     if (sc == QStringLiteral("active") && m_host) {
         const auto vm = m_host->viewMode();
@@ -353,6 +377,7 @@ int WordCounter::countActiveScopeWords() const {
 
 int WordCounter::countActiveScopeChars() const {
     if (!m_model) return 0;
+    if (!m_activeSheetItem.isEmpty()) return countCharsInHtml(itemHtml(m_activeSheetItem));
     const QString sc = m_settings.scope;
     auto charsForChapter = [this](const QString& chId) -> int {
         auto it = m_chapterCharCounts.constFind(chId);

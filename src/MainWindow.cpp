@@ -4800,6 +4800,9 @@ CharacterSheetPanel* MainWindow::ensureCharacterSheetPanel()
         characterSheetPanel->hide();
         connect(characterSheetPanel, &CharacterSheetPanel::edited, this, [this]() {
             if (projectSaver) projectSaver->saveProject();
+            // Reconta a ficha em foco pra o contador acompanhar a edição.
+            if (wordCounter && characterSheetPanel && !characterSheetPanel->currentItemId().isEmpty())
+                wordCounter->setActiveSheetItem(characterSheetPanel->currentItemId());
         });
     }
     return characterSheetPanel;
@@ -4811,6 +4814,8 @@ void MainWindow::showCharacterSheet(const QString& itemId)
     // Conteúdo dos campos na fonte de escrita atual do editor (pegada "documento").
     panel->setContentFont(QFont(currentFontFamily, currentFontSize));
     panel->openItem(itemId);
+    // O contador passa a refletir a ficha em foco.
+    if (wordCounter) wordCounter->setActiveSheetItem(itemId);
     positionCharacterSheet();
     panel->show();
     panel->raise();
@@ -4820,8 +4825,9 @@ void MainWindow::showCharacterSheet(const QString& itemId)
     if (manuscriptPanel && manuscriptPanel->isVisible()) manuscriptPanel->raise();
     if (toolbarHolder) toolbarHolder->raise();
     if (externalScrollBar) externalScrollBar->hide();
-    // O contador fica no canto, sobre tudo — precisa subir acima da ficha também.
-    if (wordCountPanel && wordCountPanel->isVisible()) {
+    // O contador fica no canto, sobre tudo — garante visível e acima da ficha.
+    if (wordCountPanel && hasProjectLoaded() && !readModeEnabled) {
+        wordCountPanel->show();
         positionWordCountPanel();
         wordCountPanel->raise();
     }
@@ -4844,6 +4850,8 @@ void MainWindow::hideCharacterSheet()
 {
     if (characterSheetPanel && characterSheetPanel->isVisible())
         characterSheetPanel->hide();
+    // Contador volta ao escopo normal.
+    if (wordCounter) wordCounter->setActiveSheetItem(QString());
 }
 
 void MainWindow::positionCharacterSheet()
