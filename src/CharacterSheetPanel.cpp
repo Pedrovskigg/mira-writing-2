@@ -27,8 +27,8 @@
 
 namespace {
 
-constexpr int kPhotoW = 150;
-constexpr int kPhotoH = 188;
+constexpr int kPhotoW = 190;
+constexpr int kPhotoH = 238;
 
 // Carrega imagem do disco como data URL JPEG quadrado 400×400 (crop central).
 QString loadImageAsDataUrl(const QString& path) {
@@ -101,7 +101,7 @@ CharacterSheetPanel::CharacterSheetPanel(ProjectModel* model, ElementsStore* ele
         "QLabel#sheetAlias { font-size: 13px; font-style: italic; color: %3; }"
         "QLabel#sheetPhoto { background: %4; border: 1px solid %5; border-radius: 6px; color: %3; }"
         "QLineEdit#sheetLabel { border: none; background: transparent; font-weight: 700; "
-        "  color: %2; padding: 0; }"
+        "  font-size: 15px; color: %2; padding: 0; }"
         "QLineEdit#sheetData { border: none; background: transparent; color: %2; padding: 1px 0; }"
         "QLineEdit#sheetData:hover, QLineEdit#sheetData:focus { background: %6; border-radius: 4px; }"
         "QTextEdit#sheetText { border: none; background: transparent; color: %2; padding: 0; }"
