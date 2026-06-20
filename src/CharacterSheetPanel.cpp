@@ -90,11 +90,12 @@ CharacterSheetPanel::CharacterSheetPanel(ProjectModel* model, ElementsStore* ele
     m_scroll->setFrameShape(QFrame::NoFrame);
     m_scroll->setObjectName(QStringLiteral("sheetScroll"));
     m_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_scroll->viewport()->setAutoFillBackground(false);
     outer->addWidget(m_scroll);
 
     setStyleSheet(QStringLiteral(
-        "#characterSheetPanel, #sheetScroll, #sheetOuter { background: transparent; }"
-        "#sheetScroll { border: none; }"
+        "#characterSheetPanel { background: %7; }"
+        "#sheetScroll, #sheetOuter { background: transparent; border: none; }"
         "#sheetPage { background: %1; }"
         "QLabel#sheetName  { font-size: 22px; font-weight: 700; color: %2; }"
         "QLabel#sheetAlias { font-size: 13px; font-style: italic; color: %3; }"
@@ -113,7 +114,8 @@ CharacterSheetPanel::CharacterSheetPanel(ProjectModel* model, ElementsStore* ele
         "  color: %3; padding: 4px 12px; background: transparent; }"
         "QPushButton#sheetGhostBtn:hover { color: %2; border-color: %2; }"
     ).arg(Theme::editorBackground(), Theme::editorTextColor(), Theme::textMuted(),
-          Theme::inputBackground(), Theme::subtleBorder(), Theme::hoverOverlay()));
+          Theme::inputBackground(), Theme::subtleBorder(), Theme::hoverOverlay(),
+          Theme::appBackground()));
 }
 
 void CharacterSheetPanel::openItem(const QString& itemId)
@@ -315,7 +317,7 @@ void CharacterSheetPanel::rebuild()
     auto* outer = new QWidget;
     outer->setObjectName(QStringLiteral("sheetOuter"));
     auto* outerLay = new QHBoxLayout(outer);
-    outerLay->setContentsMargins(0, 0, 0, 0);
+    outerLay->setContentsMargins(0, 16, 0, 24);
 
     // A folha: mesma largura da página do editor, cor de página, sombra.
     auto* page = new QWidget;
@@ -339,7 +341,7 @@ void CharacterSheetPanel::rebuild()
     topBar->addStretch();
     auto* colBtn = new QToolButton;
     colBtn->setObjectName(QStringLiteral("sheetGhostTool"));
-    colBtn->setText(m_sheet.columns == 2 ? tr("▯ 1 coluna") : tr("▮▮ 2 colunas"));
+    colBtn->setText(m_sheet.columns == 2 ? tr("1 coluna") : tr("2 colunas"));
     colBtn->setCursor(Qt::PointingHandCursor);
     connect(colBtn, &QToolButton::clicked, this, &CharacterSheetPanel::toggleColumns);
     topBar->addWidget(colBtn);
@@ -399,9 +401,8 @@ void CharacterSheetPanel::rebuild()
     addBar->addWidget(addData);
     addBar->addWidget(addText);
     addBar->addStretch();
-    root->addSpacing(4);
+    root->addSpacing(6);
     root->addLayout(addBar);
-    root->addStretch();
 
     outerLay->addStretch();
     outerLay->addWidget(page, 0, Qt::AlignTop);
