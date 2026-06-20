@@ -2433,12 +2433,16 @@ void MainWindow::setFontFamily(const QString &family)
 {
     currentFontFamily = family;
     applyEditorStyle();
+    if (characterSheetPanel && characterSheetPanel->isVisible())
+        characterSheetPanel->setContentFont(QFont(currentFontFamily, currentFontSize));
 }
 
 void MainWindow::setFontSize(int pt)
 {
     currentFontSize = pt;
     applyEditorStyle();
+    if (characterSheetPanel && characterSheetPanel->isVisible())
+        characterSheetPanel->setContentFont(QFont(currentFontFamily, currentFontSize));
 }
 
 void MainWindow::setLineHeight(int percent)

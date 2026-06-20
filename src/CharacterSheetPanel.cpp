@@ -20,6 +20,8 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolButton>
@@ -27,8 +29,8 @@
 
 namespace {
 
-constexpr int kPhotoW = 190;
-constexpr int kPhotoH = 238;
+constexpr int kPhotoW = 210;
+constexpr int kPhotoH = 280;   // 3:4 (retrato)
 
 // Carrega imagem do disco como data URL JPEG quadrado 400×400 (crop central).
 QString loadImageAsDataUrl(const QString& path) {
@@ -101,7 +103,7 @@ CharacterSheetPanel::CharacterSheetPanel(ProjectModel* model, ElementsStore* ele
         "QLabel#sheetAlias { font-size: 13px; font-style: italic; color: %3; }"
         "QLabel#sheetPhoto { background: %4; border: 1px solid %5; border-radius: 6px; color: %3; }"
         "QLineEdit#sheetLabel { border: none; background: transparent; font-weight: 700; "
-        "  font-size: 15px; color: %2; padding: 0; }"
+        "  font-size: 15px; text-decoration: underline; color: %2; padding: 0; }"
         "QLineEdit#sheetData { border: none; background: transparent; color: %2; padding: 1px 0; }"
         "QLineEdit#sheetData:hover, QLineEdit#sheetData:focus { background: %6; border-radius: 4px; }"
         "QTextEdit#sheetText { border: none; background: transparent; color: %2; padding: 0; }"
@@ -278,6 +280,17 @@ QWidget* CharacterSheetPanel::buildFieldWidget(const SheetField& f)
         te->setLineWrapMode(QTextEdit::WidgetWidth);
         te->document()->setDefaultFont(m_contentFont);  // pegada de escrita (Alegreya)
         te->setHtml(f.value);
+        // Força a fonte/tamanho atuais em TODO o conteúdo, sobrescrevendo o size
+        // que o QTextEdit embute no html — assim o texto herda a fonte do editor.
+        {
+            QTextCursor c(te->document());
+            c.select(QTextCursor::Document);
+            QTextCharFormat cf;
+            cf.setFontFamilies({m_contentFont.family()});
+            if (m_contentFont.pointSizeF() > 0) cf.setFontPointSize(m_contentFont.pointSizeF());
+            c.mergeCharFormat(cf);
+            te->setCurrentCharFormat(cf);  // novo texto digitado também herda
+        }
         te->setPlaceholderText(tr("Escreva aqui…"));
         te->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         te->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
