@@ -25,6 +25,8 @@ public:
 
     QString title() const;
     QString role() const;
+    // true = criar a página do personagem como Ficha estruturada (só personagem).
+    bool createAsSheet() const;
     QString imageDataUrl() const { return m_imageDataUrl; }
     bool narrator() const;
     QString trackMode() const;  // "" auto | "on" | "off" (trilha na linha do tempo)
@@ -44,6 +46,7 @@ private:
     QLineEdit* m_aliasesEdit = nullptr;
     QComboBox* m_roleCombo;
     QComboBox* m_trackCombo = nullptr;
+    QComboBox* m_pageTypeCombo = nullptr;
     QCheckBox* m_narratorCheck;
     QLabel* m_imagePreview;
     QPushButton* m_pickImageBtn;

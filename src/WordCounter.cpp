@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QRegularExpression>
+#include <QTextDocument>
 #include <QTimer>
 
 namespace {
@@ -241,11 +242,22 @@ QString WordCounter::itemHtml(const QString& itemId) const {
     if (!item) return QString();
     // Ficha: conta só o que o usuário escreveu (valores dos campos), não os
     // rótulos fixos (Idade, História...) nem nome/foto vindos do Element.
+    // Extrai texto plano de cada campo (o html dos blocos traz <style>/CSS que
+    // o strip por regex contaria como palavras).
     if (item->isSheet) {
-        QString h;
-        for (const SheetField& f : item->sheet.fields)
-            h += f.value + QLatin1Char(' ');
-        return h;
+        QString text;
+        for (const SheetField& f : item->sheet.fields) {
+            if (f.value.isEmpty()) continue;
+            if (f.kind == QStringLiteral("text")) {
+                QTextDocument doc;
+                doc.setHtml(f.value);
+                text += doc.toPlainText();
+            } else {
+                text += f.value;
+            }
+            text += QLatin1Char(' ');
+        }
+        return text;
     }
     const QString key = DocCache::itemKey(itemId);
     if (m_cache && m_cache->has(key)) return m_cache->get(key);

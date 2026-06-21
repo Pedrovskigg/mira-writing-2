@@ -162,6 +162,15 @@ void ElementCreateDialog::buildUi()
         m_trackCombo->addItem(tr("Sempre acompanhar"),       QStringLiteral("on"));
         m_trackCombo->addItem(tr("Nunca acompanhar"),        QStringLiteral("off"));
         outer->addWidget(m_trackCombo);
+
+        // Tipo de página do personagem: Ficha (campos prontos) ou Documento livre.
+        auto* pageTypeLabel = new QLabel(tr("Tipo de página:"), this);
+        outer->addWidget(pageTypeLabel);
+        m_pageTypeCombo = new QComboBox(this);
+        m_pageTypeCombo->addItem(tr("Ficha (campos prontos)"),          QStringLiteral("sheet"));
+        m_pageTypeCombo->addItem(tr("Documento livre (página em branco)"), QStringLiteral("free"));
+        m_pageTypeCombo->setCurrentIndex(0);
+        outer->addWidget(m_pageTypeCombo);
     }
 
     outer->addStretch();
@@ -271,6 +280,12 @@ void ElementCreateDialog::clearImage()
 {
     m_imageDataUrl.clear();
     updatePreview();
+}
+
+bool ElementCreateDialog::createAsSheet() const
+{
+    if (!m_pageTypeCombo) return false;
+    return m_pageTypeCombo->currentData().toString() == QStringLiteral("sheet");
 }
 
 QString ElementCreateDialog::title() const

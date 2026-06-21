@@ -1824,25 +1824,8 @@ void MainWindow::setupEditor()
             ElementCreateDialog dlg(elemType, this);
             if (dlg.exec() != QDialog::Accepted) return;
             if (dlg.title().isEmpty()) return;
-            // Para personagens, oferece criar como Ficha estruturada ou Documento livre.
-            bool asSheet = false;
-            if (elemType == QStringLiteral("character")) {
-                QMessageBox box(this);
-                box.setIcon(QMessageBox::Question);
-                box.setWindowTitle(tr("Novo personagem"));
-                box.setText(tr("Como você quer montar a página de “%1”?").arg(dlg.title()));
-                box.setInformativeText(tr("A Ficha já vem com campos prontos (idade, história, "
-                                          "conexões…) que você pode personalizar. O Documento "
-                                          "livre é uma página em branco."));
-                QPushButton* sheetBtn = box.addButton(tr("Ficha"), QMessageBox::AcceptRole);
-                QPushButton* freeBtn  = box.addButton(tr("Documento livre"), QMessageBox::AcceptRole);
-                box.addButton(QMessageBox::Cancel);
-                box.setDefaultButton(sheetBtn);
-                box.exec();
-                auto* clicked = box.clickedButton();
-                if (clicked != sheetBtn && clicked != freeBtn) return; // cancelou
-                asSheet = (clicked == sheetBtn);
-            }
+            // A escolha Ficha vs Documento livre vem do próprio diálogo (só personagem).
+            const bool asSheet = (elemType == QStringLiteral("character")) && dlg.createAsSheet();
             // Cria registro em ElementsStore primeiro
             Element elem;
             elem.name = dlg.title();
