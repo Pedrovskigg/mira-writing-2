@@ -1662,12 +1662,10 @@ QString RefMenuPanel::resolveDocHtml(const QString& key) const
     }
     if (key.startsWith(QStringLiteral("it:"))) {
         const QString itemId = key.mid(3);
-        const QString cacheKey = DocCache::itemKey(itemId);
-        if (m_cache && m_cache->has(cacheKey)) return m_cache->get(cacheKey);
         const DrawerItem* item = m_model->findDrawerItem(itemId);
-        if (!item) return QString();
-        if (item->isSheet) {
-            // Nome/apelido já aparecem no cabeçalho do preview — passa vazio pra não
+        if (item && item->isSheet) {
+            // Ficha: gera o html dos campos (antes do cache, que pode ter sobra do
+            // editor). Nome/apelido já aparecem no cabeçalho — passa vazio pra não
             // duplicar. A foto entra como <img> e o RefMenu a extrai pro topo.
             QString img;
             if (m_elements && !item->elementId.isEmpty()) {
@@ -1676,6 +1674,9 @@ QString RefMenuPanel::resolveDocHtml(const QString& key) const
             }
             return ProjectModel::characterSheetToHtml(item->sheet, QString(), QString(), img);
         }
+        const QString cacheKey = DocCache::itemKey(itemId);
+        if (m_cache && m_cache->has(cacheKey)) return m_cache->get(cacheKey);
+        if (!item) return QString();
         if (item->hasInlineHtml) return item->html;
         if (!item->file.isEmpty() && !m_projectRoot.isEmpty()) {
             bool ok = false;

@@ -517,8 +517,14 @@ void MainWindow::setupEditor()
         if (editorHost->viewMode().type == EditorHost::Disabled) return;
         rememberLastDocFor(projectRoot);
     });
-    // Sair para qualquer documento de texto esconde a ficha de personagem.
+    // A ficha é um DrawerDoc: ao mudar de doc, mostra a ficha se o doc ativo for
+    // uma ficha; senão esconde e o editor de texto assume.
     connect(editorHost, &EditorHost::viewModeChanged, this, [this]() {
+        const auto vm = editorHost->viewMode();
+        if (vm.type == EditorHost::DrawerDoc && projectModel) {
+            const DrawerItem* it = projectModel->findDrawerItem(vm.itemId);
+            if (it && it->isSheet) { showCharacterSheet(vm.itemId); return; }
+        }
         hideCharacterSheet();
     });
 
@@ -1402,11 +1408,7 @@ void MainWindow::setupEditor()
     globalSearchPanel = new GlobalSearchPanel(projectModel, docCache, projectRoot, container);
     connect(globalSearchPanel, &GlobalSearchPanel::openRequested, this,
             [this](EditorHost::ViewMode vm, QString query) {
-        // Item que é Ficha: abre o painel da ficha, não o editor de texto vazio.
-        if (vm.type == EditorHost::DrawerDoc && projectModel) {
-            const DrawerItem* item = projectModel->findDrawerItem(vm.itemId);
-            if (item && item->isSheet) { showCharacterSheet(vm.itemId); return; }
-        }
+        // Fichas são DrawerDoc — o handler de viewModeChanged mostra o painel.
         if (editorHost) editorHost->setViewMode(vm);
         // Após carregar, dispara FindBar com a query pra mostrar onde está.
         if (!query.isEmpty() && findBar) {
@@ -1870,12 +1872,9 @@ void MainWindow::setupEditor()
         projectModel->addDrawerItem(drawerKey, it);
     });
     connect(drawerListPanel, &DrawerListPanel::itemActivated, this, [this](const QString& /*drawerKey*/, const QString& itemId) {
-        const DrawerItem* item = projectModel->findDrawerItem(itemId);
-        if (item && item->isSheet) {
-            showCharacterSheet(itemId);
-            return;
-        }
-        hideCharacterSheet();
+        // Ficha e doc livre: ambos viram DrawerDoc no viewMode (assim o contador,
+        // o restore etc. tratam a ficha como qualquer doc de gaveta). O handler
+        // de viewModeChanged decide mostrar a ficha (se isSheet) ou o editor.
         EditorHost::ViewMode vm;
         vm.type = EditorHost::DrawerDoc;
         vm.itemId = itemId;
@@ -3757,18 +3756,9 @@ void MainWindow::restoreLastDocFor(const QString& root)
     vm.itemId       = s.value(QStringLiteral("itemId")).toString();
     s.endGroup();
     if (vm.type == EditorHost::Disabled) return;
-    // Ficha: restaura no painel da ficha, não no editor de texto. Adia até a
-    // janela estar visível — abrir o overlay antes do show() faria o Qt criá-lo
-    // como uma janela top-level separada (e ele ficaria assim pra sempre).
-    if (vm.type == EditorHost::DrawerDoc && projectModel) {
-        const DrawerItem* item = projectModel->findDrawerItem(vm.itemId);
-        if (item && item->isSheet) {
-            const QString sheetItemId = vm.itemId;
-            QTimer::singleShot(0, this, [this, sheetItemId]() { showCharacterSheet(sheetItemId); });
-            return;
-        }
-    }
     // EditorHost valida IDs e cai pra Disabled se não conseguir resolver — ok.
+    // Se for uma ficha (DrawerDoc isSheet), o handler de viewModeChanged abre o
+    // painel; showCharacterSheet adia sozinho se a janela ainda não está visível.
     editorHost->setViewMode(vm);
 }
 
@@ -4793,6 +4783,12 @@ CharacterSheetPanel* MainWindow::ensureCharacterSheetPanel()
 
 void MainWindow::showCharacterSheet(const QString& itemId)
 {
+    // Abrir o overlay antes da janela existir faria o Qt criá-lo como janela
+    // top-level. Se ainda não estamos visíveis (ex.: restore no load), adia.
+    if (!isVisible()) {
+        QTimer::singleShot(0, this, [this, itemId]() { showCharacterSheet(itemId); });
+        return;
+    }
     auto* panel = ensureCharacterSheetPanel();
     // Conteúdo dos campos na fonte de escrita atual do editor (pegada "documento").
     panel->setContentFont(QFont(currentFontFamily, currentFontSize));
@@ -4813,19 +4809,6 @@ void MainWindow::showCharacterSheet(const QString& itemId)
         wordCountPanel->show();
         positionWordCountPanel();
         wordCountPanel->raise();
-    }
-
-    // Lembra a ficha como último doc do projeto (a ficha não passa pelo
-    // viewMode do editor, então registra aqui pra o restore reabrir nela).
-    if (!projectRoot.isEmpty()) {
-        QSettings s;
-        s.beginGroup(lastDocGroupFor(projectRoot));
-        s.setValue(QStringLiteral("type"), int(EditorHost::DrawerDoc));
-        s.setValue(QStringLiteral("manuscriptId"), QString());
-        s.setValue(QStringLiteral("chapterId"), QString());
-        s.setValue(QStringLiteral("sceneIndex"), -1);
-        s.setValue(QStringLiteral("itemId"), itemId);
-        s.endGroup();
     }
 }
 

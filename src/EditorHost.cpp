@@ -316,6 +316,12 @@ QString EditorHost::hydrateFromModel(const ViewMode& vm) const {
 void EditorHost::syncEditorToCache() {
     if (!m_editor || !m_cache) return;
     if (m_viewMode.type == Disabled) return;
+    // Ficha de personagem: o conteúdo vive em DrawerItem.sheet (painel próprio),
+    // não no editor de texto. Não sincroniza pra não sujar o cache/html do item.
+    if (m_viewMode.type == DrawerDoc && m_model) {
+        const DrawerItem* it = m_model->findDrawerItem(m_viewMode.itemId);
+        if (it && it->isSheet) return;
+    }
     if (m_flushTimer->isActive()) m_flushTimer->stop();
 
     const QString key = activeKey();
