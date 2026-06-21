@@ -183,35 +183,37 @@ void MentionPopup::confirm()
     cur.setPosition(endPos, QTextCursor::KeepAnchor);
     cur.removeSelectedText();
 
-    // Formato base SEM anchor (preserva fonte/cor atuais). clearProperty remove a
-    // propriedade de vez — só setAnchor(false) deixava o anchor "grudar" no texto
-    // digitado em seguida (e vazava pros parágrafos seguintes).
+    // Formato base SEM anchor (preserva fonte/cor atuais).
     QTextCharFormat base = cur.charFormat();
     base.setAnchor(false);
     base.clearProperty(QTextFormat::IsAnchor);
     base.clearProperty(QTextFormat::AnchorHref);
     base.clearProperty(QTextFormat::AnchorName);
 
-    // Link = base + anchor, SEM cor/sublinhado: em repouso a menção é igual ao
-    // texto; o realce só aparece ao segurar Ctrl (no editor).
-    QTextCharFormat linkFmt = base;
-    linkFmt.setAnchor(true);
-    linkFmt.setAnchorHref(QStringLiteral("ref:%1:%2").arg(drawerKey, itemId));
-
-    cur.insertText(title, linkFmt);
+    // Insere o nome + espaço SEM anchor (formato base), depois aplica o anchor
+    // EXATAMENTE na seleção do nome. Inserir o anchor como formato de digitação
+    // fazia o QTextEdit propagá-lo pro texto seguinte — agora ele fica preso só
+    // ao nome do doc, nada mais herda.
+    const int linkStart = cur.position();
+    cur.insertText(title, base);
+    const int linkEnd = cur.position();
     cur.insertText(QStringLiteral(" "), base);
-    cur.endEditBlock();
-    ed->setTextCursor(cur);
 
-    // O confirm roda DENTRO do keyPress (espaço/enter) que dispara a confirmação;
-    // o QTextEdit reverte o currentCharFormat no pós-processamento do evento.
-    // Aplicar o formato base no próximo ciclo garante que o texto seguinte não
-    // herde o anchor (era isso que "vazava" o link pelo resto da linha/parágrafo).
-    QPointer<QTextEdit> edPtr(ed);
-    const QTextCharFormat baseCopy = base;
-    QTimer::singleShot(0, ed, [edPtr, baseCopy]() {
-        if (edPtr) edPtr->setCurrentCharFormat(baseCopy);
-    });
+    QTextCursor linkCur(ed->document());
+    linkCur.setPosition(linkStart);
+    linkCur.setPosition(linkEnd, QTextCursor::KeepAnchor);
+    QTextCharFormat anchorFmt;
+    anchorFmt.setAnchor(true);
+    anchorFmt.setAnchorHref(QStringLiteral("ref:%1:%2").arg(drawerKey, itemId));
+    linkCur.mergeCharFormat(anchorFmt);
+
+    cur.endEditBlock();
+
+    // Cursor de digitação após o espaço, com formato base (sem anchor).
+    QTextCursor after(ed->document());
+    after.setPosition(linkEnd + 1);
+    ed->setTextCursor(after);
+    ed->setCurrentCharFormat(base);
     hidePopup();
 }
 
