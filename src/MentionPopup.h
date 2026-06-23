@@ -27,6 +27,11 @@ public:
     // Config: incluir capítulos/manuscritos na lista (padrão: só gavetas).
     void setIncludeManuscripts(bool on) { m_includeManuscripts = on; }
 
+signals:
+    // Emitido após o vigia limpar um anchor herdado (mexe no documento de forma
+    // assíncrona). Quem depende do estado do doc (ex.: Focus Mode) deve reagir.
+    void documentTouched();
+
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 

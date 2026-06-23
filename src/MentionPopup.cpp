@@ -85,6 +85,7 @@ void MentionPopup::onContentsChange(QTextEdit* ed, int pos, int /*removed*/, int
         clr.setProperty(QTextFormat::AnchorHref, QString());
         c.mergeCharFormat(clr);
         m_cleaningAnchor = false;
+        emit documentTouched();   // a limpeza mexeu no doc → quem depende reage (Focus Mode)
     });
 }
 

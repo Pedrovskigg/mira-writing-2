@@ -965,6 +965,11 @@ void MainWindow::setupEditor()
     // Autocomplete de menções (@) no editor principal.
     mentionPopup = new MentionPopup(projectModel, this, this);
     mentionPopup->attach(editor);
+    // Quando o vigia limpa um anchor herdado (assíncrono), o Focus Mode precisa
+    // recalcular o realce do bloco — senão o trecho pós-menção fica desfocado.
+    connect(mentionPopup, &MentionPopup::documentTouched, this, [this]() {
+        if (focusModeEnabled) updateFocusedBlock();
+    });
     // Ctrl+clique num link de referência (menção @ / Codex) abre o doc no RefMenu.
     connect(editor, &SpellEditor::refActivated, this, [this](const QString& href) {
         // href = "ref:<drawerKey>:<itemId>"
@@ -2608,6 +2613,13 @@ void MainWindow::updateFocusedBlock()
     QColor focused = baseTextColor;
     focused.setAlpha(255);
 
+    // ===== DEBUG TEMP — dump de fragmentos do bloco focado =====
+    QString dbg;
+    dbg += QStringLiteral("--- updateFocusedBlock cursorPos=%1 block=[%2..%3] text=\"%4\"\n")
+        .arg(editor->textCursor().position())
+        .arg(block.position()).arg(block.position() + block.length())
+        .arg(block.text().left(80));
+
     // Uma ExtraSelection por fragmento, pulando fragmentos com background
     // (markers). Sem isso, o foreground da ExtraSelection sobrepõe o
     // foreground de contraste do marker e o texto highlighted vira a cor
@@ -2616,7 +2628,13 @@ void MainWindow::updateFocusedBlock()
         const QTextFragment frag = it.fragment();
         if (!frag.isValid() || frag.length() == 0) continue;
         const QBrush bg = frag.charFormat().background();
-        if (bg.style() != Qt::NoBrush && bg.color().alpha() > 0) continue;
+        const bool skipped = (bg.style() != Qt::NoBrush && bg.color().alpha() > 0);
+        dbg += QStringLiteral("    frag pos=%1 len=%2 anchor=%3 href=%4 bgStyle=%5 bgAlpha=%6 skip=%7 txt=\"%8\"\n")
+            .arg(frag.position()).arg(frag.length())
+            .arg(frag.charFormat().isAnchor()).arg(frag.charFormat().anchorHref())
+            .arg(int(bg.style())).arg(bg.color().alpha()).arg(skipped)
+            .arg(QString(frag.text()).left(40));
+        if (skipped) continue;
 
         QTextEdit::ExtraSelection sel;
         sel.format.setForeground(focused);
@@ -2625,6 +2643,10 @@ void MainWindow::updateFocusedBlock()
         sel.cursor.setPosition(frag.position() + frag.length(),
                                QTextCursor::KeepAnchor);
         selections.append(sel);
+    }
+    {
+        QFile f(QStringLiteral("c:/mira-writing/mira-cpp/focus_debug.log"));
+        if (f.open(QIODevice::Append | QIODevice::Text)) { f.write(dbg.toUtf8()); f.close(); }
     }
     setEditorSelectionsLayer(QStringLiteral("focus"), selections);
 }
