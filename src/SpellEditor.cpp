@@ -2,19 +2,100 @@
 
 #include "SpellChecker.h"
 
+#include <QAbstractTextDocumentLayout>
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QFile>
 #include <QFocusEvent>
 #include <QFont>
+#include <QHash>
+#include <QImage>
+#include <QImageReader>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMouseEvent>
+#include <QPainter>
+#include <QPixmap>
+#include <QTextBlock>
 #include <QTextCursor>
+#include <QTextDocument>
+#include <QTextFragment>
+#include <QTextFrame>
+#include <QTextImageFormat>
+#include <QTextObjectInterface>
 
 namespace {
 bool isRefHref(const QString& href) {
     return href.startsWith(QStringLiteral("ref:"));
 }
+
+// Substitui o QTextImageHandler padrão do Qt para ativar SmoothPixmapTransform
+// no painter antes de desenhar cada imagem. Sem isso, o QTextEdit escala imagens
+// com interpolação de baixa qualidade (FastTransformation), causando serrilhado.
+class SmoothImageHandler : public QObject, public QTextObjectInterface {
+    Q_OBJECT
+    Q_INTERFACES(QTextObjectInterface)
+
+    // Cache das dimensões naturais das imagens para evitar leitura repetida de disco.
+    QHash<QUrl, QSize> m_sizeCache;
+
+public:
+    explicit SmoothImageHandler(QObject* parent = nullptr) : QObject(parent) {}
+
+    // Retorna o tamanho de exibição da imagem (em px lógicos) a partir do formato.
+    // Qt chama isso para o layout; deve concordar com o que drawObject vai pintar.
+    QSizeF intrinsicSize(QTextDocument* /*doc*/, int /*pos*/, const QTextFormat& format) override {
+        const QTextImageFormat fmt = format.toImageFormat();
+        const bool hasW = fmt.hasProperty(QTextFormat::ImageWidth);
+        const bool hasH = fmt.hasProperty(QTextFormat::ImageHeight);
+
+        if (hasW && hasH)
+            return QSizeF(fmt.width(), fmt.height());
+
+        // Precisa das dimensões naturais para calcular o lado faltante.
+        const QUrl url(fmt.name());
+        if (!m_sizeCache.contains(url)) {
+            QSize sz;
+            const QString path = url.toLocalFile();
+            if (!path.isEmpty()) {
+                QImageReader reader(path);
+                sz = reader.size();   // lê só o header — rápido
+            }
+            m_sizeCache[url] = sz.isEmpty() ? QSize(100, 100) : sz;
+        }
+
+        const QSize nat = m_sizeCache.value(url, QSize(100, 100));
+        if (hasW && nat.height() > 0)
+            return QSizeF(fmt.width(), fmt.width() * nat.height() / nat.width());
+        if (hasH && nat.width() > 0)
+            return QSizeF(fmt.height() * nat.width() / nat.height(), fmt.height());
+        return QSizeF(nat);
+    }
+
+    // Desenha a imagem com SmoothPixmapTransform — o ponto central do fix.
+    void drawObject(QPainter* painter, const QRectF& rect, QTextDocument* doc,
+                    int /*pos*/, const QTextFormat& format) override {
+        const QUrl url(format.toImageFormat().name());
+        const QVariant data = doc->resource(QTextDocument::ImageResource, url);
+
+        QImage image;
+        if (data.userType() == QMetaType::QPixmap)
+            image = qvariant_cast<QPixmap>(data).toImage();
+        else if (data.userType() == QMetaType::QImage)
+            image = qvariant_cast<QImage>(data);
+        else if (data.userType() == QMetaType::QByteArray)
+            image.loadFromData(data.toByteArray());
+
+        if (image.isNull()) return;
+
+        painter->save();
+        painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+        painter->drawImage(rect, image, image.rect());
+        painter->restore();
+    }
+};
+// moc precisa ver Q_OBJECT numa translation unit — inclui o moc gerado inline.
+#include "SpellEditor.moc"
 }
 
 namespace {
@@ -24,6 +105,10 @@ constexpr int kMaxSuggestions = 6;
 SpellEditor::SpellEditor(QWidget* parent)
     : QTextEdit(parent)
 {
+    // Registra nosso handler que substitui o padrão do Qt para imagens.
+    // O padrão não seta SmoothPixmapTransform, causando escala com baixa qualidade.
+    document()->documentLayout()->registerHandler(
+        QTextFormat::ImageObject, new SmoothImageHandler(this));
 }
 
 void SpellEditor::setSpellChecker(SpellChecker* checker)

@@ -54,7 +54,10 @@
 #include <QUrl>
 #include <QWidget>
 #include <QFile>
+#include <QImage>
+#include <QImageReader>
 #include <QIODevice>
+#include <QPixmap>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -223,6 +226,28 @@ void applyFloatFrameStyle(QTextFrameFormat &ff, bool isLeft, int w)
     ff.setTopMargin(4);
     ff.setBottomMargin(4);
     ff.setWidth(QTextLength(QTextLength::FixedLength, w));
+}
+
+// Recarrega a imagem do disco, redimensiona suavemente para o novo displayWidth e
+// atualiza o cache de recursos do documento. Necessário quando o usuário altera a
+// largura da imagem — o cache teria o pixmap na escala antiga.
+static void refreshImageResource(QTextEdit* editor, const QUrl& url, int displayW) {
+    const QString filePath = url.toLocalFile();
+    if (filePath.isEmpty()) return;
+    QImageReader reader(filePath);
+    reader.setAutoTransform(true);
+    QImage img = reader.read();
+    if (img.isNull()) return;
+    const qreal dpr = editor->devicePixelRatioF();
+    const int physW = qRound(displayW * dpr);
+    if (physW > 0 && physW < img.width()) {
+        const int physH = qRound(qreal(img.height()) * physW / img.width());
+        img = img.scaled(physW, physH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+    QPixmap pm = QPixmap::fromImage(std::move(img));
+    pm.setDevicePixelRatio(dpr);
+    editor->document()->addResource(QTextDocument::ImageResource, url, QVariant(pm));
+    editor->viewport()->update();
 }
 }
 
@@ -1804,6 +1829,39 @@ void MainWindow::setupEditor()
     });
 
     // ---- Context menu / drag handlers do ManuscriptPanel ----
+    connect(manuscriptPanel, &ManuscriptPanel::renameManuscriptRequested, this, [this](const QString& manuscriptId) {
+        const auto& list = projectModel->manuscripts();
+        const Manuscript* ms = nullptr;
+        for (const auto& m : list) { if (m.id == manuscriptId) { ms = &m; break; } }
+        if (!ms) return;
+        const QString current = ms->title.isEmpty() ? tr("(sem título)") : ms->title;
+        bool ok = false;
+        const QString newTitle = QInputDialog::getText(this, tr("Renomear manuscrito"),
+            tr("Novo título:"), QLineEdit::Normal, current, &ok).trimmed();
+        if (!ok || newTitle.isEmpty()) return;
+        projectModel->updateManuscriptTitle(manuscriptId, newTitle);
+    });
+
+    connect(manuscriptPanel, &ManuscriptPanel::deleteManuscriptRequested, this, [this](const QString& manuscriptId) {
+        const auto& list = projectModel->manuscripts();
+        const Manuscript* ms = nullptr;
+        for (const auto& m : list) { if (m.id == manuscriptId) { ms = &m; break; } }
+        if (!ms) return;
+        const QString title = ms->title.isEmpty() ? tr("(sem título)") : ms->title;
+        const auto ret = QMessageBox::question(this, tr("Excluir manuscrito"),
+            tr("Excluir \"%1\"? Todos os capítulos serão removidos. Esta ação não pode ser desfeita.").arg(title),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (ret != QMessageBox::Yes) return;
+        if (editorHost) {
+            const auto vm = editorHost->viewMode();
+            if ((vm.type == EditorHost::ChapterDoc || vm.type == EditorHost::SceneDoc)
+                && vm.manuscriptId == manuscriptId) {
+                editorHost->disable();
+            }
+        }
+        projectModel->removeManuscript(manuscriptId);
+    });
+
     connect(manuscriptPanel, &ManuscriptPanel::renameChapterRequested, this, [this](const QString& chapterId) {
         const Chapter* c = projectModel->findChapter(chapterId);
         if (!c) return;
@@ -3010,6 +3068,10 @@ void MainWindow::onAddImageRequested()
     }
 
     cursor.endEditBlock();
+
+    // Pré-registra o pixmap suavemente redimensionado para que Qt não precise
+    // escalar sem SmoothPixmapTransform na hora de pintar.
+    refreshImageResource(editor, QUrl(fileUrl), w);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -3279,6 +3341,9 @@ void MainWindow::changeSelectedImageWidth(int delta)
 
     imageOverlay->setCurrentWidth(newWidth);
     showOverlayForImage(selectedImageCursor);
+
+    // Atualiza o cache de recurso com a nova largura para manter qualidade suave.
+    refreshImageResource(editor, QUrl(fmt.name()), newWidth);
 }
 
 void MainWindow::changeSelectedImageAlignment(int alignment)

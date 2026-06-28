@@ -62,12 +62,17 @@ void DocCache::setPinnedKeys(const QSet<QString>& keys) {
 }
 
 void DocCache::evict(const QString& key) {
-    const bool removed = m_content.remove(key) > 0;
-    m_dirty.remove(key);
-    m_lruOrder.removeAll(key);
+    // Copia local obrigatória: 'key' pode ser um alias de um elemento de m_lruOrder.
+    // removeAll() destrói esse elemento (chama ~QString, libera o d_ptr) e o reference
+    // vira dangling. Qualquer leitura posterior de 'key' (inclusive para emitir sinais)
+    // leria memória liberada, causando double-free no cleanup do parâmetro do sinal.
+    const QString k = key;
+    const bool removed = m_content.remove(k) > 0;
+    m_dirty.remove(k);
+    m_lruOrder.removeAll(k);
     if (removed) {
-        emit contentChanged(key);
-        emit evicted(key);
+        emit contentChanged(k);
+        emit evicted(k);
     }
 }
 

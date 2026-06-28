@@ -1012,6 +1012,39 @@ void ProjectModel::addManuscript(const Manuscript& manuscript) {
     emit manuscriptsChanged();
 }
 
+bool ProjectModel::updateManuscriptTitle(const QString& id, const QString& title) {
+    for (auto& m : m_manuscripts) {
+        if (m.id != id) continue;
+        if (m.title == title) return true;
+        m.title = title;
+        emit manuscriptsChanged();
+        return true;
+    }
+    return false;
+}
+
+bool ProjectModel::removeManuscript(const QString& id) {
+    int idx = -1;
+    for (int i = 0; i < m_manuscripts.size(); ++i) {
+        if (m_manuscripts.at(i).id == id) { idx = i; break; }
+    }
+    if (idx < 0) return false;
+    m_manuscripts.removeAt(idx);
+    // Remove todos os capítulos deste manuscrito.
+    for (int i = m_chapters.size() - 1; i >= 0; --i) {
+        if (m_chapters.at(i).manuscriptId == id) m_chapters.removeAt(i);
+    }
+    if (m_activeManuscriptId == id) m_activeManuscriptId.clear();
+    if (!m_activeManuscriptId.isEmpty()) {
+        bool found = false;
+        for (const auto& m : m_manuscripts) { if (m.id == m_activeManuscriptId) { found = true; break; } }
+        if (!found) m_activeManuscriptId.clear();
+    }
+    emit chaptersChanged();
+    emit manuscriptsChanged();
+    return true;
+}
+
 void ProjectModel::addChapter(const Chapter& chapter) {
     Chapter c = chapter;
     if (c.file.isEmpty() && !c.id.isEmpty()) {

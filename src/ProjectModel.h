@@ -229,6 +229,8 @@ public:
     const CharacterBond* findCharacterBond(const QString& bondId) const;
 
     void addManuscript(const Manuscript& manuscript);
+    bool updateManuscriptTitle(const QString& id, const QString& title);
+    bool removeManuscript(const QString& id);
     void addChapter(const Chapter& chapter);
     bool updateChapterScenes(const QString& chapterId, const QList<Scene>& scenes);
     bool updateChapterTitle(const QString& chapterId, const QString& title);

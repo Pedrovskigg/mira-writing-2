@@ -130,9 +130,15 @@ ManuscriptPanel::ManuscriptPanel(ProjectModel* model, QWidget* parent)
         }
     )").arg(Theme::textBright(), Theme::panelBorder(), Theme::subtleBorder(),
            Theme::panelBackground(), Theme::hoverOverlay()));
+    m_combo->setContextMenuPolicy(Qt::CustomContextMenu);
     headerLayout->addWidget(m_combo, /*stretch=*/1);
     connect(m_combo, qOverload<int>(&QComboBox::currentIndexChanged),
             this, &ManuscriptPanel::onComboChanged);
+    connect(m_combo, &QComboBox::customContextMenuRequested, this, [this](const QPoint& pos) {
+        const QString msId = activeManuscriptId();
+        if (msId.isEmpty()) return;
+        showManuscriptContextMenu(msId, m_combo->mapToGlobal(pos));
+    });
 
     auto makeIconBtn = [this](const QString& glyph, const QString& tip) {
         auto* b = new QToolButton(this);
@@ -469,6 +475,25 @@ static QString contextMenuQss() {
         QMenu::separator { height: 1px; background: %3; margin: 4px 6px; }
     )").arg(Theme::panelBackground(), Theme::textPrimary(), Theme::panelBorder(),
            Theme::hoverOverlay(), Theme::textBright(), Theme::textMuted());
+}
+
+void ManuscriptPanel::showManuscriptContextMenu(const QString& manuscriptId, const QPoint& globalPos) {
+    QMenu menu(this);
+    menu.setStyleSheet(contextMenuQss());
+
+    auto* renameAct = menu.addAction(tr("Renomear manuscrito"));
+    connect(renameAct, &QAction::triggered, this, [this, manuscriptId]() {
+        emit renameManuscriptRequested(manuscriptId);
+    });
+
+    menu.addSeparator();
+
+    auto* deleteAct = menu.addAction(tr("Excluir manuscrito"));
+    connect(deleteAct, &QAction::triggered, this, [this, manuscriptId]() {
+        emit deleteManuscriptRequested(manuscriptId);
+    });
+
+    menu.exec(globalPos);
 }
 
 void ManuscriptPanel::showChapterContextMenu(const QString& manuscriptId, const QString& chapterId, const QPoint& globalPos) {

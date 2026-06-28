@@ -25,6 +25,8 @@ signals:
     void sceneActivated(QString manuscriptId, QString chapterId, int sceneIndex);
     void newChapterRequested(QString manuscriptId);
     void newManuscriptRequested();
+    void renameManuscriptRequested(QString manuscriptId);
+    void deleteManuscriptRequested(QString manuscriptId);
     void panelClosed();
     // Context menus
     void renameChapterRequested(QString chapterId);
@@ -55,6 +57,7 @@ private:
     void rebuildList();
     QString activeManuscriptId() const;
     void syncCombo();
+    void showManuscriptContextMenu(const QString& manuscriptId, const QPoint& globalPos);
     void showChapterContextMenu(const QString& manuscriptId, const QString& chapterId, const QPoint& globalPos);
     void showSceneContextMenu(const QString& manuscriptId, const QString& chapterId, int sceneIndex, const QPoint& globalPos);
     void startChapterDrag(QWidget* sourceBtn, const QString& chapterId);
