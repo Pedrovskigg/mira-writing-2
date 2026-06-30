@@ -1,12 +1,107 @@
 #include "ConstrutorWindow.h"
+#include "EditorLayout.h"
 #include "IconUtils.h"
+#include "ImageOverlay.h"
 #include "Theme.h"
 
+#include <QAbstractTextDocumentLayout>
 #include <QApplication>
+#include <QGraphicsDropShadowEffect>
 #include <QListWidget>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QSettings>
 #include <QStyledItemDelegate>
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextEdit>
+#include <QTextFragment>
+#include <QTextImageFormat>
+#include <QTextObjectInterface>
+
+namespace {
+
+// Substitui o handler padrão de imagem do Qt pra desenhar com
+// SmoothPixmapTransform (sem isso, redimensionar via overlay deixa a imagem
+// serrilhada). Espelha SmoothImageHandler de SpellEditor.cpp, mas lê o
+// tamanho natural do recurso já em cache (base64 embutido) em vez de
+// reabrir um arquivo em disco — o Construtor não referencia caminho externo.
+class ConstrutorImageHandler : public QObject, public QTextObjectInterface {
+    Q_OBJECT
+    Q_INTERFACES(QTextObjectInterface)
+public:
+    explicit ConstrutorImageHandler(QObject* parent = nullptr) : QObject(parent) {}
+
+    QSizeF intrinsicSize(QTextDocument* doc, int /*pos*/, const QTextFormat& format) override
+    {
+        const QTextImageFormat fmt = format.toImageFormat();
+        const bool hasW = fmt.hasProperty(QTextFormat::ImageWidth);
+        const bool hasH = fmt.hasProperty(QTextFormat::ImageHeight);
+        if (hasW && hasH) return QSizeF(fmt.width(), fmt.height());
+
+        const QSize nat = naturalSize(doc, fmt);
+        if (hasW && nat.height() > 0)
+            return QSizeF(fmt.width(), fmt.width() * nat.height() / nat.width());
+        if (hasH && nat.width() > 0)
+            return QSizeF(fmt.height() * nat.width() / nat.height(), fmt.height());
+        return QSizeF(nat);
+    }
+
+    void drawObject(QPainter* painter, const QRectF& rect, QTextDocument* doc,
+                     int /*pos*/, const QTextFormat& format) override
+    {
+        const QImage image = resourceImage(doc, format.toImageFormat());
+        if (image.isNull()) return;
+        painter->save();
+        painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+        painter->drawImage(rect, image, image.rect());
+        painter->restore();
+    }
+
+private:
+    static QImage resourceImage(QTextDocument* doc, const QTextImageFormat& fmt)
+    {
+        const QVariant data = doc->resource(QTextDocument::ImageResource, QUrl(fmt.name()));
+        if (data.userType() == QMetaType::QPixmap) return qvariant_cast<QPixmap>(data).toImage();
+        if (data.userType() == QMetaType::QImage)  return qvariant_cast<QImage>(data);
+        if (data.userType() == QMetaType::QByteArray) {
+            QImage img;
+            img.loadFromData(data.toByteArray());
+            return img;
+        }
+        return {};
+    }
+
+    static QSize naturalSize(QTextDocument* doc, const QTextImageFormat& fmt)
+    {
+        const QSize sz = resourceImage(doc, fmt).size();
+        return sz.isEmpty() ? QSize(100, 100) : sz;
+    }
+};
+#include "ConstrutorWindow.moc"
+}
+
+namespace {
+// Parseia uma cor no formato "rgba(r,g,b,a)" com alpha 0-255 (mesmo formato
+// usado pelo MiraTheme; espelha a função homônima de MainWindow.cpp).
+QColor parseColor(const QString& s)
+{
+    if (!s.startsWith(QLatin1String("rgba("))) return QColor(s);
+    QString inner = s.mid(5);
+    if (inner.endsWith(QChar(')'))) inner.chop(1);
+    const QStringList parts = inner.split(QChar(','));
+    if (parts.size() != 4) return QColor(s);
+    bool ok = false;
+    const int r = parts.at(0).trimmed().toInt(&ok); if (!ok) return QColor();
+    const int g = parts.at(1).trimmed().toInt(&ok); if (!ok) return QColor();
+    const int b = parts.at(2).trimmed().toInt(&ok); if (!ok) return QColor();
+    const int a = parts.at(3).trimmed().toInt(&ok); if (!ok) return QColor();
+    return QColor(r, g, b, a);
+}
+}
 
 // Delegate de dois níveis para a lista de sistemas:
 //   Linha 1 — nome do sistema (13 px)
@@ -80,6 +175,8 @@ void ConstrutorWindow::applyTheme()
     const QString dangerSf  = Theme::accentDangerSoft();
     const QString danger    = Theme::accentDanger();
     const QString disabled  = Theme::disabledText();
+    const QString editorBg  = Theme::editorBackground();
+    const QColor  editorTxt = QColor(Theme::editorTextColor());
 
     setStyleSheet(QStringLiteral(R"(
         ConstrutorWindow { background: %1; }
@@ -228,11 +325,12 @@ void ConstrutorWindow::applyTheme()
         }
         QMenu#ctrSpacingMenu::separator { height: 1px; background: %4; margin: 4px 4px; }
 
-        /* ── Editor de conteúdo ─────────────────────────── */
+        /* ── "Página" do editor (folha centralizada) ────── */
+        QScrollArea#ctrPageScroll { background: transparent; border: none; }
+        QWidget#ctrPageColumn { background: %15; }
         QTextEdit#ctrContentEdit {
-            background: %1; color: %7;
+            background: %15;
             border: none;
-            padding: 24px 40px 32px 40px;
             selection-background-color: %9;
         }
         QTextEdit#ctrContentEdit:disabled { color: %14; }
@@ -246,7 +344,33 @@ void ConstrutorWindow::applyTheme()
     )").arg(appBg, panelBg, border, subtle, txtPrim)   // %1-5
        .arg(txtMuted, txtBright, hover, accentSf)      // %6-9
        .arg(accentBd, accentDef, dangerSf, danger)     // %10-13
-       .arg(disabled));                                // %14
+       .arg(disabled, editorBg));                      // %14-15
+
+    // Cor de texto via QPalette (não via CSS `color`) — espelha o editor
+    // principal: CSS sobrepõe palette e quebraria o dim do Focus Mode.
+    m_baseTextColor = editorTxt;
+    if (m_contentEdit) {
+        QPalette p = m_contentEdit->palette();
+        p.setColor(QPalette::Base, QColor(editorBg));
+        m_contentEdit->setPalette(p);
+    }
+    applyFocusTextColor();
+
+    // Sombra da página — mesmo efeito/parâmetros do editor principal.
+    if (m_pageColumn) {
+        if (Theme::pageShadowEnabled()) {
+            auto* effect = qobject_cast<QGraphicsDropShadowEffect*>(m_pageColumn->graphicsEffect());
+            if (!effect) {
+                effect = new QGraphicsDropShadowEffect(m_pageColumn);
+                m_pageColumn->setGraphicsEffect(effect);
+            }
+            effect->setBlurRadius(Theme::pageShadowRadius());
+            effect->setOffset(0, Theme::pageShadowOffset());
+            effect->setColor(parseColor(Theme::pageShadowColor()));
+        } else {
+            m_pageColumn->setGraphicsEffect(nullptr);
+        }
+    }
 
     if (m_sysDelegate) {
         m_sysDelegate->colorPrimary  = txtPrim;
@@ -267,6 +391,11 @@ void ConstrutorWindow::applyTheme()
     if (m_alignRightBtn)  m_alignRightBtn->setIcon(loadCtrIcon(QStringLiteral("align-right.svg")));
     if (m_spacingBtn)     m_spacingBtn->setIcon(loadCtrIcon(QStringLiteral("text-spacing.svg")));
     if (m_insertImageBtn) m_insertImageBtn->setIcon(loadCtrIcon(QStringLiteral("add-image.svg")));
+
+    // Modo foco — ícones on/off, mesmos arquivos da toolbar principal.
+    m_focusOffIcon = loadCtrIcon(QStringLiteral("focusmode-off.svg"));
+    m_focusOnIcon  = loadCtrIcon(QStringLiteral("focusmode-on.svg"));
+    if (m_focusBtn) m_focusBtn->setIcon(m_focusModeEnabled ? m_focusOnIcon : m_focusOffIcon);
 }
 
 
@@ -307,10 +436,121 @@ ConstrutorWindow::ConstrutorWindow(ConstrutorStore* store, QWidget* parent)
     setMinimumSize(750, 520);
     resize(900, 620);
     buildUi();
+    applyPageLayout();
     applyTheme();
     connect(Theme::Manager::instance(), &Theme::Manager::themeChanged,
             this, &ConstrutorWindow::applyTheme);
+    connect(EditorLayout::Manager::instance(), &EditorLayout::Manager::layoutChanged,
+            this, &ConstrutorWindow::applyPageLayout);
+
+    // Restaura preferências persistidas (mesmo padrão de "editor/focusMode"
+    // do editor principal — ver MainWindow::MainWindow / ::setFocusMode).
+    m_firstLineIndentEnabled = QSettings()
+        .value(QStringLiteral("construtor/firstLineIndent"), false).toBool();
+    if (m_indentBtn) {
+        QSignalBlocker block(m_indentBtn);
+        m_indentBtn->setChecked(m_firstLineIndentEnabled);
+    }
+    m_lineHeightPercent = QSettings()
+        .value(QStringLiteral("construtor/lineHeightPercent"), m_lineHeightPercent).toInt();
+    m_paraSpaceBefore = QSettings()
+        .value(QStringLiteral("construtor/paraSpaceBefore"), m_paraSpaceBefore).toInt();
+    m_paraSpaceAfter = QSettings()
+        .value(QStringLiteral("construtor/paraSpaceAfter"), m_paraSpaceAfter).toInt();
+    updateLineHeightMenuChecks();
+    if (m_paraBeforeLabel) m_paraBeforeLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceBefore));
+    if (m_paraAfterLabel)  m_paraAfterLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceAfter));
+
+    const bool savedFocus = QSettings()
+        .value(QStringLiteral("construtor/focusMode"), false).toBool();
+    if (savedFocus) setFocusMode(true);
+
     setStore(store);
+}
+
+void ConstrutorWindow::applyPageLayout()
+{
+    if (!m_pageColumn || !m_contentEdit) return;
+    const int hm = EditorLayout::horizontalMargin();
+    const int vm = EditorLayout::verticalMargin();
+    m_pageColumn->setFixedWidth(EditorLayout::pageWidth());
+    if (auto* lay = qobject_cast<QVBoxLayout*>(m_pageColumn->layout()))
+        lay->setContentsMargins(0, vm, 0, vm);
+    m_contentEdit->document()->setDocumentMargin(hm);
+}
+
+void ConstrutorWindow::setFocusMode(bool enabled)
+{
+    if (m_focusModeEnabled == enabled) return;
+    m_focusModeEnabled = enabled;
+    QSettings().setValue(QStringLiteral("construtor/focusMode"), enabled);
+
+    if (m_focusBtn) {
+        QSignalBlocker block(m_focusBtn);
+        m_focusBtn->setChecked(enabled);
+        m_focusBtn->setIcon(enabled ? m_focusOnIcon : m_focusOffIcon);
+    }
+
+    if (m_contentEdit) {
+        if (enabled) {
+            connect(m_contentEdit, &QTextEdit::cursorPositionChanged,
+                    this, &ConstrutorWindow::updateFocusedBlock);
+            connect(m_contentEdit, &QTextEdit::textChanged,
+                    this, &ConstrutorWindow::updateFocusedBlock);
+            connect(m_contentEdit, &QTextEdit::selectionChanged,
+                    this, &ConstrutorWindow::updateFocusedBlock);
+        } else {
+            disconnect(m_contentEdit, &QTextEdit::cursorPositionChanged,
+                       this, &ConstrutorWindow::updateFocusedBlock);
+            disconnect(m_contentEdit, &QTextEdit::textChanged,
+                       this, &ConstrutorWindow::updateFocusedBlock);
+            disconnect(m_contentEdit, &QTextEdit::selectionChanged,
+                       this, &ConstrutorWindow::updateFocusedBlock);
+            m_contentEdit->setExtraSelections({});
+        }
+    }
+
+    applyFocusTextColor();
+    if (enabled) updateFocusedBlock();
+}
+
+void ConstrutorWindow::applyFocusTextColor()
+{
+    if (!m_contentEdit || !m_baseTextColor.isValid()) return;
+
+    QColor textColor = m_baseTextColor;
+    textColor.setAlpha(m_focusModeEnabled ? 100 : 255);
+
+    QPalette p = m_contentEdit->palette();
+    p.setColor(QPalette::Text, textColor);
+    m_contentEdit->setPalette(p);
+
+    // Aplica a cor no charFormat de todo o documento — palette sozinha não
+    // alcança texto que já tem foreground explícito (ex.: colado de fora).
+    const bool wasModified = m_contentEdit->document()->isModified();
+    QTextCursor cursor(m_contentEdit->document());
+    cursor.select(QTextCursor::Document);
+    QTextCharFormat fmt;
+    fmt.setForeground(textColor);
+    cursor.mergeCharFormat(fmt);
+    m_contentEdit->document()->setModified(wasModified);
+}
+
+void ConstrutorWindow::updateFocusedBlock()
+{
+    if (!m_focusModeEnabled || !m_contentEdit) return;
+
+    QColor focused = m_baseTextColor;
+    focused.setAlpha(255);
+
+    QTextCursor blockCursor(m_contentEdit->textCursor().block());
+    blockCursor.movePosition(QTextCursor::StartOfBlock);
+    blockCursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+
+    QTextEdit::ExtraSelection sel;
+    sel.cursor = blockCursor;
+    sel.format.setForeground(focused);
+    m_contentEdit->setExtraSelections({sel});
 }
 
 void ConstrutorWindow::setStore(ConstrutorStore* store)
@@ -329,6 +569,24 @@ void ConstrutorWindow::closeEvent(QCloseEvent* event)
 {
     saveCurrentNodeContent();
     event->accept();
+}
+
+bool ConstrutorWindow::eventFilter(QObject* watched, QEvent* event)
+{
+    if (m_contentEdit && watched == m_contentEdit->viewport()) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            auto* me = static_cast<QMouseEvent*>(event);
+            QTextCursor imageCursor;
+            if (findImageAt(me->pos(), imageCursor)) {
+                showOverlayForImage(imageCursor);
+                return true;
+            }
+            hideOverlay();
+        } else if (event->type() == QEvent::Resize) {
+            hideOverlay();
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
@@ -605,17 +863,27 @@ void ConstrutorWindow::buildUi()
     tbLay->addWidget(m_alignCenterBtn);
     tbLay->addWidget(m_alignRightBtn);
 
-    tbLay->addStretch();
+    tbLay->addWidget(makeSep(toolbar));
+
+    // Modo foco — mesmo ícone/mecânica do botão "Modo foco" da toolbar
+    // principal (TopToolbar::focusButton): checkable, ícone troca on/off.
+    m_focusBtn = makeFmtBtn(QString(), toolbar, true);
+    m_focusBtn->setToolTip(tr("Modo foco"));
+    m_focusBtn->setIconSize(QSize(16, 16));
+    tbLay->addWidget(m_focusBtn);
 
     m_insertImageBtn = makeFmtBtn(QString(), toolbar);
     m_insertImageBtn->setToolTip(tr("Inserir imagem"));
     m_insertImageBtn->setIconSize(QSize(16, 16));
     tbLay->addWidget(m_insertImageBtn);
+    tbLay->addStretch();
 
     rightLay->addWidget(toolbar);
 
-    // Editor rich text
-    m_contentEdit = new QTextEdit(rightWidget);
+    // Editor rich text — vive dentro de uma "página" (largura/margens vindas
+    // de EditorLayout::Manager, a mesma config global do editor principal),
+    // centralizada numa QScrollArea — ver applyPageLayout().
+    m_contentEdit = new QTextEdit();
     m_contentEdit->setObjectName(QStringLiteral("ctrContentEdit"));
     m_contentEdit->setFrameShape(QFrame::NoFrame);
     m_contentEdit->setPlaceholderText(tr("Escreva aqui…"));
@@ -624,13 +892,39 @@ void ConstrutorWindow::buildUi()
     m_contentEdit->document()->setDefaultStyleSheet(
         QStringLiteral("p { margin: 0 0 10px 0; line-height: 1.7; }"));
     { QFont f; f.setPointSize(16); m_contentEdit->document()->setDefaultFont(f); }
-    rightLay->addWidget(m_contentEdit, 1);
+    m_contentEdit->document()->documentLayout()->registerHandler(
+        QTextFormat::ImageObject, new ConstrutorImageHandler(m_contentEdit));
+
+    // Overlay de tamanho de imagem — clica na imagem, mostra controles de
+    // +/- largura. Sem alinhamento (showAlignment=false): o Construtor não
+    // tem float/posicionamento de imagem, só inline centralizado.
+    m_imageOverlay = new ImageOverlay(m_contentEdit->viewport(), /*showAlignment=*/false);
+    m_imageOverlay->hide();
+    connect(m_imageOverlay, &ImageOverlay::widthChangeRequested,
+            this, &ConstrutorWindow::changeSelectedImageWidth);
+    m_contentEdit->viewport()->installEventFilter(this);
+    connect(m_contentEdit->verticalScrollBar(), &QAbstractSlider::valueChanged,
+            this, &ConstrutorWindow::hideOverlay);
+
+    m_pageColumn = new QWidget();
+    m_pageColumn->setObjectName(QStringLiteral("ctrPageColumn"));
+    auto* pageLay = new QVBoxLayout(m_pageColumn);
+    pageLay->addWidget(m_contentEdit, 1);
+
+    m_pageScroll = new QScrollArea(rightWidget);
+    m_pageScroll->setObjectName(QStringLiteral("ctrPageScroll"));
+    m_pageScroll->setFrameShape(QFrame::NoFrame);
+    m_pageScroll->setWidgetResizable(true);
+    m_pageScroll->setAlignment(Qt::AlignHCenter);
+    m_pageScroll->setWidget(m_pageColumn);
+    rightLay->addWidget(m_pageScroll, 1);
 
     root->addWidget(rightWidget, 1);
 
     // ── Conexões ─────────────────────────────────────────────────────────────
     connect(m_togglePanelBtn, &QPushButton::toggled,
             this, &ConstrutorWindow::onTogglePanel);
+    connect(m_focusBtn, &QPushButton::toggled, this, &ConstrutorWindow::setFocusMode);
 
     connect(m_systemsList, &QListWidget::currentRowChanged,
             this, &ConstrutorWindow::onSystemSelected);
@@ -688,7 +982,10 @@ void ConstrutorWindow::buildUi()
     // aplicam ao documento inteiro do nó atual, não apenas à seleção/parágrafo
     // corrente (mesmo padrão do editor principal: MainWindow::applyEditorStyle()).
     connect(m_indentBtn, &QPushButton::toggled, this, [this](bool on) {
-        if (m_updatingFmt || !m_contentEdit->isEnabled()) return;
+        if (m_updatingFmt) return;
+        m_firstLineIndentEnabled = on;
+        QSettings().setValue(QStringLiteral("construtor/firstLineIndent"), on);
+        if (!m_contentEdit->isEnabled()) return;
         QTextCursor c(m_contentEdit->document());
         c.select(QTextCursor::Document);
         QTextBlockFormat bfmt;
@@ -835,6 +1132,7 @@ void ConstrutorWindow::loadSystem(const QString& id)
     rebuildTree();
 
     // Editor
+    hideOverlay();
     m_contentEdit->setEnabled(false);
     m_contentEdit->clear();
     m_deleteNodeBtn->setEnabled(false);
@@ -858,10 +1156,12 @@ void ConstrutorWindow::rebuildTree()
         populateTreeNode(nullptr, node);
 
     m_tree->expandAll();
-    m_tree->blockSignals(false);
-    m_rebuilding = false;
 
-    // Restaura seleção
+    // Restaura seleção — ainda com m_rebuilding=true (igual rebuildSystemsList):
+    // setCurrentItem dispara itemSelectionChanged mesmo fora de blockSignals,
+    // e sem essa guarda o reseletor reaciona onTreeSelectionChanged, que
+    // recarrega o conteúdo do nó (setHtml + moveCursor(Start)) no meio da
+    // digitação, resetando o cursor pro início do documento.
     if (!m_currentNodeId.isEmpty()) {
         const auto items = m_tree->findItems(QString(), Qt::MatchContains | Qt::MatchRecursive);
         for (auto* item : items) {
@@ -871,6 +1171,9 @@ void ConstrutorWindow::rebuildTree()
             }
         }
     }
+
+    m_tree->blockSignals(false);
+    m_rebuilding = false;
 }
 
 void ConstrutorWindow::populateTreeNode(QTreeWidgetItem* parent,
@@ -901,6 +1204,7 @@ void ConstrutorWindow::onTreeSelectionChanged()
     m_currentNodeId = nodeId;
 
     if (nodeId.isEmpty()) {
+        hideOverlay();
         m_contentEdit->setEnabled(false);
         m_contentEdit->clear();
         m_deleteNodeBtn->setEnabled(false);
@@ -930,6 +1234,8 @@ void ConstrutorWindow::onTreeSelectionChanged()
     const ConstrutorStore::Node* node = findConst(sys->nodes, nodeId);
     if (!node) return;
 
+    hideOverlay();
+    m_selectedImageCursor = QTextCursor();
     m_contentEdit->blockSignals(true);
     m_contentEdit->setEnabled(true);
     if (node->content.startsWith(QLatin1String("<!DOCTYPE")))
@@ -937,7 +1243,28 @@ void ConstrutorWindow::onTreeSelectionChanged()
     else
         m_contentEdit->setPlainText(node->content);
     m_contentEdit->moveCursor(QTextCursor::Start);
+
+    // Normaliza indentação, entrelinha e espaçamento de parágrafo pelas
+    // preferências globais persistidas (igual ao editor principal: são
+    // globais, reaplicadas em todo o documento a cada carregamento, não
+    // por parágrafo/documento individual).
+    {
+        QTextCursor c(m_contentEdit->document());
+        c.select(QTextCursor::Document);
+        QTextBlockFormat bf;
+        bf.setTextIndent(m_firstLineIndentEnabled ? 24.0 : 0.0);
+        bf.setLineHeight(m_lineHeightPercent, QTextBlockFormat::ProportionalHeight);
+        bf.setTopMargin(m_paraSpaceBefore);
+        bf.setBottomMargin(m_paraSpaceAfter);
+        c.mergeBlockFormat(bf);
+    }
+
     m_contentEdit->blockSignals(false);
+
+    // Conteúdo novo entra sem o dim/foreground do Focus Mode (blockSignals
+    // suprimiu o cursorPositionChanged) — reaplica explicitamente.
+    applyFocusTextColor();
+    updateFocusedBlock();
 
     updateToolbarState(m_contentEdit->currentCharFormat());
 }
@@ -1151,6 +1478,7 @@ void ConstrutorWindow::onDeleteNode()
     m_saveTimer->stop();
     const QString nodeId = m_currentNodeId;
     m_currentNodeId.clear();
+    hideOverlay();
     m_contentEdit->setEnabled(false);
     m_contentEdit->clear();
     m_deleteNodeBtn->setEnabled(false);
@@ -1238,13 +1566,10 @@ void ConstrutorWindow::updateToolbarState(const QTextCharFormat& fmt)
     m_alignCenterBtn->setChecked(align & Qt::AlignHCenter);
     m_alignRightBtn->setChecked(align & Qt::AlignRight);
 
-    m_indentBtn->setChecked(m_contentEdit->textCursor().blockFormat().textIndent() > 0);
+    m_indentBtn->setChecked(m_firstLineIndentEnabled);
 
-    const QTextBlockFormat bf = m_contentEdit->textCursor().blockFormat();
-    if (bf.lineHeight() > 0)
-        m_lineHeightPercent = static_cast<int>(bf.lineHeight());
-    m_paraSpaceBefore = static_cast<int>(bf.topMargin());
-    m_paraSpaceAfter  = static_cast<int>(bf.bottomMargin());
+    // Entrelinha/espaçamento de parágrafo são preferências globais (como o
+    // indent) — não derivam do parágrafo atual, só refletem o valor salvo.
     if (m_paraBeforeLabel) m_paraBeforeLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceBefore));
     if (m_paraAfterLabel)  m_paraAfterLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceAfter));
     updateLineHeightMenuChecks();
@@ -1277,8 +1602,10 @@ void ConstrutorWindow::applyGlobalAlignment(Qt::Alignment align)
 
 void ConstrutorWindow::applyLineHeight(int percent)
 {
-    if (!m_contentEdit->isEnabled()) return;
     m_lineHeightPercent = percent;
+    QSettings().setValue(QStringLiteral("construtor/lineHeightPercent"), percent);
+    updateLineHeightMenuChecks();
+    if (!m_contentEdit->isEnabled()) return;
     QTextCursor c(m_contentEdit->document());
     c.select(QTextCursor::Document);
     QTextBlockFormat bf;
@@ -1287,13 +1614,14 @@ void ConstrutorWindow::applyLineHeight(int percent)
     QTextCursor cur = m_contentEdit->textCursor();
     cur.mergeBlockFormat(bf);
     m_contentEdit->setTextCursor(cur);
-    updateLineHeightMenuChecks();
 }
 
 void ConstrutorWindow::applyParaSpaceBefore(int px)
 {
-    if (!m_contentEdit->isEnabled()) return;
     m_paraSpaceBefore = qBound(0, px, 64);
+    QSettings().setValue(QStringLiteral("construtor/paraSpaceBefore"), m_paraSpaceBefore);
+    if (m_paraBeforeLabel) m_paraBeforeLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceBefore));
+    if (!m_contentEdit->isEnabled()) return;
     QTextCursor c(m_contentEdit->document());
     c.select(QTextCursor::Document);
     QTextBlockFormat bf;
@@ -1302,13 +1630,14 @@ void ConstrutorWindow::applyParaSpaceBefore(int px)
     QTextCursor cur = m_contentEdit->textCursor();
     cur.mergeBlockFormat(bf);
     m_contentEdit->setTextCursor(cur);
-    if (m_paraBeforeLabel) m_paraBeforeLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceBefore));
 }
 
 void ConstrutorWindow::applyParaSpaceAfter(int px)
 {
-    if (!m_contentEdit->isEnabled()) return;
     m_paraSpaceAfter = qBound(0, px, 64);
+    QSettings().setValue(QStringLiteral("construtor/paraSpaceAfter"), m_paraSpaceAfter);
+    if (m_paraAfterLabel) m_paraAfterLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceAfter));
+    if (!m_contentEdit->isEnabled()) return;
     QTextCursor c(m_contentEdit->document());
     c.select(QTextCursor::Document);
     QTextBlockFormat bf;
@@ -1317,7 +1646,6 @@ void ConstrutorWindow::applyParaSpaceAfter(int px)
     QTextCursor cur = m_contentEdit->textCursor();
     cur.mergeBlockFormat(bf);
     m_contentEdit->setTextCursor(cur);
-    if (m_paraAfterLabel) m_paraAfterLabel->setText(QStringLiteral("%1 px").arg(m_paraSpaceAfter));
 }
 
 void ConstrutorWindow::updateLineHeightMenuChecks()
@@ -1415,9 +1743,12 @@ void ConstrutorWindow::onInsertImage()
     QImage img(path);
     if (img.isNull()) return;
 
-    // Limita largura máxima a 600 px para não quebrar o layout
-    if (img.width() > 600)
-        img = img.scaledToWidth(600, Qt::SmoothTransformation);
+    // Embute numa resolução generosa (até 1200px — o teto do overlay de
+    // tamanho abaixo) em vez de pedir a largura antes de inserir. O usuário
+    // ajusta o tamanho depois clicando na imagem, igual ao editor principal.
+    constexpr int kMaxEmbedWidth = 1200;
+    if (img.width() > kMaxEmbedWidth)
+        img = img.scaledToWidth(kMaxEmbedWidth, Qt::SmoothTransformation);
 
     QByteArray data;
     QBuffer buf(&data);
@@ -1426,6 +1757,79 @@ void ConstrutorWindow::onInsertImage()
     buf.close();
 
     const QString src = QStringLiteral("data:image/png;base64,") + QString::fromLatin1(data.toBase64());
-    m_contentEdit->textCursor().insertHtml(
-        QStringLiteral("<img src=\"%1\" style=\"max-width:100%;\"/>").arg(src));
+
+    QTextImageFormat fmt;
+    fmt.setName(src);
+    fmt.setWidth(qMin(img.width(), 600));
+    m_contentEdit->textCursor().insertImage(fmt);
+}
+
+// ── Overlay de tamanho de imagem ─────────────────────────────────────────────
+
+bool ConstrutorWindow::findImageAt(const QPoint& viewportPos, QTextCursor& imageCursor) const
+{
+    auto* layout = m_contentEdit->document()->documentLayout();
+    const int scrollY = m_contentEdit->verticalScrollBar()->value();
+
+    for (QTextBlock block = m_contentEdit->document()->begin(); block.isValid(); block = block.next()) {
+        for (auto it = block.begin(); !it.atEnd(); ++it) {
+            QTextFragment frag = it.fragment();
+            if (!frag.isValid() || !frag.charFormat().isImageFormat()) continue;
+
+            QRect visRect = layout->blockBoundingRect(block).toRect();
+            visRect.translate(0, -scrollY);
+
+            if (visRect.adjusted(-4, -4, 4, 4).contains(viewportPos)) {
+                imageCursor = QTextCursor(m_contentEdit->document());
+                imageCursor.setPosition(frag.position());
+                imageCursor.setPosition(frag.position() + frag.length(), QTextCursor::KeepAnchor);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void ConstrutorWindow::showOverlayForImage(const QTextCursor& imageCursor)
+{
+    m_selectedImageCursor = imageCursor;
+
+    const QTextImageFormat fmt = imageCursor.charFormat().toImageFormat();
+    const int imgW = static_cast<int>(fmt.width() > 0 ? fmt.width() : 320);
+    m_imageOverlay->setCurrentWidth(imgW);
+
+    auto* layout = m_contentEdit->document()->documentLayout();
+    QRect visRect = layout->blockBoundingRect(imageCursor.block()).toRect();
+    visRect.translate(0, -m_contentEdit->verticalScrollBar()->value());
+
+    m_imageOverlay->adjustSize();
+    int x = visRect.center().x() - m_imageOverlay->width() / 2;
+    int y = visRect.top() + 4;
+    if (x + m_imageOverlay->width() > m_contentEdit->viewport()->width() - 4)
+        x = m_contentEdit->viewport()->width() - m_imageOverlay->width() - 4;
+    if (x < 4) x = 4;
+    if (y < 4) y = 4;
+
+    m_imageOverlay->move(x, y);
+    m_imageOverlay->show();
+    m_imageOverlay->raise();
+}
+
+void ConstrutorWindow::hideOverlay()
+{
+    if (m_imageOverlay) m_imageOverlay->hide();
+}
+
+void ConstrutorWindow::changeSelectedImageWidth(int delta)
+{
+    if (m_selectedImageCursor.isNull() || !m_selectedImageCursor.charFormat().isImageFormat()) return;
+
+    QTextImageFormat fmt = m_selectedImageCursor.charFormat().toImageFormat();
+    int newWidth = static_cast<int>(fmt.width() > 0 ? fmt.width() : 320) + delta;
+    newWidth = qBound(60, newWidth, 1200);
+    fmt.setWidth(newWidth);
+    m_selectedImageCursor.setCharFormat(fmt);
+
+    m_imageOverlay->setCurrentWidth(newWidth);
+    showOverlayForImage(m_selectedImageCursor);
 }

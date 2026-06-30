@@ -2,10 +2,14 @@
 
 #include "ConstrutorStore.h"
 
+#include <QColor>
+#include <QIcon>
 #include <QList>
 #include <QTextCharFormat>
+#include <QTextCursor>
 #include <QWidget>
 
+class ImageOverlay;
 class QAction;
 class QButtonGroup;
 class QComboBox;
@@ -16,6 +20,7 @@ class QLineEdit;
 class QListWidget;
 class QListWidgetItem;
 class QPushButton;
+class QScrollArea;
 class QSlider;
 class QTextEdit;
 class QTimer;
@@ -35,9 +40,11 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
     void applyTheme();
+    void applyPageLayout();
     void onStoreChanged();
     void onSystemSelected();
     void onSystemNameEdited(const QString& name);
@@ -55,6 +62,8 @@ private slots:
     void onTogglePanel();
     void onCurrentCharFormatChanged(const QTextCharFormat& fmt);
     void onInsertImage();
+    void setFocusMode(bool enabled);
+    void updateFocusedBlock();
 
 private:
     void buildUi();
@@ -77,6 +86,20 @@ private:
     void applyParaSpaceBefore(int px);
     void applyParaSpaceAfter(int px);
     void updateLineHeightMenuChecks();
+
+    // Focus Mode — esmaece todo o texto exceto o parágrafo com o cursor.
+    // Mesmo mecanismo do editor principal (MainWindow::applyTextColor/
+    // updateFocusedBlock), simplificado por não haver markers/@menções aqui.
+    void applyFocusTextColor();
+
+    // Overlay de tamanho de imagem (clica na imagem → mostra controles de
+    // +/- largura) — mesmo mecanismo do editor principal (MainWindow::
+    // findImageAt/showOverlayForImage/changeSelectedImageWidth), sem a parte
+    // de alinhamento/frame flutuante, que o Construtor não usa.
+    bool findImageAt(const QPoint& viewportPos, QTextCursor& imageCursor) const;
+    void showOverlayForImage(const QTextCursor& imageCursor);
+    void hideOverlay();
+    void changeSelectedImageWidth(int delta);
 
     ConstrutorStore* m_store = nullptr;
 
@@ -116,8 +139,19 @@ private:
     QPushButton*   m_alignRightBtn  = nullptr;
     QPushButton*   m_indentBtn      = nullptr;
     QPushButton*   m_spacingBtn     = nullptr;
+    QPushButton*   m_focusBtn       = nullptr;
+    QIcon          m_focusOffIcon;
+    QIcon          m_focusOnIcon;
     QPushButton*   m_insertImageBtn = nullptr;
+    QScrollArea*   m_pageScroll     = nullptr;  // centraliza a "página" do editor
+    QWidget*       m_pageColumn     = nullptr;  // largura/margens de EditorLayout::Manager
     QTextEdit*     m_contentEdit    = nullptr;
+    ImageOverlay*  m_imageOverlay   = nullptr;
+    QTextCursor    m_selectedImageCursor;  // imagem atualmente selecionada pelo overlay
+
+    bool    m_focusModeEnabled        = false;
+    bool    m_firstLineIndentEnabled  = false;  // preferência global, persiste em QSettings
+    QColor  m_baseTextColor;  // Theme::editorTextColor() — base do dim do Focus Mode
 
     // Estado de espaçamento global (entrelinha + margens de parágrafo)
     QLabel*         m_paraBeforeLabel  = nullptr;

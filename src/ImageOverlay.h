@@ -13,7 +13,7 @@ class ImageOverlay : public QWidget
 public:
     enum Alignment { Left = 0, Center = 1, Right = 2 };
 
-    explicit ImageOverlay(QWidget *parent = nullptr);
+    explicit ImageOverlay(QWidget *parent = nullptr, bool showAlignment = true);
 
     void setCurrentAlignment(Alignment alignment);
     void setCurrentWidth(int width);

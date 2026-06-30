@@ -30,7 +30,7 @@ QFrame *makeOverlaySeparator(QWidget *parent)
 
 }
 
-ImageOverlay::ImageOverlay(QWidget *parent)
+ImageOverlay::ImageOverlay(QWidget *parent, bool showAlignment)
     : QWidget(parent)
     , leftBtn(makeOverlayButton(this, QStringLiteral("⇤"), tr("Alinhar à esquerda")))
     , centerBtn(makeOverlayButton(this, QStringLiteral("≡"), tr("Centralizar")))
@@ -53,16 +53,27 @@ ImageOverlay::ImageOverlay(QWidget *parent)
     widthLabel->setFixedWidth(56);
     widthLabel->setText(QStringLiteral("320 px"));
 
+    auto *alignSep = makeOverlaySeparator(this);
+
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(8, 4, 8, 4);
     layout->setSpacing(4);
     layout->addWidget(leftBtn);
     layout->addWidget(centerBtn);
     layout->addWidget(rightBtn);
-    layout->addWidget(makeOverlaySeparator(this));
+    layout->addWidget(alignSep);
     layout->addWidget(minusBtn);
     layout->addWidget(widthLabel);
     layout->addWidget(plusBtn);
+
+    // Sem alinhamento/flutuação em alguns contextos (ex.: Construtor) — só
+    // o controle de tamanho importa lá, então some com esse grupo de botões.
+    if (!showAlignment) {
+        leftBtn->hide();
+        centerBtn->hide();
+        rightBtn->hide();
+        alignSep->hide();
+    }
 
     connect(leftBtn, &QToolButton::clicked, this, [this]() { emit alignmentRequested(Left); });
     connect(centerBtn, &QToolButton::clicked, this, [this]() { emit alignmentRequested(Center); });
