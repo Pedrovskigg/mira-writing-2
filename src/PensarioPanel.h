@@ -21,6 +21,8 @@ class NameGenerator;
 class MapPanel;
 class MapPinsStore;
 class ElementsStore;
+class ConstrutorStore;
+class ConstrutorWindow;
 struct Chapter;
 
 // Pensário — painel "auxiliar criativo" do Mira 2 (Pensarium no i18n).
@@ -46,6 +48,7 @@ public:
     void setMapPinsStore(MapPinsStore* s) { m_mapPins = s; }
     void setMemoriesStore(MemoriesStore* s);
     void setElementsStore(ElementsStore* s) { m_elements = s; }
+    void setConstrutorStore(ConstrutorStore* s);
 
 signals:
     // Pedido pra abrir um documento no editor e saltar até o trecho comentado.
@@ -128,6 +131,8 @@ private:
     QToolButton* m_mapBtn = nullptr;   // acesso ao painel do mapa, no header
     MapPanel* m_mapPanel = nullptr;
     MapPinsStore* m_mapPins = nullptr;
+    ConstrutorWindow* m_construtorWindow = nullptr;
+    ConstrutorStore*  m_construtorStore  = nullptr;
 
     QStackedWidget* m_stack = nullptr;
     QScrollArea* m_commentsScroll = nullptr;

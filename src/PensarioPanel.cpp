@@ -1,5 +1,7 @@
 #include "PensarioPanel.h"
 
+#include "ConstrutorStore.h"
+#include "ConstrutorWindow.h"
 #include "DocCache.h"
 #include "ElementsStore.h"
 #include "IconUtils.h"
@@ -74,6 +76,13 @@ void PensarioPanel::setMemoriesStore(MemoriesStore* s)
         });
 }
 
+void PensarioPanel::setConstrutorStore(ConstrutorStore* s)
+{
+    m_construtorStore = s;
+    if (m_construtorWindow)
+        m_construtorWindow->setStore(s);
+}
+
 void PensarioPanel::buildUi()
 {
     auto* root = new QVBoxLayout(this);
@@ -145,6 +154,23 @@ void PensarioPanel::buildUi()
     m_mapBtn->setIconSize(QSize(18, 18));
     connect(m_mapBtn, &QToolButton::clicked, this, &PensarioPanel::openMapPanel);
     headLay->addWidget(m_mapBtn);
+
+    // Acesso ao Construtor — abre janela dedicada de worldbuilding.
+    auto* construtorBtn = new QToolButton(m_header);
+    construtorBtn->setObjectName(QStringLiteral("pnConstrutorBtn"));
+    construtorBtn->setText(QStringLiteral("⚙"));
+    construtorBtn->setCursor(Qt::PointingHandCursor);
+    construtorBtn->setToolTip(tr("Construtor"));
+    construtorBtn->setFixedSize(28, 28);
+    connect(construtorBtn, &QToolButton::clicked, this, [this]() {
+        if (!m_construtorWindow) {
+            m_construtorWindow = new ConstrutorWindow(m_construtorStore, window());
+        }
+        m_construtorWindow->show();
+        m_construtorWindow->raise();
+        m_construtorWindow->activateWindow();
+    });
+    headLay->addWidget(construtorBtn);
 
     m_closeBtn = new QToolButton(m_header);
     m_closeBtn->setObjectName(QStringLiteral("pnClose"));

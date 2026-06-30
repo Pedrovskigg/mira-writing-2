@@ -62,6 +62,7 @@ class GlossaryPanel;
 class GlossaryAddPopup;
 class MemoriesStore;
 class MemoryAddPopup;
+class ConstrutorStore;
 class MainMenuDialog;
 class BackgroundWidget;
 class RemindersStore;
@@ -262,6 +263,7 @@ private:
     GlossaryAddPopup *glossaryAddPopup = nullptr;
     MemoriesStore *memoriesStore = nullptr;
     MemoryAddPopup *memoryAddPopup = nullptr;
+    ConstrutorStore *construtorStore = nullptr;
     // Memória sendo criada: preenchida em addSelectionToMemory() (texto + fonte)
     // e completada no confirmed do popup (nome + destino).
     std::optional<MemoriesStore::Memory> m_pendingMemory;

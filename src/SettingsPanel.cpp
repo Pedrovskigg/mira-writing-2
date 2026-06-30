@@ -1,5 +1,6 @@
 #include "SettingsPanel.h"
 
+#include "AboutDialog.h"
 #include "EditorLayout.h"
 #include "Theme.h"
 
@@ -39,9 +40,23 @@ SettingsPanel::SettingsPanel(QWidget* parent)
     root->setContentsMargins(20, 18, 20, 18);
     root->setSpacing(12);
 
+    auto* titleRow = new QHBoxLayout();
+    titleRow->setContentsMargins(0, 0, 0, 0);
+    titleRow->setSpacing(8);
     auto* title = new QLabel(tr("Configurações"), this);
     title->setObjectName(QStringLiteral("settingsTitle"));
-    root->addWidget(title);
+    titleRow->addWidget(title, 1);
+    auto* infoBtn = new QPushButton(QStringLiteral("ⓘ"), this);
+    infoBtn->setObjectName(QStringLiteral("settingsInfoBtn"));
+    infoBtn->setCursor(Qt::PointingHandCursor);
+    infoBtn->setFixedSize(24, 24);
+    infoBtn->setToolTip(tr("Sobre o Mira Writing"));
+    connect(infoBtn, &QPushButton::clicked, this, [this]() {
+        AboutDialog dlg(this);
+        dlg.exec();
+    });
+    titleRow->addWidget(infoBtn);
+    root->addLayout(titleRow);
 
     // ---- Seção: Corretor ortográfico ----
     auto* spellGroup = new QGroupBox(tr("Corretor ortográfico"), this);
@@ -489,6 +504,18 @@ void SettingsPanel::applyTheme()
         #settingsPanel QPushButton:hover {
             background: %9;
             color: %6;
+        }
+        QPushButton#settingsInfoBtn {
+            background: transparent;
+            color: %5;
+            border: 1px solid %2;
+            border-radius: 12px;
+            font-size: 13px;
+            padding: 0;
+        }
+        QPushButton#settingsInfoBtn:hover {
+            color: %6;
+            border-color: %9;
         }
         #settingsPanel QSlider::groove:horizontal {
             background: %3;

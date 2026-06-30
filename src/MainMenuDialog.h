@@ -46,6 +46,8 @@ signals:
     void autoOpenChanged(const QString& path, bool enabled);
     // Emitido após o Mira Cover fechar e a capa ser gravada no JSON do projeto.
     void coverUpdated(const QString& projectPath);
+    // Emitido quando o user clica em "Verificar atualizações".
+    void checkUpdatesRequested();
 
 protected:
     void showEvent(QShowEvent* event) override;

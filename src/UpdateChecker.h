@@ -17,14 +17,23 @@ public:
     explicit UpdateChecker(QObject* parent = nullptr);
 
     void check();
+    // Checa atualizações do Cover Creator.
+    // coverDir = pasta onde está Mira Cover.exe (lê cover-version.txt de lá).
+    void checkCover(const QString& coverDir);
 
 signals:
     void updateAvailable(const QString& version, const QString& downloadUrl, const QString& releaseUrl, const QString& releaseNotes);
+    void checkFinished();       // dispara ao fim da checagem (update ou não)
+    void coverUpdateAvailable(const QString& version, const QString& downloadUrl, const QString& releaseUrl);
+    void coverCheckFinished();  // dispara ao fim da checagem do Cover (update ou não)
 
 private:
     void onReplyFinished(QNetworkReply* reply);
+    void onCoverReplyFinished(QNetworkReply* reply, const QString& installedVersion);
     static int compareVersions(const QString& a, const QString& b);
+    static QString readInstalledCoverVersion(const QString& coverDir);
 
     QNetworkAccessManager* m_nam;
     bool m_pending = false;
+    bool m_coverPending = false;
 };

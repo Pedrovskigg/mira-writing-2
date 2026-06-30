@@ -1026,6 +1026,16 @@ void MainMenuDialog::buildSidebar(QVBoxLayout* col)
     langRow->addWidget(langLbl);
     langRow->addWidget(m_langCombo, 1);
 
+    auto* checkUpdatesBtn = new QPushButton(QStringLiteral("↑"), this);
+    checkUpdatesBtn->setObjectName(QStringLiteral("menuInfoBtn"));
+    checkUpdatesBtn->setCursor(Qt::PointingHandCursor);
+    checkUpdatesBtn->setFixedSize(24, 24);
+    checkUpdatesBtn->setToolTip(tr("Verificar atualizações"));
+    connect(checkUpdatesBtn, &QPushButton::clicked, this, [this]() {
+        emit checkUpdatesRequested();
+    });
+    langRow->addWidget(checkUpdatesBtn);
+
     auto* infoBtn = new QPushButton(QStringLiteral("ⓘ"), this);
     infoBtn->setObjectName(QStringLiteral("menuInfoBtn"));
     infoBtn->setCursor(Qt::PointingHandCursor);

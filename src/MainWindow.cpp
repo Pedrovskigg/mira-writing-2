@@ -105,6 +105,7 @@
 #include "AmbienceManager.h"
 #include "AmbiencePanel.h"
 #include "GlossaryAddPopup.h"
+#include "ConstrutorStore.h"
 #include "GlossaryPanel.h"
 #include "GlossaryStore.h"
 #include "MemoriesStore.h"
@@ -1146,6 +1147,7 @@ void MainWindow::setupEditor()
     // Memórias: store (sidecar JSON) + popup de "Adicionar à memória..." (mini
     // toolbar de seleção). O texto selecionado é salvo no projeto ou na
     // memória de um personagem, com o rótulo da fonte (capítulo/cena).
+    construtorStore = new ConstrutorStore(this);
     memoriesStore = new MemoriesStore(this);
     memoryAddPopup = new MemoryAddPopup(this);
     connect(memoryAddPopup, &MemoryAddPopup::confirmed, this,
@@ -1570,6 +1572,7 @@ void MainWindow::setupEditor()
     pensarioPanel = new PensarioPanel(markerStore, projectModel, notesStore, container);
     pensarioPanel->setMapPinsStore(mapPinsStore);
     pensarioPanel->setElementsStore(elementsStore);
+    pensarioPanel->setConstrutorStore(construtorStore);
     pensarioPanel->setTopInset(toolbarHolder ? toolbarHolder->sizeHint().height() : 0);
     pensarioPanel->raise();
     connect(pensarioPanel, &PensarioPanel::openMarkerRequested,
@@ -3493,6 +3496,11 @@ void MainWindow::applyProjectRoot(const QString& root)
         if (pensarioPanel) pensarioPanel->setMemoriesStore(memoriesStore);
         memoriesStore->load();
     }
+    if (construtorStore) {
+        construtorStore->setProjectRoot(root);
+        if (pensarioPanel) pensarioPanel->setConstrutorStore(construtorStore);
+        construtorStore->load();
+    }
     if (lousaPanel) {
         lousaPanel->setProjectModel(projectModel);
         lousaPanel->setElementsStore(elementsStore);
@@ -4057,7 +4065,49 @@ void MainWindow::openMainMenu()
                     }
                     if (mainMenuDialog) mainMenuDialog->setRecentProjects(list);
                 });
-        connect(mainMenuDialog, &MainMenuDialog::coverUpdated,
+            connect(mainMenuDialog, &MainMenuDialog::checkUpdatesRequested,
+                this, [this]() {
+                    if (!m_updateChecker) return;
+
+                    // Contador: espera as duas checagens terminarem
+                    auto* pending   = new int(2);
+                    auto* hadUpdate = new bool(false);
+
+                    auto onDone = [this, pending, hadUpdate]() {
+                        if (--(*pending) > 0) return;
+                        if (!*hadUpdate)
+                            showUpdateToast(tr("Tudo atualizado"), QString(),
+                                tr("O Mira Writing e o Cover Creator estão na versão mais recente."));
+                        delete pending;
+                        delete hadUpdate;
+                    };
+
+                    connect(m_updateChecker, &UpdateChecker::updateAvailable,
+                            this, [hadUpdate](const QString&,const QString&,const QString&,const QString&) {
+                                *hadUpdate = true;
+                            }, Qt::SingleShotConnection);
+                    connect(m_updateChecker, &UpdateChecker::coverUpdateAvailable,
+                            this, [hadUpdate](const QString&,const QString&,const QString&) {
+                                *hadUpdate = true;
+                            }, Qt::SingleShotConnection);
+                    connect(m_updateChecker, &UpdateChecker::checkFinished,
+                            this, onDone, Qt::SingleShotConnection);
+                    connect(m_updateChecker, &UpdateChecker::coverCheckFinished,
+                            this, onDone, Qt::SingleShotConnection);
+
+                    m_updateChecker->check();
+                    const QString coverDir = QCoreApplication::applicationDirPath()
+                                             + QStringLiteral("/Cover Creator");
+                    m_updateChecker->checkCover(coverDir);
+                });
+        connect(m_updateChecker, &UpdateChecker::coverUpdateAvailable,
+                this, [this](const QString& version, const QString& downloadUrl, const QString&) {
+                    showUpdateToast(
+                        tr("Cover Creator %1").arg(version),
+                        downloadUrl,
+                        tr("Nova versão do Cover Creator disponível."));
+                });
+    connect(mainMenuDialog, &MainMenuDialog::coverUpdated,
                 this, [this](const QString& updatedPath) {
                     // Se o projeto alterado está aberto no editor, recarrega a capa.
                     if (!projectRoot.isEmpty()

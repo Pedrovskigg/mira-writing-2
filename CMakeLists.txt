@@ -110,6 +110,8 @@ qt_add_executable(mira-writing
     src/SpellEditor.h
     src/SettingsPanel.cpp
     src/SettingsPanel.h
+    src/AboutDialog.cpp
+    src/AboutDialog.h
     src/SelectionPopup.cpp
     src/SelectionPopup.h
     src/MarkerStore.cpp
@@ -152,6 +154,10 @@ qt_add_executable(mira-writing
     src/GlossaryPanel.h
     src/GlossaryAddPopup.cpp
     src/GlossaryAddPopup.h
+    src/ConstrutorStore.cpp
+    src/ConstrutorStore.h
+    src/ConstrutorWindow.cpp
+    src/ConstrutorWindow.h
     src/MemoriesStore.cpp
     src/MemoriesStore.h
     src/MemoryAddPopup.cpp
