@@ -1,7 +1,5 @@
 #include "PensarioPanel.h"
 
-#include "ConstrutorStore.h"
-#include "ConstrutorWindow.h"
 #include "DocCache.h"
 #include "ElementsStore.h"
 #include "IconUtils.h"
@@ -76,13 +74,6 @@ void PensarioPanel::setMemoriesStore(MemoriesStore* s)
         });
 }
 
-void PensarioPanel::setConstrutorStore(ConstrutorStore* s)
-{
-    m_construtorStore = s;
-    if (m_construtorWindow)
-        m_construtorWindow->setStore(s);
-}
-
 void PensarioPanel::buildUi()
 {
     auto* root = new QVBoxLayout(this);
@@ -154,23 +145,6 @@ void PensarioPanel::buildUi()
     m_mapBtn->setIconSize(QSize(18, 18));
     connect(m_mapBtn, &QToolButton::clicked, this, &PensarioPanel::openMapPanel);
     headLay->addWidget(m_mapBtn);
-
-    // Acesso ao Construtor — abre janela dedicada de worldbuilding.
-    auto* construtorBtn = new QToolButton(m_header);
-    construtorBtn->setObjectName(QStringLiteral("pnConstrutorBtn"));
-    construtorBtn->setText(QStringLiteral("⚙"));
-    construtorBtn->setCursor(Qt::PointingHandCursor);
-    construtorBtn->setToolTip(tr("Construtor"));
-    construtorBtn->setFixedSize(28, 28);
-    connect(construtorBtn, &QToolButton::clicked, this, [this]() {
-        if (!m_construtorWindow) {
-            m_construtorWindow = new ConstrutorWindow(m_construtorStore, window());
-        }
-        m_construtorWindow->show();
-        m_construtorWindow->raise();
-        m_construtorWindow->activateWindow();
-    });
-    headLay->addWidget(construtorBtn);
 
     m_closeBtn = new QToolButton(m_header);
     m_closeBtn->setObjectName(QStringLiteral("pnClose"));
@@ -766,15 +740,26 @@ void PensarioPanel::rebuildMemories()
     filterBtn->setMenu(menu);
     m_memoriesLay->addWidget(filterBtn);
 
+    rebuildMemTagChips(all);
+
     // ---- Lista filtrada ----
     QVector<MemoriesStore::Memory> list;
     for (const MemoriesStore::Memory& m : all) {
-        if (m_memFilter == QStringLiteral("all")) list.append(m);
-        else if (m_memFilter == QStringLiteral("project")) {
-            if (m.targetType != QStringLiteral("character")) list.append(m);
-        } else if (m.targetType == QStringLiteral("character") && m.elementId == m_memFilter) {
-            list.append(m);
+        bool passesTarget = false;
+        if (m_memFilter == QStringLiteral("all")) passesTarget = true;
+        else if (m_memFilter == QStringLiteral("project"))
+            passesTarget = (m.targetType != QStringLiteral("character"));
+        else
+            passesTarget = (m.targetType == QStringLiteral("character") && m.elementId == m_memFilter);
+        if (!passesTarget) continue;
+
+        if (!m_memTagFilter.isEmpty()) {
+            bool hasTag = false;
+            for (const QString& t : m.tags)
+                if (m_memTagFilter.contains(t)) { hasTag = true; break; }
+            if (!hasTag) continue;
         }
+        list.append(m);
     }
     std::sort(list.begin(), list.end(),
               [](const MemoriesStore::Memory& a, const MemoriesStore::Memory& b) {
@@ -783,7 +768,7 @@ void PensarioPanel::rebuildMemories()
 
     if (list.isEmpty()) {
         auto* empty = new QLabel(
-            m_memFilter == QStringLiteral("all")
+            (m_memFilter == QStringLiteral("all") && m_memTagFilter.isEmpty())
                 ? tr("Nenhuma memória ainda. Selecione um trecho no editor e escolha "
                      "“Adicionar à memória…” na barra de seleção.")
                 : tr("Nenhuma memória neste filtro."),
@@ -806,14 +791,67 @@ void PensarioPanel::rebuildMemories()
             && m.targetType == QStringLiteral("character") && !m.elementId.isEmpty()) {
             header = tr("[%1]  %2").arg(charName(m.elementId), header);
         }
-        m_memoriesLay->addWidget(buildMemoryCard(m.id, header, m.text, m_memoriesInner));
+        m_memoriesLay->addWidget(buildMemoryCard(m.id, header, m.text, m.tags, m_memoriesInner));
     }
 
     m_memoriesLay->addStretch();
 }
 
+void PensarioPanel::rebuildMemTagChips(const QVector<MemoriesStore::Memory>& all)
+{
+    if (!m_memoriesLay) return;
+
+    QStringList tags;
+    for (const MemoriesStore::Memory& m : all) {
+        for (const QString& t : m.tags) {
+            bool dup = false;
+            for (const QString& seen : tags)
+                if (seen.compare(t, Qt::CaseInsensitive) == 0) { dup = true; break; }
+            if (!dup) tags.append(t);
+        }
+    }
+    if (tags.isEmpty()) return;
+    std::sort(tags.begin(), tags.end(),
+              [](const QString& a, const QString& b) { return a.compare(b, Qt::CaseInsensitive) < 0; });
+
+    auto* wrap = new QWidget(m_memoriesInner);
+    const int maxWidth = kPanelWidth - 2 * kMargin - 4;
+    const int hGap = 5, vGap = 5;
+    int x = 0, y = 0, rowH = 0;
+    for (const QString& tag : tags) {
+        auto* chip = new QPushButton(tag, wrap);
+        chip->setObjectName(QStringLiteral("pnMemTagChip"));
+        chip->setCheckable(true);
+        chip->setChecked(m_memTagFilter.contains(tag));
+        chip->setCursor(Qt::PointingHandCursor);
+        chip->setStyleSheet(QStringLiteral(R"(
+            QPushButton {
+                background: transparent; color: %1; border: 1px solid %2;
+                border-radius: 9px; padding: 2px 8px; font-size: 10px;
+            }
+            QPushButton:hover   { background: %3; color: %4; }
+            QPushButton:checked { background: %5; color: %4; border-color: %6; }
+        )").arg(Theme::textMuted(), Theme::panelBorder(), Theme::hoverOverlay(),
+                Theme::textBright(), Theme::pressedOverlay(), Theme::accentDefault()));
+        chip->adjustSize();
+        const QSize sz = chip->sizeHint();
+        if (x > 0 && x + sz.width() > maxWidth) { x = 0; y += sz.height() + vGap; }
+        chip->setGeometry(x, y, sz.width(), sz.height());
+        chip->show();
+        x += sz.width() + hGap;
+        rowH = sz.height();
+        connect(chip, &QPushButton::clicked, this, [this, tag]() {
+            if (m_memTagFilter.contains(tag)) m_memTagFilter.remove(tag);
+            else m_memTagFilter.insert(tag);
+            rebuildMemories();
+        });
+    }
+    wrap->setFixedHeight(y + rowH);
+    m_memoriesLay->addWidget(wrap);
+}
+
 QWidget* PensarioPanel::buildMemoryCard(const QString& memId, const QString& title,
-                                        const QString& text, QWidget* parent)
+                                        const QString& text, const QStringList& tags, QWidget* parent)
 {
     auto* card = new QFrame(parent);
     card->setObjectName(QStringLiteral("pnMemCard"));
@@ -851,6 +889,16 @@ QWidget* PensarioPanel::buildMemoryCard(const QString& memId, const QString& tit
     textLbl->setWordWrap(true);
     textLbl->setAttribute(Qt::WA_TransparentForMouseEvents, true);
     lay->addWidget(textLbl);
+
+    if (!tags.isEmpty()) {
+        auto* tagsLbl = new QLabel(tags.join(QStringLiteral("  ·  ")), card);
+        tagsLbl->setObjectName(QStringLiteral("pnMemCardTags"));
+        tagsLbl->setWordWrap(true);
+        tagsLbl->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        tagsLbl->setStyleSheet(QStringLiteral("color: %1; font-size: 10px; font-style: italic;")
+                                   .arg(Theme::textMuted()));
+        lay->addWidget(tagsLbl);
+    }
 
     return card;
 }

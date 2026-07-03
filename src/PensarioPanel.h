@@ -3,7 +3,9 @@
 #include "MemoriesStore.h"
 
 #include <QPoint>
+#include <QSet>
 #include <QString>
+#include <QStringList>
 #include <QWidget>
 
 class QLabel;
@@ -21,8 +23,6 @@ class NameGenerator;
 class MapPanel;
 class MapPinsStore;
 class ElementsStore;
-class ConstrutorStore;
-class ConstrutorWindow;
 struct Chapter;
 
 // Pensário — painel "auxiliar criativo" do Mira 2 (Pensarium no i18n).
@@ -48,7 +48,6 @@ public:
     void setMapPinsStore(MapPinsStore* s) { m_mapPins = s; }
     void setMemoriesStore(MemoriesStore* s);
     void setElementsStore(ElementsStore* s) { m_elements = s; }
-    void setConstrutorStore(ConstrutorStore* s);
 
 signals:
     // Pedido pra abrir um documento no editor e saltar até o trecho comentado.
@@ -93,7 +92,9 @@ private:
     QWidget* buildMemoriesPage();
     void rebuildMemories();
     QWidget* buildMemoryCard(const QString& memId, const QString& title,
-                             const QString& text, QWidget* parent);
+                             const QString& text, const QStringList& tags, QWidget* parent);
+    // Chips multi-select de tags (facet ortogonal ao filtro de destino acima).
+    void rebuildMemTagChips(const QVector<MemoriesStore::Memory>& all);
     // Clique numa memória → menu (abrir no editor / no refmenu).
     void showMemoryActions(const QString& memId, const QPoint& globalPos);
     void setNameCategory(NameCategory c);
@@ -131,8 +132,6 @@ private:
     QToolButton* m_mapBtn = nullptr;   // acesso ao painel do mapa, no header
     MapPanel* m_mapPanel = nullptr;
     MapPinsStore* m_mapPins = nullptr;
-    ConstrutorWindow* m_construtorWindow = nullptr;
-    ConstrutorStore*  m_construtorStore  = nullptr;
 
     QStackedWidget* m_stack = nullptr;
     QScrollArea* m_commentsScroll = nullptr;
@@ -169,6 +168,8 @@ private:
     QVBoxLayout* m_memoriesLay = nullptr;
     // Filtro da aba de Memórias: "all" | "project" | <elementId de personagem>.
     QString m_memFilter = QStringLiteral("all");
+    // Facet ortogonal: tags marcadas (vazio = não filtra por tag).
+    QSet<QString> m_memTagFilter;
 
     bool m_dragging = false;
     QPoint m_dragOffset;

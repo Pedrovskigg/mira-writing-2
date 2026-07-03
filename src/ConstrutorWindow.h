@@ -72,6 +72,14 @@ private:
     void rebuildTree();
     void populateTreeNode(QTreeWidgetItem* parent, const ConstrutorStore::Node& node);
     void updateSliderDisplay(int index);
+    // Carrega HTML/plain text no editor, normaliza formatação global (indent/
+    // entrelinha/margens) e sincroniza a toolbar — usado tanto pro conteúdo de
+    // um nó quanto pro resumo do sistema (sem nó selecionado).
+    void loadContentIntoEditor(const QString& content);
+    // Nenhum sistema aberto — desabilita o editor com uma mensagem explicando
+    // que é preciso selecionar/criar um sistema (distinta da mensagem de
+    // "sistema aberto, sem nó selecionado" usada pelo resumo do sistema).
+    void showNoSystemOpenState();
     void saveCurrentNodeContent();
     void updateToolbarState(const QTextCharFormat& fmt);
     QString selectedSystemId() const;

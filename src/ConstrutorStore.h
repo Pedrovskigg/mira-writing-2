@@ -28,6 +28,7 @@ public:
         QString categoryId;
         int sliderIndex = 0;
         qint64 createdAt = 0;
+        QString content; // resumo/parecer geral do sistema, sem nó selecionado
         QList<Node> nodes;
     };
 
@@ -56,6 +57,7 @@ public:
     // CRUD — sistemas
     QString addSystem(const QString& name, const QString& categoryId, int sliderIndex);
     bool updateSystem(const QString& id, const QString& name, int sliderIndex);
+    bool updateSystemContent(const QString& id, const QString& content);
     bool removeSystem(const QString& id);
 
     // CRUD — nós (parentNodeId vazio = filho direto do sistema)

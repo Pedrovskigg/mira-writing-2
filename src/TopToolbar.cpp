@@ -114,6 +114,7 @@ TopToolbar::TopToolbar(QWidget *parent)
     , fullscreenButton(makeIconButton(this))
     , refMenuButton(makeIconButton(this))
     , pensarioButton(makeIconButton(this))
+    , construtorButton(makeIconButton(this))
     , docTitleLabel(new QLabel(this))
     , fontPicker(nullptr)
     , sizeStepperEdit(nullptr)
@@ -319,6 +320,11 @@ TopToolbar::TopToolbar(QWidget *parent)
     pensarioButton->setToolTip(tr("Pensário"));
     connect(pensarioButton, &QToolButton::clicked, this, &TopToolbar::pensarioToggleRequested);
 
+    construtorButton->setObjectName(QStringLiteral("ttbSystem"));
+    bindIcon(construtorButton, QStringLiteral("construtor.svg"));
+    construtorButton->setToolTip(tr("Construtor"));
+    connect(construtorButton, &QToolButton::clicked, this, &TopToolbar::construtorToggleRequested);
+
     // ---------------- Título do documento (centro) ----------------
     docTitleLabel->setObjectName(QStringLiteral("ttbDocTitle"));
     docTitleLabel->setAlignment(Qt::AlignCenter);
@@ -331,7 +337,7 @@ TopToolbar::TopToolbar(QWidget *parent)
     // ---------------- Layout ----------------
     // Esquerda: Projeto (new/open/save) + Editor (font/size/lineHeight/indent/B/I)
     // Centro: título do documento
-    // Direita: Ferramentas + Mídia + Sistema + RefMenu
+    // Direita: Ferramentas + Mídia + Worldbuilding (Construtor/Pensário/RefMenu) + Sistema
     auto *layout = new QHBoxLayout(this);
     layout->setContentsMargins(14, 4, 14, 4);
     layout->setSpacing(6);
@@ -371,13 +377,16 @@ TopToolbar::TopToolbar(QWidget *parent)
     layout->addWidget(immersiveSoundButton);
     layout->addWidget(makeVSeparator(this));
 
+    // --- Direita: Ferramentas de worldbuilding ---
+    layout->addWidget(construtorButton);
+    layout->addWidget(pensarioButton);
+    layout->addWidget(refMenuButton);
+    layout->addWidget(makeVSeparator(this));
+
     // --- Direita: Sistema ---
     layout->addWidget(themePanelButton);
     layout->addWidget(settingsButton);
     layout->addWidget(fullscreenButton);
-    layout->addWidget(makeVSeparator(this));
-    layout->addWidget(pensarioButton);
-    layout->addWidget(refMenuButton);
 
     buildSizeMenu();
     buildSpacingMenu();

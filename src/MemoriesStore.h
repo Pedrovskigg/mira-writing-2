@@ -25,6 +25,7 @@ public:
         QString manuscriptId;
         QString drawerKey;
         QString itemId;
+        QStringList tags;       // rótulos livres definidos pelo usuário
         qint64  createdAt = 0; // ms desde epoch
     };
 
@@ -39,6 +40,9 @@ public:
     QVector<Memory> projectMemories() const;
     // Memórias de um personagem específico, mais recentes primeiro.
     QVector<Memory> characterMemories(const QString& elementId) const;
+    // Todas as tags distintas já usadas no projeto, ordenadas alfabeticamente
+    // (case-insensitive) — alimenta sugestões/autocomplete ao salvar.
+    QStringList allTags() const;
 
     QString add(const Memory& mem); // gera id/createdAt se vazios; retorna id
     bool remove(const QString& id);

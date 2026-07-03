@@ -106,6 +106,7 @@
 #include "AmbiencePanel.h"
 #include "GlossaryAddPopup.h"
 #include "ConstrutorStore.h"
+#include "ConstrutorWindow.h"
 #include "GlossaryPanel.h"
 #include "GlossaryStore.h"
 #include "MemoriesStore.h"
@@ -1151,12 +1152,14 @@ void MainWindow::setupEditor()
     memoriesStore = new MemoriesStore(this);
     memoryAddPopup = new MemoryAddPopup(this);
     connect(memoryAddPopup, &MemoryAddPopup::confirmed, this,
-            [this](const QString& name, const QString& targetType, const QString& elementId) {
+            [this](const QString& name, const QString& targetType, const QString& elementId,
+                   const QStringList& tags) {
         if (!memoriesStore || !m_pendingMemory.has_value()) return;
         MemoriesStore::Memory mem = *m_pendingMemory;
         mem.name = name;
         mem.targetType = targetType;
         mem.elementId = (targetType == QStringLiteral("character")) ? elementId : QString();
+        mem.tags = tags;
         memoriesStore->add(mem);
         const QString where = (mem.targetType == QStringLiteral("character"))
             ? tr("memória do personagem") : tr("memória do projeto");
@@ -1266,7 +1269,11 @@ void MainWindow::setupEditor()
 
     // Autoload do projeto marcado como "abrir automaticamente" (opt-in via
     // checkbox no Main Menu). Sem opt-in, o app abre direto no Main Menu.
-    {
+    // Adiado pro próximo tick: painéis como o Pensário (ex: pensarioPanel)
+    // só são construídos mais adiante neste construtor, e loadProjectFrom
+    // já dispara setMemoriesStore/etc — rodar aqui direto deixaria esses
+    // painéis com ponteiros nulos até a próxima troca de projeto.
+    QTimer::singleShot(0, this, [this]() {
         const QString autoPath = QSettings()
             .value(QStringLiteral("autoOpenProject")).toString();
         if (!autoPath.isEmpty() && QDir(autoPath).exists()) {
@@ -1275,13 +1282,12 @@ void MainWindow::setupEditor()
                 qWarning("Falha no autoload: %s", qUtf8Printable(loadErr));
             }
         }
-    }
-
-    // Sem projeto carregado? Abre o Main Menu no próximo tick — espera a
-    // window aparecer pra o dialog ter parent visível.
-    if (projectRoot.isEmpty()) {
-        QTimer::singleShot(0, this, &MainWindow::openMainMenu);
-    }
+        // Sem projeto carregado? Abre o Main Menu — espera a window
+        // aparecer pra o dialog ter parent visível.
+        if (projectRoot.isEmpty()) {
+            openMainMenu();
+        }
+    });
 
     // Ctrl+S → paulada.
     auto* saveShortcut = new QShortcut(QKeySequence::Save, this);
@@ -1572,7 +1578,6 @@ void MainWindow::setupEditor()
     pensarioPanel = new PensarioPanel(markerStore, projectModel, notesStore, container);
     pensarioPanel->setMapPinsStore(mapPinsStore);
     pensarioPanel->setElementsStore(elementsStore);
-    pensarioPanel->setConstrutorStore(construtorStore);
     pensarioPanel->setTopInset(toolbarHolder ? toolbarHolder->sizeHint().height() : 0);
     pensarioPanel->raise();
     connect(pensarioPanel, &PensarioPanel::openMarkerRequested,
@@ -1585,6 +1590,14 @@ void MainWindow::setupEditor()
     });
     connect(toolbar, &TopToolbar::pensarioToggleRequested, this, [this]() {
         if (pensarioPanel) pensarioPanel->togglePanel();
+    });
+    connect(toolbar, &TopToolbar::construtorToggleRequested, this, [this]() {
+        if (!construtorWindow) {
+            construtorWindow = new ConstrutorWindow(construtorStore, this);
+        }
+        construtorWindow->show();
+        construtorWindow->raise();
+        construtorWindow->activateWindow();
     });
     if (markerStore) {
         connect(markerStore, &MarkerStore::markersChanged, this, [this](const QString&) {
@@ -3498,7 +3511,7 @@ void MainWindow::applyProjectRoot(const QString& root)
     }
     if (construtorStore) {
         construtorStore->setProjectRoot(root);
-        if (pensarioPanel) pensarioPanel->setConstrutorStore(construtorStore);
+        if (construtorWindow) construtorWindow->setStore(construtorStore);
         construtorStore->load();
     }
     if (lousaPanel) {
@@ -5432,7 +5445,8 @@ void MainWindow::addSelectionToMemory()
     end.setPosition(cur.selectionEnd());
     const QRect r = editor->cursorRect(end);
     const QPoint gp = editor->viewport()->mapToGlobal(r.bottomLeft()) + QPoint(0, 6);
-    memoryAddPopup->presentAt(gp, text, sourceLabel, characters);
+    memoryAddPopup->presentAt(gp, text, sourceLabel, characters,
+                               memoriesStore ? memoriesStore->allTags() : QStringList());
 }
 
 void MainWindow::openMemoryInEditor(const MemoriesStore::Memory& mem)

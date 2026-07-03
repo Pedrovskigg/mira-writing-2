@@ -458,6 +458,7 @@ ConstrutorWindow::ConstrutorWindow(ConstrutorStore* store, QWidget* parent)
     setMinimumSize(750, 520);
     resize(900, 620);
     buildUi();
+    showNoSystemOpenState();
     applyPageLayout();
     applyTheme();
     connect(Theme::Manager::instance(), &Theme::Manager::themeChanged,
@@ -947,7 +948,6 @@ void ConstrutorWindow::buildUi()
     m_contentEdit = new QTextEdit();
     m_contentEdit->setObjectName(QStringLiteral("ctrContentEdit"));
     m_contentEdit->setFrameShape(QFrame::NoFrame);
-    m_contentEdit->setPlaceholderText(tr("Escreva aqui…"));
     m_contentEdit->setEnabled(false);
     m_contentEdit->setAcceptRichText(true);
     m_contentEdit->document()->setDefaultStyleSheet(
@@ -1134,8 +1134,10 @@ void ConstrutorWindow::rebuildSystemsList()
 
     if (m_systemsList->currentItem() == nullptr && !m_currentSystemId.isEmpty()) {
         m_currentSystemId.clear();
+        m_currentNodeId.clear();
         m_sysDetail->setVisible(false);
         m_tree->setVisible(false);
+        showNoSystemOpenState();
     }
 }
 
@@ -1152,6 +1154,7 @@ void ConstrutorWindow::onSystemSelected()
         m_currentNodeId.clear();
         m_sysDetail->setVisible(false);
         m_tree->setVisible(false);
+        showNoSystemOpenState();
         return;
     }
     if (id == m_currentSystemId) return;
@@ -1192,10 +1195,10 @@ void ConstrutorWindow::loadSystem(const QString& id)
     // Árvore
     rebuildTree();
 
-    // Editor
-    hideOverlay();
-    m_contentEdit->setEnabled(false);
-    m_contentEdit->clear();
+    // Editor — ainda sem nó selecionado: mostra o resumo/parecer do sistema.
+    m_contentEdit->setPlaceholderText(
+        tr("Escreva um resumo, parecer ou introdução deste sistema…"));
+    loadContentIntoEditor(sys->content);
     m_deleteNodeBtn->setEnabled(false);
 }
 
@@ -1256,53 +1259,28 @@ void ConstrutorWindow::populateTreeNode(QTreeWidgetItem* parent,
         populateTreeNode(item, child);
 }
 
-void ConstrutorWindow::onTreeSelectionChanged()
+void ConstrutorWindow::showNoSystemOpenState()
 {
-    if (m_rebuilding) return;
-    saveCurrentNodeContent();
+    m_saveTimer->stop();
+    hideOverlay();
+    m_contentEdit->blockSignals(true);
+    m_contentEdit->clear();
+    m_contentEdit->setEnabled(false);
+    m_contentEdit->setPlaceholderText(
+        tr("Nenhum sistema aberto. Selecione um sistema à esquerda ou crie um novo para começar."));
+    m_contentEdit->blockSignals(false);
+}
 
-    const QString nodeId = selectedNodeId();
-    m_currentNodeId = nodeId;
-
-    if (nodeId.isEmpty()) {
-        hideOverlay();
-        m_contentEdit->setEnabled(false);
-        m_contentEdit->clear();
-        m_deleteNodeBtn->setEnabled(false);
-        return;
-    }
-
-    m_deleteNodeBtn->setEnabled(true);
-
-    const ConstrutorStore::System* sys = m_store ? m_store->system(m_currentSystemId) : nullptr;
-    if (!sys) return;
-
-    // Busca o nó na store para carregar o conteúdo
-    // (findNode é privado, mas podemos usar updateNode com dados iguais para obter)
-    // Aqui fazemos a busca diretamente via store const
-    // Usamos um helper local recursivo
-    std::function<const ConstrutorStore::Node*(const QList<ConstrutorStore::Node>&, const QString&)>
-        findConst = [&](const QList<ConstrutorStore::Node>& nodes,
-                        const QString& id) -> const ConstrutorStore::Node* {
-        for (const auto& n : nodes) {
-            if (n.id == id) return &n;
-            const auto* c = findConst(n.children, id);
-            if (c) return c;
-        }
-        return nullptr;
-    };
-
-    const ConstrutorStore::Node* node = findConst(sys->nodes, nodeId);
-    if (!node) return;
-
+void ConstrutorWindow::loadContentIntoEditor(const QString& content)
+{
     hideOverlay();
     m_selectedImageCursor = QTextCursor();
     m_contentEdit->blockSignals(true);
     m_contentEdit->setEnabled(true);
-    if (node->content.startsWith(QLatin1String("<!DOCTYPE")))
-        m_contentEdit->setHtml(node->content);
+    if (content.startsWith(QLatin1String("<!DOCTYPE")))
+        m_contentEdit->setHtml(content);
     else
-        m_contentEdit->setPlainText(node->content);
+        m_contentEdit->setPlainText(content);
     m_contentEdit->moveCursor(QTextCursor::Start);
 
     // Normaliza indentação, entrelinha e espaçamento de parágrafo pelas
@@ -1328,6 +1306,56 @@ void ConstrutorWindow::onTreeSelectionChanged()
     updateFocusedBlock();
 
     updateToolbarState(m_contentEdit->currentCharFormat());
+}
+
+void ConstrutorWindow::onTreeSelectionChanged()
+{
+    if (m_rebuilding) return;
+    saveCurrentNodeContent();
+
+    const QString nodeId = selectedNodeId();
+    m_currentNodeId = nodeId;
+
+    const ConstrutorStore::System* sys = m_store ? m_store->system(m_currentSystemId) : nullptr;
+
+    if (nodeId.isEmpty()) {
+        // Sem nó selecionado: volta pro resumo/parecer geral do sistema.
+        m_deleteNodeBtn->setEnabled(false);
+        if (!sys) {
+            hideOverlay();
+            m_contentEdit->setEnabled(false);
+            m_contentEdit->clear();
+            return;
+        }
+        m_contentEdit->setPlaceholderText(
+            tr("Escreva um resumo, parecer ou introdução deste sistema…"));
+        loadContentIntoEditor(sys->content);
+        return;
+    }
+
+    m_deleteNodeBtn->setEnabled(true);
+    if (!sys) return;
+
+    // Busca o nó na store para carregar o conteúdo
+    // (findNode é privado, mas podemos usar updateNode com dados iguais para obter)
+    // Aqui fazemos a busca diretamente via store const
+    // Usamos um helper local recursivo
+    std::function<const ConstrutorStore::Node*(const QList<ConstrutorStore::Node>&, const QString&)>
+        findConst = [&](const QList<ConstrutorStore::Node>& nodes,
+                        const QString& id) -> const ConstrutorStore::Node* {
+        for (const auto& n : nodes) {
+            if (n.id == id) return &n;
+            const auto* c = findConst(n.children, id);
+            if (c) return c;
+        }
+        return nullptr;
+    };
+
+    const ConstrutorStore::Node* node = findConst(sys->nodes, nodeId);
+    if (!node) return;
+
+    m_contentEdit->setPlaceholderText(tr("Escreva aqui…"));
+    loadContentIntoEditor(node->content);
 }
 
 void ConstrutorWindow::onTreeItemChanged(QTreeWidgetItem* item, int column)
@@ -1431,11 +1459,20 @@ void ConstrutorWindow::onNodeContentChanged()
 void ConstrutorWindow::saveCurrentNodeContent()
 {
     m_saveTimer->stop();
-    if (!m_store || m_currentSystemId.isEmpty() || m_currentNodeId.isEmpty()) return;
+    if (!m_store || m_currentSystemId.isEmpty()) return;
     if (!m_contentEdit->isEnabled()) return;
 
     const ConstrutorStore::System* sys = m_store->system(m_currentSystemId);
     if (!sys) return;
+
+    const QString newContent = m_contentEdit->toHtml();
+
+    if (m_currentNodeId.isEmpty()) {
+        // Sem nó selecionado: o texto pertence ao resumo do sistema.
+        if (sys->content == newContent) return;
+        m_store->updateSystemContent(m_currentSystemId, newContent);
+        return;
+    }
 
     std::function<const ConstrutorStore::Node*(const QList<ConstrutorStore::Node>&)>
         findConst = [&](const QList<ConstrutorStore::Node>& nodes)
@@ -1451,7 +1488,6 @@ void ConstrutorWindow::saveCurrentNodeContent()
     const ConstrutorStore::Node* node = findConst(sys->nodes);
     if (!node) return;
 
-    const QString newContent = m_contentEdit->toHtml();
     if (node->content == newContent) return;
     m_store->updateNode(m_currentSystemId, m_currentNodeId, node->name, newContent);
 }
@@ -1525,6 +1561,7 @@ void ConstrutorWindow::onDeleteSystem()
     m_currentNodeId.clear();
     m_sysDetail->setVisible(false);
     m_tree->setVisible(false);
+    showNoSystemOpenState();
     m_store->removeSystem(sys->id);
 }
 
@@ -1564,10 +1601,19 @@ void ConstrutorWindow::onDeleteNode()
     m_saveTimer->stop();
     const QString nodeId = m_currentNodeId;
     m_currentNodeId.clear();
-    hideOverlay();
-    m_contentEdit->setEnabled(false);
-    m_contentEdit->clear();
     m_deleteNodeBtn->setEnabled(false);
+
+    // Volta pro resumo do sistema, já que nenhum nó fica selecionado.
+    const ConstrutorStore::System* sys = m_store->system(m_currentSystemId);
+    if (sys) {
+        m_contentEdit->setPlaceholderText(
+            tr("Escreva um resumo, parecer ou introdução deste sistema…"));
+        loadContentIntoEditor(sys->content);
+    } else {
+        hideOverlay();
+        m_contentEdit->setEnabled(false);
+        m_contentEdit->clear();
+    }
     m_store->removeNode(m_currentSystemId, nodeId);
 }
 

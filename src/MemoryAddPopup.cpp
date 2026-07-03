@@ -89,6 +89,18 @@ void MemoryAddPopup::buildUi()
     connect(m_charCombo, &QComboBox::currentIndexChanged, this, [this](int) { refreshOkEnabled(); });
     root->addWidget(m_charCombo);
 
+    auto* tagsLabel = new QLabel(tr("Tags (opcional)"), this);
+    tagsLabel->setObjectName(QStringLiteral("memAddFieldLabel"));
+    root->addWidget(tagsLabel);
+    m_tagsEdit = new QLineEdit(this);
+    m_tagsEdit->setObjectName(QStringLiteral("memAddName"));
+    m_tagsEdit->setPlaceholderText(tr("Ex: conflito, flashback"));
+    root->addWidget(m_tagsEdit);
+
+    m_tagSuggestWrap = new QWidget(this);
+    m_tagSuggestWrap->setFixedHeight(0);
+    root->addWidget(m_tagSuggestWrap);
+
     auto* row = new QHBoxLayout();
     row->addStretch(1);
     m_cancelBtn = new QPushButton(tr("Cancelar"), this);
@@ -144,6 +156,10 @@ void MemoryAddPopup::applyTheme()
         "QPushButton:disabled { color: %4; border-color: %2; }"
         "QPushButton#memAddOk { color: %3; border-color: %8; }"
         "QPushButton#memAddOk:hover { background: %6; }"
+        "QPushButton#memAddTagChip {"
+        "  padding: 2px 8px; border-radius: 9px; font-size: 10px; color: %4;"
+        "}"
+        "QPushButton#memAddTagChip:hover { background: %6; color: %3; border-color: %8; }"
     ).arg(Theme::panelBackground(),   // 1
           Theme::panelBorder(),       // 2
           Theme::textPrimary(),       // 3
@@ -163,6 +179,49 @@ void MemoryAddPopup::refreshCharVisibility()
     adjustSize();
 }
 
+void MemoryAddPopup::rebuildTagSuggestions()
+{
+    if (!m_tagSuggestWrap) return;
+    for (auto* w : m_tagSuggestWrap->findChildren<QPushButton*>(QString(), Qt::FindDirectChildrenOnly))
+        w->deleteLater();
+
+    if (m_existingTags.isEmpty()) {
+        m_tagSuggestWrap->setFixedHeight(0);
+        return;
+    }
+
+    const int maxWidth = 316; // largura útil do popup (340 - margens)
+    const int hGap = 5, vGap = 5;
+    int x = 0, y = 0, rowH = 0;
+    for (const QString& tag : m_existingTags) {
+        auto* btn = new QPushButton(tag, m_tagSuggestWrap);
+        btn->setObjectName(QStringLiteral("memAddTagChip"));
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->adjustSize();
+        const QSize sz = btn->sizeHint();
+        if (x > 0 && x + sz.width() > maxWidth) { x = 0; y += sz.height() + vGap; }
+        btn->setGeometry(x, y, sz.width(), sz.height());
+        btn->show();
+        x += sz.width() + hGap;
+        rowH = sz.height();
+        connect(btn, &QPushButton::clicked, this, [this, tag]() { appendTag(tag); });
+    }
+    m_tagSuggestWrap->setFixedHeight(y + rowH);
+}
+
+void MemoryAddPopup::appendTag(const QString& tag)
+{
+    if (!m_tagsEdit) return;
+    QStringList parts = m_tagsEdit->text().split(QLatin1Char(','), Qt::SkipEmptyParts);
+    for (QString& p : parts) p = p.trimmed();
+    for (const QString& p : parts)
+        if (p.compare(tag, Qt::CaseInsensitive) == 0) return; // já presente
+    parts.append(tag);
+    m_tagsEdit->setText(parts.join(QStringLiteral(", ")));
+    m_tagsEdit->setFocus();
+    m_tagsEdit->end(false);
+}
+
 void MemoryAddPopup::refreshOkEnabled()
 {
     if (!m_okBtn) return;
@@ -175,12 +234,16 @@ void MemoryAddPopup::refreshOkEnabled()
 void MemoryAddPopup::presentAt(const QPoint& globalAnchor,
                                const QString& selectedText,
                                const QString& sourceLabel,
-                               const QVector<QPair<QString, QString>>& characters)
+                               const QVector<QPair<QString, QString>>& characters,
+                               const QStringList& existingTags)
 {
     if (m_nameEdit) {
         m_nameEdit->clear();
         m_nameEdit->setFocus();
     }
+    if (m_tagsEdit) m_tagsEdit->clear();
+    m_existingTags = existingTags;
+    rebuildTagSuggestions();
     if (m_sourceLabel) {
         if (sourceLabel.isEmpty()) {
             m_sourceLabel->setVisible(false);
@@ -238,8 +301,15 @@ void MemoryAddPopup::emitConfirm()
     QString elementId;
     if (targetType == QStringLiteral("character") && m_charCombo)
         elementId = m_charCombo->currentData().toString();
+    QStringList tags;
+    if (m_tagsEdit) {
+        for (QString tag : m_tagsEdit->text().split(QLatin1Char(','), Qt::SkipEmptyParts)) {
+            tag = tag.trimmed();
+            if (!tag.isEmpty() && !tags.contains(tag, Qt::CaseInsensitive)) tags.append(tag);
+        }
+    }
     hide();
-    emit confirmed(name, targetType, elementId);
+    emit confirmed(name, targetType, elementId, tags);
 }
 
 bool MemoryAddPopup::eventFilter(QObject* /*watched*/, QEvent* event)

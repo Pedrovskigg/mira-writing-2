@@ -296,6 +296,7 @@ bool ConstrutorStore::load()
         sys.categoryId  = o.value(QStringLiteral("categoryId")).toString();
         sys.sliderIndex = o.value(QStringLiteral("sliderIndex")).toInt(0);
         sys.createdAt   = o.value(QStringLiteral("createdAt")).toVariant().toLongLong();
+        sys.content     = o.value(QStringLiteral("content")).toString();
         for (const auto& nv : o.value(QStringLiteral("nodes")).toArray())
             sys.nodes.append(nodeFromJson(nv.toObject()));
         if (!sys.id.isEmpty())
@@ -317,6 +318,8 @@ bool ConstrutorStore::save() const
         o.insert(QStringLiteral("categoryId"),   sys.categoryId);
         o.insert(QStringLiteral("sliderIndex"),  sys.sliderIndex);
         o.insert(QStringLiteral("createdAt"),    sys.createdAt);
+        if (!sys.content.isEmpty())
+            o.insert(QStringLiteral("content"), sys.content);
         QJsonArray nodes;
         for (const Node& n : sys.nodes)
             nodes.append(nodeToJson(n));
@@ -384,6 +387,16 @@ bool ConstrutorStore::updateSystem(const QString& id, const QString& name, int s
     if (!sys) return false;
     sys->name        = name;
     sys->sliderIndex = sliderIndex;
+    save();
+    emit changed();
+    return true;
+}
+
+bool ConstrutorStore::updateSystemContent(const QString& id, const QString& content)
+{
+    System* sys = findSystem(id);
+    if (!sys || sys->content == content) return false;
+    sys->content = content;
     save();
     emit changed();
     return true;

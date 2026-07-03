@@ -61,6 +61,10 @@ bool MemoriesStore::load()
         m.manuscriptId = o.value(QStringLiteral("manuscriptId")).toString();
         m.drawerKey    = o.value(QStringLiteral("drawerKey")).toString();
         m.itemId       = o.value(QStringLiteral("itemId")).toString();
+        for (const auto& t : o.value(QStringLiteral("tags")).toArray()) {
+            const QString tag = t.toString().trimmed();
+            if (!tag.isEmpty()) m.tags.append(tag);
+        }
         m.createdAt    = qint64(o.value(QStringLiteral("createdAt")).toDouble());
         if (m.id.isEmpty() || m.text.isEmpty()) continue;
         if (m.targetType.isEmpty()) m.targetType = QStringLiteral("project");
@@ -90,6 +94,7 @@ bool MemoriesStore::save() const
         o.insert(QStringLiteral("manuscriptId"), m.manuscriptId);
         o.insert(QStringLiteral("drawerKey"), m.drawerKey);
         o.insert(QStringLiteral("itemId"), m.itemId);
+        o.insert(QStringLiteral("tags"), QJsonArray::fromStringList(m.tags));
         o.insert(QStringLiteral("createdAt"), double(m.createdAt));
         arr.append(o);
     }
@@ -119,6 +124,22 @@ QVector<MemoriesStore::Memory> MemoriesStore::characterMemories(const QString& e
             out.append(m);
     std::sort(out.begin(), out.end(),
               [](const Memory& a, const Memory& b) { return a.createdAt > b.createdAt; });
+    return out;
+}
+
+QStringList MemoriesStore::allTags() const
+{
+    QStringList out;
+    for (const Memory& m : m_memories) {
+        for (const QString& tag : m.tags) {
+            bool dup = false;
+            for (const QString& seen : out)
+                if (seen.compare(tag, Qt::CaseInsensitive) == 0) { dup = true; break; }
+            if (!dup) out.append(tag);
+        }
+    }
+    std::sort(out.begin(), out.end(),
+              [](const QString& a, const QString& b) { return a.compare(b, Qt::CaseInsensitive) < 0; });
     return out;
 }
 
