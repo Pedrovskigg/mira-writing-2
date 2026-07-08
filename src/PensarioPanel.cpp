@@ -74,6 +74,16 @@ void PensarioPanel::setMemoriesStore(MemoriesStore* s)
         });
 }
 
+void PensarioPanel::setDialogueStore(DialogueStore* s)
+{
+    if (m_dialogues == s) return;
+    m_dialogues = s;
+    if (m_dialogues)
+        connect(m_dialogues, &DialogueStore::changed, this, [this]() {
+            if (m_tab == Tab::Dialogues) rebuildDialogues();
+        });
+}
+
 void PensarioPanel::buildUi()
 {
     auto* root = new QVBoxLayout(this);
@@ -174,13 +184,15 @@ void PensarioPanel::buildUi()
         tabsLay->addWidget(b);
         return b;
     };
-    m_tabComments = makeTab(tr("Comentários"));
-    m_tabNotes    = makeTab(tr("Notas"));
-    m_tabMemories = makeTab(tr("Memórias"));
+    m_tabComments  = makeTab(tr("Comentários"));
+    m_tabNotes     = makeTab(tr("Notas"));
+    m_tabMemories  = makeTab(tr("Memórias"));
+    m_tabDialogues = makeTab(tr("Diálogos"));
 
-    connect(m_tabComments, &QToolButton::clicked, this, [this]() { selectTab(Tab::Comments); });
-    connect(m_tabNotes,    &QToolButton::clicked, this, [this]() { selectTab(Tab::Notes); });
-    connect(m_tabMemories, &QToolButton::clicked, this, [this]() { selectTab(Tab::Memories); });
+    connect(m_tabComments,  &QToolButton::clicked, this, [this]() { selectTab(Tab::Comments); });
+    connect(m_tabNotes,     &QToolButton::clicked, this, [this]() { selectTab(Tab::Notes); });
+    connect(m_tabMemories,  &QToolButton::clicked, this, [this]() { selectTab(Tab::Memories); });
+    connect(m_tabDialogues, &QToolButton::clicked, this, [this]() { selectTab(Tab::Dialogues); });
 
     root->addWidget(tabsRow);
 
@@ -209,6 +221,9 @@ void PensarioPanel::buildUi()
 
     // Página 3: Memórias do projeto (funcional)
     m_stack->addWidget(buildMemoriesPage());
+
+    // Página 4: Diálogos detectados automaticamente (funcional)
+    m_stack->addWidget(buildDialoguesPage());
 
     root->addWidget(m_stack, 1);
 
@@ -930,18 +945,264 @@ void PensarioPanel::showMemoryActions(const QString& memId, const QPoint& global
     }
 }
 
+QWidget* PensarioPanel::buildDialoguesPage()
+{
+    auto* page = new QWidget(m_stack);
+    auto* lay = new QVBoxLayout(page);
+    lay->setContentsMargins(12, 10, 12, 12);
+    lay->setSpacing(8);
+
+    m_dialoguesScroll = new QScrollArea(page);
+    m_dialoguesScroll->setWidgetResizable(true);
+    m_dialoguesScroll->setFrameShape(QFrame::NoFrame);
+    m_dialoguesScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_dialoguesInner = new QWidget(m_dialoguesScroll);
+    m_dialoguesLay = new QVBoxLayout(m_dialoguesInner);
+    m_dialoguesLay->setContentsMargins(0, 0, 0, 0);
+    m_dialoguesLay->setSpacing(8);
+    m_dialoguesLay->addStretch();
+    m_dialoguesScroll->setWidget(m_dialoguesInner);
+    m_dialoguesScroll->viewport()->setStyleSheet(QStringLiteral("background: transparent;"));
+    lay->addWidget(m_dialoguesScroll, 1);
+
+    return page;
+}
+
+void PensarioPanel::rebuildDialogues()
+{
+    if (!m_dialoguesLay) return;
+
+    while (m_dialoguesLay->count() > 0) {
+        QLayoutItem* item = m_dialoguesLay->takeAt(0);
+        if (QWidget* w = item->widget()) w->deleteLater();
+        delete item;
+    }
+
+    const QVector<DialogueStore::Dialogue> all =
+        m_dialogues ? m_dialogues->dialogues() : QVector<DialogueStore::Dialogue>();
+
+    auto charName = [this](const QString& elId) -> QString {
+        if (m_elements) {
+            if (const Element* el = m_elements->findElement(elId))
+                if (!el->name.isEmpty()) return el->name;
+        }
+        return tr("Personagem");
+    };
+
+    // ---- Botão de filtro (quem fala) ----
+    QString filterLabel = tr("Todos");
+    if (m_dialogueFilter != QStringLiteral("all")) filterLabel = charName(m_dialogueFilter);
+
+    auto* filterBtn = new QToolButton(m_dialoguesInner);
+    filterBtn->setObjectName(QStringLiteral("pnMemFilterBtn"));
+    filterBtn->setCursor(Qt::PointingHandCursor);
+    filterBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    filterBtn->setText(tr("Fala: %1  ▾").arg(filterLabel));
+    filterBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    filterBtn->setPopupMode(QToolButton::InstantPopup);
+
+    auto* menu = new QMenu(filterBtn);
+    menu->setStyleSheet(QStringLiteral(R"(
+        QMenu { background: %1; color: %2; border: 1px solid %3; border-radius: 6px; padding: 4px; }
+        QMenu::item { padding: 5px 18px; border-radius: 4px; }
+        QMenu::item:selected { background: %4; color: %5; }
+        QMenu::separator { height: 1px; background: %3; margin: 4px 6px; }
+    )").arg(Theme::panelBackground(), Theme::textPrimary(), Theme::panelBorder(),
+            Theme::accentInfoSoft(), Theme::textBright()));
+    auto addFilter = [this, menu](const QString& label, const QString& value) {
+        QAction* a = menu->addAction(label);
+        a->setCheckable(true);
+        a->setChecked(m_dialogueFilter == value);
+        connect(a, &QAction::triggered, this, [this, value]() {
+            m_dialogueFilter = value;
+            rebuildDialogues();
+        });
+    };
+    addFilter(tr("Todos os diálogos"), QStringLiteral("all"));
+    QStringList seenSpeakers;
+    for (const DialogueStore::Dialogue& d : all) {
+        if (!d.characterId.isEmpty() && !seenSpeakers.contains(d.characterId))
+            seenSpeakers.append(d.characterId);
+    }
+    if (!seenSpeakers.isEmpty()) {
+        menu->addSeparator();
+        for (const QString& elId : seenSpeakers)
+            addFilter(tr("Falas de %1").arg(charName(elId)), elId);
+    }
+    filterBtn->setMenu(menu);
+    m_dialoguesLay->addWidget(filterBtn);
+
+    rebuildDialoguePresenceChips(all);
+
+    // ---- Lista filtrada ----
+    QVector<DialogueStore::Dialogue> list;
+    for (const DialogueStore::Dialogue& d : all) {
+        if (m_dialogueFilter != QStringLiteral("all") && d.characterId != m_dialogueFilter) continue;
+
+        if (!m_dialoguePresenceFilter.isEmpty()) {
+            // A cena (capítulo+índice) precisa ter fala de TODOS os
+            // personagens marcados nos chips, além do falante desta linha —
+            // proxy de "presença confirmada" usando os próprios diálogos já
+            // salvos (mais barato que reescanear o texto da cena).
+            bool ok = true;
+            for (const QString& reqId : m_dialoguePresenceFilter) {
+                bool present = false;
+                for (const DialogueStore::Dialogue& other : all) {
+                    if (other.chapterId == d.chapterId && other.sceneIndex == d.sceneIndex
+                        && other.characterId == reqId) { present = true; break; }
+                }
+                if (!present) { ok = false; break; }
+            }
+            if (!ok) continue;
+        }
+        list.append(d);
+    }
+    std::sort(list.begin(), list.end(),
+              [](const DialogueStore::Dialogue& a, const DialogueStore::Dialogue& b) {
+                  return a.createdAt > b.createdAt;
+              });
+
+    if (list.isEmpty()) {
+        auto* empty = new QLabel(
+            (m_dialogueFilter == QStringLiteral("all") && m_dialoguePresenceFilter.isEmpty())
+                ? tr("Nenhum diálogo detectado ainda. Escreva falas com travessão "
+                     "(“— Não vou, disse Maria.”) e espere alguns segundos.")
+                : tr("Nenhum diálogo neste filtro."),
+            m_dialoguesInner);
+        empty->setObjectName(QStringLiteral("pnEmpty"));
+        empty->setAlignment(Qt::AlignCenter);
+        empty->setWordWrap(true);
+        m_dialoguesLay->addWidget(empty);
+        m_dialoguesLay->addStretch();
+        return;
+    }
+
+    for (const DialogueStore::Dialogue& d : list) {
+        const QString title = m_dialogueFilter == QStringLiteral("all")
+            ? tr("%1  ·  %2").arg(charName(d.characterId), d.sourceLabel)
+            : d.sourceLabel;
+        m_dialoguesLay->addWidget(buildDialogueCard(d, title, m_dialoguesInner));
+    }
+
+    m_dialoguesLay->addStretch();
+}
+
+void PensarioPanel::rebuildDialoguePresenceChips(const QVector<DialogueStore::Dialogue>& all)
+{
+    if (!m_dialoguesLay) return;
+
+    QStringList speakerIds;
+    for (const DialogueStore::Dialogue& d : all) {
+        if (!d.characterId.isEmpty() && !speakerIds.contains(d.characterId))
+            speakerIds.append(d.characterId);
+    }
+    if (speakerIds.size() < 2) return; // não faz sentido cruzar com só 1 personagem falando
+
+    auto charName = [this](const QString& elId) -> QString {
+        if (m_elements) {
+            if (const Element* el = m_elements->findElement(elId))
+                if (!el->name.isEmpty()) return el->name;
+        }
+        return tr("Personagem");
+    };
+    std::sort(speakerIds.begin(), speakerIds.end(), [&](const QString& a, const QString& b) {
+        return charName(a).compare(charName(b), Qt::CaseInsensitive) < 0;
+    });
+
+    auto* wrap = new QWidget(m_dialoguesInner);
+    const int maxWidth = kPanelWidth - 2 * kMargin - 4;
+    const int hGap = 5, vGap = 5;
+    int x = 0, y = 0, rowH = 0;
+    for (const QString& elId : speakerIds) {
+        auto* chip = new QPushButton(tr("também fala: %1").arg(charName(elId)), wrap);
+        chip->setObjectName(QStringLiteral("pnMemTagChip"));
+        chip->setCheckable(true);
+        chip->setChecked(m_dialoguePresenceFilter.contains(elId));
+        chip->setCursor(Qt::PointingHandCursor);
+        chip->setStyleSheet(QStringLiteral(R"(
+            QPushButton {
+                background: transparent; color: %1; border: 1px solid %2;
+                border-radius: 9px; padding: 2px 8px; font-size: 10px;
+            }
+            QPushButton:hover   { background: %3; color: %4; }
+            QPushButton:checked { background: %5; color: %4; border-color: %6; }
+        )").arg(Theme::textMuted(), Theme::panelBorder(), Theme::hoverOverlay(),
+                Theme::textBright(), Theme::pressedOverlay(), Theme::accentDefault()));
+        chip->adjustSize();
+        const QSize sz = chip->sizeHint();
+        if (x > 0 && x + sz.width() > maxWidth) { x = 0; y += sz.height() + vGap; }
+        chip->setGeometry(x, y, sz.width(), sz.height());
+        chip->show();
+        x += sz.width() + hGap;
+        rowH = sz.height();
+        connect(chip, &QPushButton::clicked, this, [this, elId]() {
+            if (m_dialoguePresenceFilter.contains(elId)) m_dialoguePresenceFilter.remove(elId);
+            else m_dialoguePresenceFilter.insert(elId);
+            rebuildDialogues();
+        });
+    }
+    wrap->setFixedHeight(y + rowH);
+    m_dialoguesLay->addWidget(wrap);
+}
+
+QWidget* PensarioPanel::buildDialogueCard(const DialogueStore::Dialogue& dlg, const QString& speakerName,
+                                          QWidget* parent)
+{
+    auto* card = new QFrame(parent);
+    card->setObjectName(QStringLiteral("pnMemCard"));
+    card->setCursor(Qt::PointingHandCursor);
+    card->setProperty("dlgId", dlg.id);
+    card->installEventFilter(this);
+
+    auto* lay = new QVBoxLayout(card);
+    lay->setContentsMargins(12, 9, 10, 10);
+    lay->setSpacing(4);
+
+    auto* topRow = new QHBoxLayout();
+    topRow->setContentsMargins(0, 0, 0, 0);
+    topRow->setSpacing(4);
+    auto* titleLbl = new QLabel(speakerName, card);
+    titleLbl->setObjectName(QStringLiteral("pnMemCardTitle"));
+    titleLbl->setWordWrap(true);
+    titleLbl->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    topRow->addWidget(titleLbl, 1);
+
+    auto* delBtn = new QToolButton(card);
+    delBtn->setObjectName(QStringLiteral("pnMemDelete"));
+    delBtn->setText(QStringLiteral("×"));
+    delBtn->setCursor(Qt::PointingHandCursor);
+    delBtn->setToolTip(tr("Excluir diálogo"));
+    delBtn->setFixedSize(20, 20);
+    const QString dlgId = dlg.id;
+    connect(delBtn, &QToolButton::clicked, this, [this, dlgId]() {
+        if (m_dialogues) m_dialogues->remove(dlgId);
+    });
+    topRow->addWidget(delBtn, 0, Qt::AlignTop);
+    lay->addLayout(topRow);
+
+    auto* textLbl = new QLabel(QStringLiteral("“%1”").arg(dlg.text.trimmed()), card);
+    textLbl->setObjectName(QStringLiteral("pnMemCardQuote"));
+    textLbl->setWordWrap(true);
+    textLbl->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    lay->addWidget(textLbl);
+
+    return card;
+}
+
 void PensarioPanel::selectTab(Tab tab)
 {
     m_tab = tab;
     m_tabComments->setChecked(tab == Tab::Comments);
     m_tabNotes->setChecked(tab == Tab::Notes);
     if (m_tabMemories) m_tabMemories->setChecked(tab == Tab::Memories);
+    if (m_tabDialogues) m_tabDialogues->setChecked(tab == Tab::Dialogues);
     if (m_namesBtn) m_namesBtn->setChecked(tab == Tab::Names);
     m_stack->setCurrentIndex(static_cast<int>(tab));
     if (m_sortBtn) m_sortBtn->setVisible(tab == Tab::Comments);
     if (tab == Tab::Comments) rebuildComments();
     else if (tab == Tab::Notes) rebuildNotes();
     else if (tab == Tab::Memories) rebuildMemories();
+    else if (tab == Tab::Dialogues) rebuildDialogues();
 }
 
 void PensarioPanel::rebuildComments()
@@ -1208,6 +1469,25 @@ bool PensarioPanel::eventFilter(QObject* watched, QEvent* event)
                 auto* me = static_cast<QMouseEvent*>(event);
                 if (me->button() == Qt::LeftButton && w->rect().contains(me->position().toPoint())) {
                     showMemoryActions(memId, me->globalPosition().toPoint());
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Card de diálogo: clicar abre a cena de origem no editor (sem menu —
+    // só há uma ação possível nesta v1).
+    if (event->type() == QEvent::MouseButtonRelease) {
+        if (auto* w = qobject_cast<QWidget*>(watched)) {
+            const QString dlgId = w->property("dlgId").toString();
+            if (!dlgId.isEmpty()) {
+                auto* me = static_cast<QMouseEvent*>(event);
+                if (me->button() == Qt::LeftButton && w->rect().contains(me->position().toPoint())) {
+                    if (m_dialogues) {
+                        for (const DialogueStore::Dialogue& d : m_dialogues->dialogues()) {
+                            if (d.id == dlgId) { emit openDialogueInEditorRequested(d); break; }
+                        }
+                    }
                     return true;
                 }
             }

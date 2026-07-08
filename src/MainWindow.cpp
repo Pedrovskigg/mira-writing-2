@@ -53,6 +53,7 @@
 #include <QHash>
 #include <QUrl>
 #include <QWidget>
+#include <QDateTime>
 #include <QFile>
 #include <QImage>
 #include <QImageReader>
@@ -79,6 +80,7 @@
 #include "BondPopup.h"
 #include "BondViewPanel.h"
 #include "CharacterDetector.h"
+#include "DialogueDetector.h"
 #include "DocCache.h"
 #include "DrawerCreateDialog.h"
 #include "DrawerListPanel.h"
@@ -972,6 +974,82 @@ void MainWindow::setupEditor()
         detectionNeverIds.insert(elementId);
     });
 
+    // Diálogos: motor de atribuição roda no mesmo debounce da presença, mas
+    // como timer irmão independente — scanConfidentDialogues já é uma
+    // passada única e barata, não precisa do lote incremental acima.
+    dialogueStore = new DialogueStore(this);
+
+    dialogueDetectionTimer = new QTimer(this);
+    dialogueDetectionTimer->setSingleShot(true);
+    dialogueDetectionTimer->setInterval(3000);
+
+    connect(dialogueDetectionTimer, &QTimer::timeout, this, [this]() {
+        if (!detectionEnabled || !dialogueStore || !elementsStore || !editorHost
+            || !editor || !projectModel) return;
+        const EditorHost::ViewMode vm = editorHost->viewMode();
+        if (vm.type != EditorHost::ChapterDoc && vm.type != EditorHost::SceneDoc) return;
+
+        const Chapter* ch = projectModel->findChapter(vm.chapterId);
+        if (!ch) return;
+        const QString chTitle = !ch->title.isEmpty() ? ch->title : tr("Capítulo");
+
+        const QList<Element> allElements = elementsStore->elements();
+        const Element* narrator = nullptr;
+        for (const Element& e : allElements) {
+            if (e.narrator) { narrator = &e; break; }
+        }
+        const QVector<DialogueScannerToken> tokens = DialogueDetector::buildScannerTokens(allElements);
+        if (tokens.isEmpty()) return;
+
+        struct Segment { QString plainText; int sceneIndex; QString sourceLabel; };
+        QVector<Segment> segments;
+
+        if (vm.type == EditorHost::SceneDoc) {
+            // Já sabemos exatamente qual cena — não precisa reconstituir por <hr>.
+            const Scene* sc = projectModel->findScene(vm.chapterId, vm.sceneIndex);
+            const QString scTitle = (sc && !sc->title.isEmpty())
+                ? sc->title : tr("Cena %1").arg(vm.sceneIndex + 1);
+            segments.append({ editor->toPlainText(), vm.sceneIndex, tr("%1 — %2").arg(chTitle, scTitle) });
+        } else if (!ch->scenes.isEmpty()) {
+            // ChapterDoc com o capítulo inteiro visível: separa por cena via <hr>,
+            // igual ao GlobalSearchPanel::runSearch.
+            const QString html = editor->toHtml();
+            for (int si = 0; si < ch->scenes.size(); ++si) {
+                const QString scHtml = SceneUtils::getSceneHtml(html, si);
+                if (scHtml.isEmpty()) continue;
+                QTextDocument segDoc;
+                segDoc.setHtml(scHtml);
+                const QString plain = segDoc.toPlainText();
+                if (plain.trimmed().isEmpty()) continue;
+                const Scene& sc = ch->scenes.at(si);
+                const QString scTitle = !sc.title.isEmpty() ? sc.title : tr("Cena %1").arg(si + 1);
+                segments.append({ plain, si, tr("%1 — %2").arg(chTitle, scTitle) });
+            }
+        } else {
+            segments.append({ editor->toPlainText(), -1, chTitle });
+        }
+
+        QVector<DialogueStore::ScannedLine> allFound;
+        for (const Segment& seg : segments) {
+            const QVector<DetectedDialogueLine> found =
+                DialogueDetector::scanConfidentDialogues(seg.plainText, tokens, narrator);
+            for (const DetectedDialogueLine& f : found) {
+                allFound.append({ f.text, f.characterId, seg.sceneIndex, seg.sourceLabel });
+            }
+        }
+        dialogueStore->upsertScanResults(vm.manuscriptId, vm.chapterId, allFound);
+    });
+
+    connect(editor, &QTextEdit::textChanged, this, [this]() {
+        if (detectionEnabled) dialogueDetectionTimer->start();
+    });
+    connect(editorHost, &EditorHost::contentLoaded, this, [this]() {
+        if (detectionEnabled) dialogueDetectionTimer->start();
+    });
+    connect(dialogueStore, &DialogueStore::changed, this, [this]() {
+        if (dialogueStore) dialogueStore->save();
+    });
+
     // MarkerStore: sidecar de markers comentados. Carrega ao abrir projeto,
     // re-aplica GUIDs no contentLoaded, captura ao flush e salva ao saveProject.
     markerStore = new MarkerStore(this);
@@ -1605,6 +1683,8 @@ void MainWindow::setupEditor()
             [this](const MemoriesStore::Memory& mem) {
         if (refMenuPanel) refMenuPanel->openMemoryInRef(mem);
     });
+    connect(pensarioPanel, &PensarioPanel::openDialogueInEditorRequested,
+            this, &MainWindow::openDialogueInEditor);
     connect(toolbar, &TopToolbar::pensarioToggleRequested, this, [this]() {
         if (pensarioPanel) pensarioPanel->togglePanel();
     });
@@ -3534,6 +3614,11 @@ void MainWindow::applyProjectRoot(const QString& root)
         memoriesStore->setProjectRoot(root);
         if (pensarioPanel) pensarioPanel->setMemoriesStore(memoriesStore);
         memoriesStore->load();
+    }
+    if (dialogueStore) {
+        dialogueStore->setProjectRoot(root);
+        if (pensarioPanel) pensarioPanel->setDialogueStore(dialogueStore);
+        dialogueStore->load();
     }
     if (construtorStore) {
         construtorStore->setProjectRoot(root);
@@ -5500,6 +5585,37 @@ void MainWindow::openMemoryInEditor(const MemoriesStore::Memory& mem)
     // "Ctrl+F" automático: depois do doc carregar, leva o cursor ao início e
     // seleciona o 1º casamento do trecho (1ª linha, até ~60 chars).
     QString query = mem.text;
+    query.replace(QChar(0x2029), QChar('\n'));
+    const QStringList lines = query.split(QChar('\n'), Qt::SkipEmptyParts);
+    query = lines.isEmpty() ? query.trimmed() : lines.first().trimmed();
+    if (query.size() > 60) query = query.left(60);
+
+    QTimer::singleShot(140, this, [this, query]() {
+        if (!editor || query.isEmpty()) return;
+        editor->moveCursor(QTextCursor::Start);
+        if (editor->find(query))
+            editor->ensureCursorVisible();
+        editor->setFocus();
+    });
+}
+
+void MainWindow::openDialogueInEditor(const DialogueStore::Dialogue& dlg)
+{
+    if (!editorHost || !editor || dlg.chapterId.isEmpty()) return;
+
+    EditorHost::ViewMode vm;
+    vm.manuscriptId = dlg.manuscriptId;
+    vm.chapterId = dlg.chapterId;
+    if (dlg.sceneIndex >= 0) {
+        vm.type = EditorHost::SceneDoc;
+        vm.sceneIndex = dlg.sceneIndex;
+    } else {
+        vm.type = EditorHost::ChapterDoc;
+    }
+    editorHost->setViewMode(vm);
+
+    // "Ctrl+F" automático: mesma lógica de openMemoryInEditor.
+    QString query = dlg.text;
     query.replace(QChar(0x2029), QChar('\n'));
     const QStringList lines = query.split(QChar('\n'), Qt::SkipEmptyParts);
     query = lines.isEmpty() ? query.trimmed() : lines.first().trimmed();

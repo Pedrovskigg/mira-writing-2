@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "CharacterDetector.h"
+#include "DialogueStore.h"
 #include "EditorHost.h"
 #include "MemoriesStore.h"
 #include "PresenceTypes.h"
@@ -203,6 +204,8 @@ private:
     void addSelectionToMemory();
     // Abre a fonte da memória no editor e seleciona o trecho ("Ctrl+F" auto).
     void openMemoryInEditor(const MemoriesStore::Memory& mem);
+    // Abre a fonte de um diálogo detectado no editor e seleciona o trecho.
+    void openDialogueInEditor(const DialogueStore::Dialogue& dlg);
     TimelinePanel* ensureTimelinePanel();  // cria o painel (lazy) e devolve
     // Texto puro de um doc do projeto p/ a descrição de um evento da timeline.
     // linkKey: "ch:<id>" | "sc:<id>" | "doc:<id>". Trunca em ~600 palavras + aviso.
@@ -264,6 +267,7 @@ private:
     GlossaryAddPopup *glossaryAddPopup = nullptr;
     MemoriesStore *memoriesStore = nullptr;
     MemoryAddPopup *memoryAddPopup = nullptr;
+    DialogueStore *dialogueStore = nullptr;
     ConstrutorStore *construtorStore = nullptr;
     ConstrutorWindow *construtorWindow = nullptr;
     // Memória sendo criada: preenchida em addSelectionToMemory() (texto + fonte)
@@ -324,6 +328,9 @@ private:
     QString m_autoNavTargetTitle;
     QTimer *detectionTimer = nullptr;
     QTimer *detectionBatchTimer = nullptr;
+    // Timer irmão do de presença, mas dedicado à detecção de diálogos —
+    // roda sozinho, sem entrar no DetectionScanState incremental acima.
+    QTimer *dialogueDetectionTimer = nullptr;
     class PresencePopup *presencePopup = nullptr;
     bool detectionEnabled = true;
     bool detectionMarkAll = false;

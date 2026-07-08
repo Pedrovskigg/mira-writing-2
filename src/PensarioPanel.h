@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DialogueStore.h"
 #include "MemoriesStore.h"
 
 #include <QPoint>
@@ -47,6 +48,7 @@ public:
     void setTopInset(int px) { m_topInset = px; }
     void setMapPinsStore(MapPinsStore* s) { m_mapPins = s; }
     void setMemoriesStore(MemoriesStore* s);
+    void setDialogueStore(DialogueStore* s);
     void setElementsStore(ElementsStore* s) { m_elements = s; }
 
 signals:
@@ -56,6 +58,8 @@ signals:
     void openMemoryInEditorRequested(MemoriesStore::Memory mem);
     // Pedido pra abrir a fonte de uma memória no RefMenu (com o trecho marcado).
     void openMemoryInRefRequested(MemoriesStore::Memory mem);
+    // Pedido pra abrir a fonte de um diálogo detectado no editor.
+    void openDialogueInEditorRequested(DialogueStore::Dialogue dlg);
 
 public slots:
     void refresh();
@@ -68,7 +72,7 @@ private slots:
     void applyTheme();
 
 private:
-    enum class Tab { Comments = 0, Notes = 1, Names = 2, Memories = 3 };
+    enum class Tab { Comments = 0, Notes = 1, Names = 2, Memories = 3, Dialogues = 4 };
     enum class SortMode { Chapters, Creation };
     enum class NameCategory { Character, Place, Weapon };
     enum class Gender { Female, Male };
@@ -97,6 +101,13 @@ private:
     void rebuildMemTagChips(const QVector<MemoriesStore::Memory>& all);
     // Clique numa memória → menu (abrir no editor / no refmenu).
     void showMemoryActions(const QString& memId, const QPoint& globalPos);
+    // Diálogos detectados automaticamente: lista filtrável (todos / por
+    // personagem que fala) + chips de "também fala nessa cena".
+    QWidget* buildDialoguesPage();
+    void rebuildDialogues();
+    void rebuildDialoguePresenceChips(const QVector<DialogueStore::Dialogue>& all);
+    QWidget* buildDialogueCard(const DialogueStore::Dialogue& dlg, const QString& speakerName,
+                               QWidget* parent);
     void setNameCategory(NameCategory c);
     void updateGenderVisibility();
     void generateNames();
@@ -114,6 +125,7 @@ private:
     ProjectModel* m_model = nullptr;
     NotesStore* m_notesStore = nullptr;
     MemoriesStore* m_memories = nullptr;
+    DialogueStore* m_dialogues = nullptr;
     ElementsStore* m_elements = nullptr;
     Tab m_tab = Tab::Comments;
     SortMode m_sortMode = SortMode::Chapters;
@@ -128,6 +140,7 @@ private:
     QToolButton* m_tabComments = nullptr;
     QToolButton* m_tabNotes = nullptr;
     QToolButton* m_tabMemories = nullptr;
+    QToolButton* m_tabDialogues = nullptr;
     QToolButton* m_namesBtn = nullptr; // acesso discreto ao gerador, no header
     QToolButton* m_mapBtn = nullptr;   // acesso ao painel do mapa, no header
     MapPanel* m_mapPanel = nullptr;
@@ -170,6 +183,16 @@ private:
     QString m_memFilter = QStringLiteral("all");
     // Facet ortogonal: tags marcadas (vazio = não filtra por tag).
     QSet<QString> m_memTagFilter;
+
+    QScrollArea* m_dialoguesScroll = nullptr;
+    QWidget* m_dialoguesInner = nullptr;
+    QVBoxLayout* m_dialoguesLay = nullptr;
+    // Filtro principal da aba Diálogos: "all" | elementId de quem fala.
+    QString m_dialogueFilter = QStringLiteral("all");
+    // Facet ortogonal: só mostra falas de cenas onde estes personagens
+    // TAMBÉM têm fala salva (proxy de presença — mais barato que reescanear
+    // o texto da cena, e os dados já estão no DialogueStore).
+    QSet<QString> m_dialoguePresenceFilter;
 
     bool m_dragging = false;
     QPoint m_dragOffset;

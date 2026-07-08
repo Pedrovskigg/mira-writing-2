@@ -84,6 +84,11 @@ qt_add_executable(mira-writing
     src/ElementsStore.h
     src/CharacterDetector.cpp
     src/CharacterDetector.h
+    src/DialogueVerbs.h
+    src/DialogueDetector.cpp
+    src/DialogueDetector.h
+    src/DialogueStore.cpp
+    src/DialogueStore.h
     src/PresencePopup.cpp
     src/PresencePopup.h
     src/DocCache.cpp
