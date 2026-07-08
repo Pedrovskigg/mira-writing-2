@@ -99,8 +99,11 @@ bool EditorHost::tryConvertHrShortcut() {
     edit.movePosition(QTextCursor::StartOfBlock);
     edit.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     edit.removeSelectedText();
-    edit.insertHtml(QStringLiteral("<hr/>"));
-    edit.insertBlock();
+    // Precisa ir num insertHtml() só, com o <p></p> já embutido no fragmento —
+    // separar num insertHtml("<hr/>") + insertBlock() faz o importador de HTML
+    // do Qt duplicar o <hr> (confirmado isolado: gera 2 <hr> em vez de 1 quando
+    // o fragmento é só a tag sozinha, inserida no meio de um documento existente).
+    edit.insertHtml(QStringLiteral("<hr/><p></p>"));
     edit.endEditBlock();
     m_editor->setTextCursor(edit);
 
