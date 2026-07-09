@@ -188,6 +188,9 @@ private:
     void showUpdateToast(const QString& version, const QString& downloadUrl, const QString& releaseNotes);
     void positionUpdateToast();
     void startUpdateDownload();
+    void cancelUpdateDownload();
+    void showUpdateDownloadError(const QString& message);
+    void resetUpdateToastIdle();
 
     void closeBondPopup();
     void closeBondViewPanel();
@@ -290,9 +293,13 @@ private:
     QFrame      *m_updateToast         = nullptr;
     QLabel      *m_updateToastLabel    = nullptr;
     QLabel      *m_updateToastNotes    = nullptr;
+    QLabel      *m_updateToastError    = nullptr;
     QToolButton *m_updateToastBtn      = nullptr;
+    QToolButton *m_updateToastCancelBtn = nullptr;
     QProgressBar *m_updateToastProgress = nullptr;
     QNetworkAccessManager *m_updateNam = nullptr;
+    QNetworkReply *m_updateReply = nullptr;
+    bool m_updateCancelledByUser = false;
     QString m_updateDownloadUrl;
     QString m_updateVersion;
     MainMenuDialog *mainMenuDialog = nullptr;

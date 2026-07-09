@@ -3941,6 +3941,12 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
         m_updateToastNotes->hide();
         root->addWidget(m_updateToastNotes);
 
+        m_updateToastError = new QLabel(m_updateToast);
+        m_updateToastError->setObjectName(QStringLiteral("utError"));
+        m_updateToastError->setWordWrap(true);
+        m_updateToastError->hide();
+        root->addWidget(m_updateToastError);
+
         m_updateToastProgress = new QProgressBar(m_updateToast);
         m_updateToastProgress->setObjectName(QStringLiteral("utProgress"));
         m_updateToastProgress->setRange(0, 100);
@@ -3949,11 +3955,24 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
         m_updateToastProgress->hide();
         root->addWidget(m_updateToastProgress);
 
+        auto* actionRow = new QHBoxLayout();
+        actionRow->setSpacing(6);
+
         m_updateToastBtn = new QToolButton(m_updateToast);
         m_updateToastBtn->setObjectName(QStringLiteral("utAction"));
         m_updateToastBtn->setCursor(Qt::PointingHandCursor);
         connect(m_updateToastBtn, &QToolButton::clicked, this, &MainWindow::startUpdateDownload);
-        root->addWidget(m_updateToastBtn);
+        actionRow->addWidget(m_updateToastBtn, 1);
+
+        m_updateToastCancelBtn = new QToolButton(m_updateToast);
+        m_updateToastCancelBtn->setObjectName(QStringLiteral("utCancel"));
+        m_updateToastCancelBtn->setCursor(Qt::PointingHandCursor);
+        m_updateToastCancelBtn->setText(tr("Cancelar"));
+        m_updateToastCancelBtn->hide();
+        connect(m_updateToastCancelBtn, &QToolButton::clicked, this, &MainWindow::cancelUpdateDownload);
+        actionRow->addWidget(m_updateToastCancelBtn);
+
+        root->addLayout(actionRow);
 
         m_updateToast->hide();
     }
@@ -3964,6 +3983,7 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
         "}"
         "QLabel#utTitle { color: %3; font-size: 13px; font-weight: 600; }"
         "QLabel#utNotes { color: %4; font-size: 11px; }"
+        "QLabel#utError { color: %8; font-size: 11px; font-weight: 600; }"
         "QToolButton#utClose {"
         "  background: transparent; border: none;"
         "  color: %4; font-size: 16px; font-weight: 300;"
@@ -3974,6 +3994,11 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
         "  padding: 6px 10px; font-size: 12px; font-weight: 600;"
         "}"
         "QToolButton#utAction:hover { background: %7; }"
+        "QToolButton#utCancel {"
+        "  background: transparent; color: %4; border: 1px solid %2;"
+        "  border-radius: 6px; padding: 6px 10px; font-size: 12px;"
+        "}"
+        "QToolButton#utCancel:hover { color: %3; border-color: %3; }"
         "QProgressBar#utProgress {"
         "  background: %2; border: none; border-radius: 3px;"
         "}"
@@ -3984,7 +4009,8 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
          Theme::textMuted(),
          Theme::accentInfo(),
          Theme::panelBackground(),
-         Theme::accentInfo()));
+         Theme::accentInfo(),
+         Theme::accentDanger()));
 
     m_updateToastLabel->setText(tr("Nova versão disponível: %1").arg(version));
 
@@ -3996,8 +4022,10 @@ void MainWindow::showUpdateToast(const QString& version, const QString& download
         m_updateToastNotes->hide();
     }
 
+    m_updateToastError->hide();
     m_updateToastBtn->setText(tr("Baixar e instalar"));
     m_updateToastBtn->setEnabled(true);
+    if (m_updateToastCancelBtn) m_updateToastCancelBtn->hide();
     m_updateToastProgress->setValue(0);
     m_updateToastProgress->hide();
 
@@ -4021,12 +4049,57 @@ void MainWindow::positionUpdateToast()
         bottom - m_updateToast->height());
 }
 
+void MainWindow::resetUpdateToastIdle()
+{
+    if (m_updateToastBtn) {
+        m_updateToastBtn->setEnabled(true);
+        m_updateToastBtn->setText(tr("Baixar e instalar"));
+    }
+    if (m_updateToastCancelBtn) m_updateToastCancelBtn->hide();
+    if (m_updateToastProgress) {
+        m_updateToastProgress->setValue(0);
+        m_updateToastProgress->hide();
+    }
+    if (m_updateToastError) m_updateToastError->hide();
+    if (m_updateToast) {
+        m_updateToast->adjustSize();
+        positionUpdateToast();
+    }
+}
+
+void MainWindow::showUpdateDownloadError(const QString& message)
+{
+    if (m_updateToastBtn) {
+        m_updateToastBtn->setEnabled(true);
+        m_updateToastBtn->setText(tr("Tentar novamente"));
+    }
+    if (m_updateToastCancelBtn) m_updateToastCancelBtn->hide();
+    if (m_updateToastProgress) m_updateToastProgress->hide();
+    if (m_updateToastError) {
+        m_updateToastError->setText(message);
+        m_updateToastError->show();
+    }
+    if (m_updateToast) {
+        m_updateToast->adjustSize();
+        positionUpdateToast();
+    }
+}
+
+void MainWindow::cancelUpdateDownload()
+{
+    if (!m_updateReply) return;
+    m_updateCancelledByUser = true;
+    m_updateReply->abort();
+}
+
 void MainWindow::startUpdateDownload()
 {
     if (m_updateDownloadUrl.isEmpty() || !m_updateToastBtn || !m_updateToastProgress) return;
 
+    if (m_updateToastError) m_updateToastError->hide();
     m_updateToastBtn->setEnabled(false);
     m_updateToastBtn->setText(tr("Baixando…"));
+    if (m_updateToastCancelBtn) m_updateToastCancelBtn->show();
     m_updateToastProgress->setValue(0);
     m_updateToastProgress->show();
     m_updateToast->adjustSize();
@@ -4041,15 +4114,19 @@ void MainWindow::startUpdateDownload()
     auto* file = new QFile(destPath, this);
     if (!file->open(QIODevice::WriteOnly)) {
         delete file;
-        m_updateToastBtn->setEnabled(true);
-        m_updateToastBtn->setText(tr("Baixar e instalar"));
-        m_updateToastProgress->hide();
+        showUpdateDownloadError(tr("Não foi possível salvar o instalador no disco."));
         return;
     }
 
     QNetworkRequest req{QUrl(m_updateDownloadUrl)};
     req.setHeader(QNetworkRequest::UserAgentHeader, QByteArray("mira-writing-update-checker"));
+    // Aborta a conexão se ficar 30s sem receber nenhum byte — sem isso, uma
+    // rede instável deixa o QNetworkReply pendurado pra sempre (nunca emite
+    // finished nem erro) e o download "morre na metade" sem feedback.
+    req.setTransferTimeout(30000);
     QNetworkReply* reply = m_updateNam->get(req);
+    m_updateReply = reply;
+    m_updateCancelledByUser = false;
 
     connect(reply, &QNetworkReply::readyRead, this, [reply, file]() {
         file->write(reply->readAll());
@@ -4061,18 +4138,28 @@ void MainWindow::startUpdateDownload()
             });
     connect(reply, &QNetworkReply::finished, this, [this, reply, file, destPath]() {
         file->write(reply->readAll());
+        const qint64 expected = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+        const qint64 actual = file->size();
         file->close();
-        const bool ok = reply->error() == QNetworkReply::NoError;
+        const bool networkOk = reply->error() == QNetworkReply::NoError;
+        const bool sizeOk = expected <= 0 || actual == expected;
+        const QString errorString = reply->errorString();
+        const bool wasCancelled = m_updateCancelledByUser;
+        m_updateCancelledByUser = false;
+        m_updateReply = nullptr;
         reply->deleteLater();
         file->deleteLater();
 
-        if (!ok) {
+        if (!networkOk || !sizeOk) {
             QFile::remove(destPath);
-            if (m_updateToastBtn) {
-                m_updateToastBtn->setEnabled(true);
-                m_updateToastBtn->setText(tr("Baixar e instalar"));
+            if (wasCancelled) {
+                resetUpdateToastIdle();
+                return;
             }
-            if (m_updateToastProgress) m_updateToastProgress->hide();
+            const QString reason = !networkOk
+                ? errorString
+                : tr("arquivo incompleto (conexão interrompida).");
+            showUpdateDownloadError(tr("Falha ao baixar atualização: %1").arg(reason));
             return;
         }
 
