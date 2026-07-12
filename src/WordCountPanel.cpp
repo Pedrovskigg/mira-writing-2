@@ -25,6 +25,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QSettings>
 #include <QSpinBox>
 #include <QTimer>
 #include <QToolButton>
@@ -38,6 +39,15 @@ QString fmtDuration(qint64 ms) {
     const qint64 m = totalMin % 60;
     if (h > 0) return QStringLiteral("%1h %2min").arg(h).arg(m);
     return QStringLiteral("%1min").arg(m);
+}
+
+// Locale usada só pra formatação numérica — precisa acompanhar o idioma do
+// app, não ficar fixa em pt-BR (ver app/language no QSettings).
+QLocale statsLocale() {
+    QSettings qs;
+    const bool en = qs.value(QStringLiteral("app/language")).toString() == QStringLiteral("en");
+    return en ? QLocale(QLocale::English, QLocale::UnitedStates)
+              : QLocale(QLocale::Portuguese, QLocale::Brazil);
 }
 }
 
@@ -913,7 +923,7 @@ void WordCountPanel::refresh()
 {
     if (!m_counter || !m_slot1Value || !m_slot2Value) return;
 
-    QLocale loc(QLocale::Portuguese, QLocale::Brazil);
+    QLocale loc = statsLocale();
     const auto s = m_counter->settings();
 
     auto slotValue = [&](const QString& metric, const QString& scope) -> QString {

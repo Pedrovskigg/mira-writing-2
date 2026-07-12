@@ -19,12 +19,22 @@
 #include <QLocale>
 #include <QMenu>
 #include <QMouseEvent>
+#include <QSettings>
 #include <QToolButton>
 #include <QVBoxLayout>
 
 namespace {
 QString dayKey(const QDate& d) {
     return d.toString(QStringLiteral("yyyy-MM-dd"));
+}
+
+// Locale usada só pra nomes de mês/formatação numérica — precisa acompanhar
+// o idioma do app, não ficar fixa em pt-BR (ver app/language no QSettings).
+QLocale statsLocale() {
+    QSettings qs;
+    const bool en = qs.value(QStringLiteral("app/language")).toString() == QStringLiteral("en");
+    return en ? QLocale(QLocale::English, QLocale::UnitedStates)
+              : QLocale(QLocale::Portuguese, QLocale::Brazil);
 }
 }
 
@@ -93,7 +103,19 @@ void WordCounterCalendar::buildUi()
     m_grid->setSpacing(2);
     m_grid->setContentsMargins(0, 0, 0, 0);
 
-    static const QStringList dow = { tr("D"), tr("S"), tr("T"), tr("Q"), tr("Q"), tr("S"), tr("S") };
+    // Desambiguação explícita: "Q" (Quarta/Quinta) e "S" (Segunda/Sexta/Sábado)
+    // repetem o texto-fonte em português, e o tr() precisa de um contexto
+    // diferente por ocorrência pra poder traduzir cada um pra uma letra distinta
+    // em inglês (S M T W T F S) em vez de duplicar a mesma tradução.
+    static const QStringList dow = {
+        tr("D", "calendar weekday abbrev: Sunday"),
+        tr("S", "calendar weekday abbrev: Monday"),
+        tr("T", "calendar weekday abbrev: Tuesday"),
+        tr("Q", "calendar weekday abbrev: Wednesday"),
+        tr("Q", "calendar weekday abbrev: Thursday"),
+        tr("S", "calendar weekday abbrev: Friday"),
+        tr("S", "calendar weekday abbrev: Saturday"),
+    };
     for (int c = 0; c < 7; ++c) {
         auto* lbl = new QLabel(dow[c], this);
         lbl->setObjectName(QStringLiteral("wcpCalDow"));
@@ -216,7 +238,7 @@ void WordCounterCalendar::refresh()
     if (!m_monthLabel || !m_grid) return;
 
     // Header label: "Maio de 2026"
-    QLocale loc(QLocale::Portuguese, QLocale::Brazil);
+    QLocale loc = statsLocale();
     const QString monthName = loc.monthName(m_currentMonth.month(), QLocale::LongFormat);
     m_monthLabel->setText(tr("%1 de %2").arg(monthName).arg(m_currentMonth.year()));
 
@@ -422,7 +444,7 @@ void WordCounterCalendar::showDayDetails(const QString& key)
     const auto offType = m_counter->offDayType(key);
 
     const QDate date = QDate::fromString(key, QStringLiteral("yyyy-MM-dd"));
-    QLocale loc(QLocale::Portuguese, QLocale::Brazil);
+    QLocale loc = statsLocale();
     const QString dateStr = date.isValid()
         ? tr("%1 de %2 de %3").arg(date.day())
               .arg(loc.monthName(date.month(), QLocale::LongFormat)).arg(date.year())

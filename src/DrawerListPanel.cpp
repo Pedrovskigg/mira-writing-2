@@ -3,6 +3,7 @@
 #include "ElementsStore.h"
 #include "IconUtils.h"
 #include "ProjectModel.h"
+#include "RoleTiers.h"
 #include "Theme.h"
 
 #include <QAction>
@@ -42,15 +43,6 @@ constexpr const char* kItemMime = "application/x-mira-drawer-item";
 }
 
 namespace {
-
-const QStringList kPresetStatuses = {
-    QStringLiteral("Morto"),       QStringLiteral("Desaparecido"), QStringLiteral("Ferido"),
-    QStringLiteral("Curado"),      QStringLiteral("Apaixonado"),   QStringLiteral("Raivoso"),
-    QStringLiteral("Feliz"),       QStringLiteral("Triste"),       QStringLiteral("Confuso"),
-    QStringLiteral("Traído"),      QStringLiteral("Com medo"),     QStringLiteral("Em fuga"),
-    QStringLiteral("Preso"),       QStringLiteral("Transformado"), QStringLiteral("Aliviado"),
-    QStringLiteral("Perdido"),
-};
 
 QString pickerPopupQss() {
     return QStringLiteral(R"(
@@ -492,7 +484,7 @@ DrawerListPanel::DrawerListPanel(ProjectModel* model, QWidget* parent)
     m_folderStripLayout = new QHBoxLayout(m_folderStrip);
     m_folderStripLayout->setContentsMargins(0, 0, 0, 0);
     m_folderStripLayout->setSpacing(6);
-    m_folderBtn = new QPushButton(QStringLiteral("+ Pasta"), m_folderStrip);
+    m_folderBtn = new QPushButton(tr("+ Pasta"), m_folderStrip);
     m_folderBtn->setCursor(Qt::PointingHandCursor);
     m_folderBtn->setStyleSheet(folderPillQss());
     m_folderBtn->setMinimumHeight(24);
@@ -733,7 +725,15 @@ void DrawerListPanel::showStatusPicker(const QString& itemId, const QPoint& glob
     }
 
     // Presets
-    for (const auto& s : kPresetStatuses) {
+    const QStringList presetStatuses = {
+        tr("Morto"),       tr("Desaparecido"), tr("Ferido"),
+        tr("Curado"),      tr("Apaixonado"),   tr("Raivoso"),
+        tr("Feliz"),       tr("Triste"),       tr("Confuso"),
+        tr("Traído"),      tr("Com medo"),     tr("Em fuga"),
+        tr("Preso"),       tr("Transformado"), tr("Aliviado"),
+        tr("Perdido"),
+    };
+    for (const auto& s : presetStatuses) {
         auto* btn = new QPushButton(s, popup);
         btn->setObjectName(QStringLiteral("pickerOption"));
         btn->setFixedHeight(26);
@@ -1589,7 +1589,7 @@ QWidget* DrawerListPanel::makeElementCard(const QString& itemId, const QString& 
     }
 
     if (!role.isEmpty()) {
-        auto* roleLbl = new QLabel(role.toUpper(), card);
+        auto* roleLbl = new QLabel(RoleTiers::roleDisplayName(role).toUpper(), card);
         roleLbl->setStyleSheet(QStringLiteral(
             "color: %1; font-size: 9px; font-weight: 800; letter-spacing: 0.8px;").arg(roleColor(role)));
         roleLbl->setAlignment(Qt::AlignHCenter);
@@ -1762,7 +1762,7 @@ QWidget* DrawerListPanel::makeRow(const QString& label, bool isFolder, const QSt
     const QString glyph = isFolder ? QStringLiteral("▸") : QStringLiteral("·");
     QString text = QStringLiteral("%1  %2").arg(glyph, label);
     if (!isFolder && !role.isEmpty()) {
-        text += QStringLiteral("   —  %1").arg(role.toUpper());
+        text += QStringLiteral("   —  %1").arg(RoleTiers::roleDisplayName(role).toUpper());
     }
     btn->setText(text);
     btn->setToolButtonStyle(Qt::ToolButtonTextOnly);

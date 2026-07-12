@@ -1,5 +1,7 @@
 #include "BondTypes.h"
 
+#include <QCoreApplication>
+
 namespace BondTypes {
 
 QList<QString> presetColors() {
@@ -19,71 +21,77 @@ QList<BondTypeGroup> presetGroups() {
     QList<BondTypeGroup> g;
     {
         BondTypeGroup fam;
-        fam.name = QStringLiteral("Família");
+        fam.name = QT_TRANSLATE_NOOP("BondPopup", "Família");
         fam.options = {
-            { QStringLiteral("Pai"),              QStringLiteral("Mãe") },
-            { QStringLiteral("Filho"),            QStringLiteral("Filha") },
-            { QStringLiteral("Irmão"),            QStringLiteral("Irmã") },
-            { QStringLiteral("Avô"),              QStringLiteral("Avó") },
-            { QStringLiteral("Tio"),              QStringLiteral("Tia") },
-            { QStringLiteral("Primo"),            QStringLiteral("Prima") },
-            { QStringLiteral("Cônjuge"),          QStringLiteral("Cônjuge") },
-            { QStringLiteral("Divorciados"),      QStringLiteral("Divorciadas") },
-            { QStringLiteral("Padrinho"),         QStringLiteral("Madrinha") },
-            { QStringLiteral("Parentes distantes"), QStringLiteral("Parentes distantes") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Pai"),              QT_TRANSLATE_NOOP("BondPopup", "Mãe") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Filho"),            QT_TRANSLATE_NOOP("BondPopup", "Filha") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Irmão"),            QT_TRANSLATE_NOOP("BondPopup", "Irmã") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Avô"),              QT_TRANSLATE_NOOP("BondPopup", "Avó") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Tio"),              QT_TRANSLATE_NOOP("BondPopup", "Tia") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Primo"),            QT_TRANSLATE_NOOP("BondPopup", "Prima") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Cônjuge"),          QT_TRANSLATE_NOOP("BondPopup", "Cônjuge") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Divorciados"),      QT_TRANSLATE_NOOP("BondPopup", "Divorciadas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Padrinho"),         QT_TRANSLATE_NOOP("BondPopup", "Madrinha") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Parentes distantes"), QT_TRANSLATE_NOOP("BondPopup", "Parentes distantes") },
         };
         g.append(fam);
     }
     {
         BondTypeGroup rom;
-        rom.name = QStringLiteral("Romântico");
+        rom.name = QT_TRANSLATE_NOOP("BondPopup", "Romântico");
         rom.options = {
-            { QStringLiteral("Namorados"),         QStringLiteral("Namoradas") },
-            { QStringLiteral("Ex-namorados"),      QStringLiteral("Ex-namoradas") },
-            { QStringLiteral("Interesse amoroso"), QStringLiteral("Interesse amoroso") },
-            { QStringLiteral("Casados"),           QStringLiteral("Casadas") },
-            { QStringLiteral("Separados"),         QStringLiteral("Separadas") },
-            { QStringLiteral("Ficantes"),          QStringLiteral("Ficantes") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Namorados"),         QT_TRANSLATE_NOOP("BondPopup", "Namoradas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Ex-namorados"),      QT_TRANSLATE_NOOP("BondPopup", "Ex-namoradas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Interesse amoroso"), QT_TRANSLATE_NOOP("BondPopup", "Interesse amoroso") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Casados"),           QT_TRANSLATE_NOOP("BondPopup", "Casadas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Separados"),         QT_TRANSLATE_NOOP("BondPopup", "Separadas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Ficantes"),          QT_TRANSLATE_NOOP("BondPopup", "Ficantes") },
         };
         g.append(rom);
     }
     {
         BondTypeGroup soc;
-        soc.name = QStringLiteral("Social");
+        soc.name = QT_TRANSLATE_NOOP("BondPopup", "Social");
         soc.options = {
-            { QStringLiteral("Amigos íntimos"),    QStringLiteral("Amigas íntimas") },
-            { QStringLiteral("Velhos amigos"),     QStringLiteral("Velhas amigas") },
-            { QStringLiteral("Conhecidos"),        QStringLiteral("Conhecidas") },
-            { QStringLiteral("Colegas"),           QStringLiteral("Colegas") },
-            { QStringLiteral("Parceiros"),         QStringLiteral("Parceiras") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Amigos íntimos"),    QT_TRANSLATE_NOOP("BondPopup", "Amigas íntimas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Velhos amigos"),     QT_TRANSLATE_NOOP("BondPopup", "Velhas amigas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Conhecidos"),        QT_TRANSLATE_NOOP("BondPopup", "Conhecidas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Colegas"),           QT_TRANSLATE_NOOP("BondPopup", "Colegas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Parceiros"),         QT_TRANSLATE_NOOP("BondPopup", "Parceiras") },
         };
         g.append(soc);
     }
     {
         BondTypeGroup con;
-        con.name = QStringLiteral("Conflito");
+        con.name = QT_TRANSLATE_NOOP("BondPopup", "Conflito");
         con.options = {
-            { QStringLiteral("Inimigos"),          QStringLiteral("Inimigas") },
-            { QStringLiteral("Rivais"),            QStringLiteral("Rivais") },
-            { QStringLiteral("Desconfiança mútua"), QStringLiteral("Desconfiança mútua") },
-            { QStringLiteral("Credor/Devedor"),    QStringLiteral("Credora/Devedora") },
-            { QStringLiteral("Traição"),           QStringLiteral("Traição") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Inimigos"),          QT_TRANSLATE_NOOP("BondPopup", "Inimigas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Rivais"),            QT_TRANSLATE_NOOP("BondPopup", "Rivais") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Desconfiança mútua"), QT_TRANSLATE_NOOP("BondPopup", "Desconfiança mútua") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Credor/Devedor"),    QT_TRANSLATE_NOOP("BondPopup", "Credora/Devedora") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Traição"),           QT_TRANSLATE_NOOP("BondPopup", "Traição") },
         };
         g.append(con);
     }
     {
         BondTypeGroup pwr;
-        pwr.name = QStringLiteral("Poder");
+        pwr.name = QT_TRANSLATE_NOOP("BondPopup", "Poder");
         pwr.options = {
-            { QStringLiteral("Mentor / Aprendiz"),    QStringLiteral("Mentora / Aprendiz") },
-            { QStringLiteral("Líder / Subordinado"),  QStringLiteral("Líder / Subordinada") },
-            { QStringLiteral("Aliados"),              QStringLiteral("Aliadas") },
-            { QStringLiteral("Protetor / Protegido"), QStringLiteral("Protetora / Protegida") },
-            { QStringLiteral("Mestre / Discípulo"),   QStringLiteral("Mestra / Discípula") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Mentor / Aprendiz"),    QT_TRANSLATE_NOOP("BondPopup", "Mentora / Aprendiz") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Líder / Subordinado"),  QT_TRANSLATE_NOOP("BondPopup", "Líder / Subordinada") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Aliados"),              QT_TRANSLATE_NOOP("BondPopup", "Aliadas") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Protetor / Protegido"), QT_TRANSLATE_NOOP("BondPopup", "Protetora / Protegida") },
+            { QT_TRANSLATE_NOOP("BondPopup", "Mestre / Discípulo"),   QT_TRANSLATE_NOOP("BondPopup", "Mestra / Discípula") },
         };
         g.append(pwr);
     }
     return g;
+}
+
+QString displayName(const QString& raw)
+{
+    if (raw.isEmpty()) return raw;
+    return QCoreApplication::translate("BondPopup", raw.toUtf8().constData());
 }
 
 } // namespace BondTypes

@@ -3645,8 +3645,8 @@ void MainWindow::applyProjectRoot(const QString& root)
     }
     if (construtorStore) {
         construtorStore->setProjectRoot(root);
-        if (construtorWindow) construtorWindow->setStore(construtorStore);
         construtorStore->load();
+        if (construtorWindow) construtorWindow->setStore(construtorStore);
     }
     if (lousaPanel) {
         lousaPanel->setProjectModel(projectModel);
@@ -4373,7 +4373,7 @@ void MainWindow::openMainMenu()
     mainMenuDialog->setRecentProjects(loadRecentProjects());
     mainMenuDialog->setAutoOpenPath(
         QSettings().value(QStringLiteral("autoOpenProject")).toString());
-    mainMenuDialog->show();
+    mainMenuDialog->showMaximized();
     mainMenuDialog->raise();
     mainMenuDialog->activateWindow();
 }
@@ -5416,7 +5416,7 @@ void MainWindow::createDocFromBond(const QString& drawerKey, const QString& bond
     QString html = QStringLiteral("<h2>%1</h2>").arg(title.toHtmlEscaped());
     if (!bond->type.isEmpty()) {
         html += QStringLiteral("<p><em>%1</em></p>")
-            .arg(QStringLiteral("%1 — %2 de %3").arg(bond->type, fromIt->title, toIt->title).toHtmlEscaped());
+            .arg(tr("%1 — %2 de %3").arg(bond->type, fromIt->title, toIt->title).toHtmlEscaped());
     }
     if (!bond->description.isEmpty()) {
         const QStringList paras = bond->description.split(QChar('\n'), Qt::SkipEmptyParts);

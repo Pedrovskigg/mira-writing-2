@@ -14,10 +14,20 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QSettings>
 #include <QSvgRenderer>
 #include <QVBoxLayout>
 
 namespace {
+
+// Locale usada só pra formatação numérica — precisa acompanhar o idioma do
+// app, não ficar fixa em pt-BR (ver app/language no QSettings).
+QLocale statsLocale() {
+    QSettings qs;
+    const bool en = qs.value(QStringLiteral("app/language")).toString() == QStringLiteral("en");
+    return en ? QLocale(QLocale::English, QLocale::UnitedStates)
+              : QLocale(QLocale::Portuguese, QLocale::Brazil);
+}
 
 QPixmap renderIcon(const QString& path, const QColor& color, int sz = 14)
 {
@@ -38,12 +48,6 @@ QPixmap renderIcon(const QString& path, const QColor& color, int sz = 14)
     renderer.render(&p);
     return pix;
 }
-
-const QString kWeekdays[] = {
-    QStringLiteral("Segunda"), QStringLiteral("Terça"),   QStringLiteral("Quarta"),
-    QStringLiteral("Quinta"),  QStringLiteral("Sexta"),   QStringLiteral("Sábado"),
-    QStringLiteral("Domingo")
-};
 
 QString fmtMs(qint64 ms)
 {
@@ -70,7 +74,12 @@ WritingStatsDialog::WritingStatsDialog(WordCounter* counter, QWidget* parent)
 void WritingStatsDialog::buildUi()
 {
     const QJsonObject& prog = m_counter ? m_counter->settings().progress : QJsonObject{};
-    QLocale loc(QLocale::Portuguese, QLocale::Brazil);
+    QLocale loc = statsLocale();
+    const QString weekdays[] = {
+        tr("Segunda"), tr("Terça"),   tr("Quarta"),
+        tr("Quinta"),  tr("Sexta"),   tr("Sábado"),
+        tr("Domingo")
+    };
 
     // ── Cálculo das estatísticas ──────────────────────────────────────────────
 
@@ -250,7 +259,7 @@ void WritingStatsDialog::buildUi()
         addStat(QStringLiteral(":/icons/leftbar/timeline.svg"),
                 tr("Dia mais produtivo"),
                 tr("%1 (~%2 pal.)")
-                    .arg(kWeekdays[bestWd - 1])
+                    .arg(weekdays[bestWd - 1])
                     .arg(loc.toString(static_cast<int>(bestWdAvg))));
     }
     if (!topDocName.isEmpty()) {

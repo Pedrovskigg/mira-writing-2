@@ -1,4 +1,5 @@
 #include "BondsLayer.h"
+#include "BondTypes.h"
 
 #include <QHashIterator>
 #include <QLineF>
@@ -302,13 +303,14 @@ void BondsLayer::paintEvent(QPaintEvent* event) {
         for (const auto& g : m_geometry) {
             if (g.id != m_hoveredBondId) continue;
             if (g.type.isEmpty()) break;
+            const QString typeLabel = BondTypes::displayName(g.type);
             QFont f = font();
             f.setPointSizeF(8.5);
             f.setBold(true);
             p.setFont(f);
 
             const QFontMetrics fm(f);
-            const QRect textRect = fm.boundingRect(g.type);
+            const QRect textRect = fm.boundingRect(typeLabel);
             const QPointF center = g.labelPos;
             const QRectF bg(center.x() - textRect.width() / 2.0 - 5,
                             center.y() - textRect.height() + 1,
@@ -322,7 +324,7 @@ void BondsLayer::paintEvent(QPaintEvent* event) {
 
             p.setPen(QColor(255, 255, 255));
             p.drawText(QRectF(bg.x() + 5, bg.y(), textRect.width(), bg.height()),
-                       Qt::AlignVCenter | Qt::AlignLeft, g.type);
+                       Qt::AlignVCenter | Qt::AlignLeft, typeLabel);
             break;
         }
     }

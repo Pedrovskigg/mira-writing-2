@@ -92,6 +92,10 @@ ui_*.h
 .vscode/
 .idea/
 
+# Estado local do Claude Code (hoje só fica excluído via .git/info/exclude,
+# que é local e não viaja com o repositório em outra máquina/clone)
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -103,3 +107,7 @@ third_party/hunspell/
 # distribuído. Em dev: copiar da pasta correspondente do Mira 1
 # (mira-writing/assets/ambience-sounds/) ou baixar separadamente.
 src/assets/ambience-sounds/
+
+# Notas internas de dev (não são doc pro usuário final) e artefatos do instalador
+BRIEFING_image_textwrap.md
+installer/

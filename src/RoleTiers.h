@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QSet>
 #include <QString>
 
@@ -14,6 +15,33 @@
 // Role personalizada (digitada pelo usuário, fora da lista) é tratada como
 // Principal — pela lógica: ninguém digita um papel à mão para um figurante.
 namespace RoleTiers {
+
+// Exibe o papel (role) traduzido. O valor salvo em Element::role é sempre o id
+// interno em maiúsculas (ex.: "PROTAGONISTA") — precisa passar por aqui em
+// qualquer lugar que mostra o papel na tela, senão aparece o id cru. Reusa o
+// mesmo contexto/textos-fonte de ElementCreateDialog, então não precisa de
+// nenhuma entrada nova no .ts.
+inline QString roleDisplayName(const QString& roleId)
+{
+    const QString r = roleId.trimmed().toUpper();
+    if (r == QStringLiteral("PROTAGONISTA"))
+        return QCoreApplication::translate("ElementCreateDialog", "Protagonista");
+    if (r == QStringLiteral("DEUTERAGONISTA"))
+        return QCoreApplication::translate("ElementCreateDialog", "Deuteragonista");
+    if (r == QStringLiteral("COADJUVANTE"))
+        return QCoreApplication::translate("ElementCreateDialog", "Coadjuvante");
+    if (r == QStringLiteral("ANTAGONISTA"))
+        return QCoreApplication::translate("ElementCreateDialog", "Antagonista");
+    if (r == QStringLiteral("CONTRAPONTO"))
+        return QCoreApplication::translate("ElementCreateDialog", "Contraponto");
+    if (r == QStringLiteral("TRICKSTER"))
+        return QCoreApplication::translate("ElementCreateDialog", "Trickster");
+    if (r == QStringLiteral("MENTOR"))
+        return QCoreApplication::translate("ElementCreateDialog", "Mentor");
+    if (r == QStringLiteral("FIGURANTE"))
+        return QCoreApplication::translate("ElementCreateDialog", "Figurante");
+    return roleId; // papel personalizado digitado pelo usuário — mostra como está
+}
 
 enum class Tier { Principal, Secundario, Terciario, None };
 

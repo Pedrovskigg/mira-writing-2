@@ -25,30 +25,33 @@ struct IconEntry {
     const char* label;
 };
 
+// Os labels usam QT_TRANSLATE_NOOP (só marca pro lupdate extrair) porque o
+// catálogo é um array estático de const char* fora de qualquer classe — a
+// tradução de fato acontece em DrawerCreateDialog::tr(e.label) no ponto de uso.
 const QList<IconEntry>& drawerIconCatalogRaw() {
     static const QList<IconEntry> kCatalog = {
-        { "user",       "Pessoa" },
-        { "map",        "Mapa" },
-        { "cube",       "Cubo" },
-        { "planet",     "Planeta" },
-        { "moon",       "Lua" },
-        { "sun",        "Sol" },
-        { "sword",      "Espada" },
-        { "gun",        "Arma" },
-        { "car",        "Carro" },
-        { "pin",        "Pin" },
-        { "star",       "Estrela" },
-        { "crown",      "Coroa" },
-        { "heart",      "Coração" },
-        { "tree",       "Árvore" },
-        { "castle",     "Castelo" },
-        { "flask",      "Frasco" },
-        { "skull",      "Caveira" },
-        { "book",       "Livro" },
-        { "file",       "Arquivo" },
-        { "drawer",     "Gaveta" },
-        { "manuscript", "Manuscrito" },
-        { "chapter",    "Capítulo" },
+        { "user",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Pessoa") },
+        { "map",        QT_TRANSLATE_NOOP("DrawerCreateDialog", "Mapa") },
+        { "cube",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Cubo") },
+        { "planet",     QT_TRANSLATE_NOOP("DrawerCreateDialog", "Planeta") },
+        { "moon",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Lua") },
+        { "sun",        QT_TRANSLATE_NOOP("DrawerCreateDialog", "Sol") },
+        { "sword",      QT_TRANSLATE_NOOP("DrawerCreateDialog", "Espada") },
+        { "gun",        QT_TRANSLATE_NOOP("DrawerCreateDialog", "Arma") },
+        { "car",        QT_TRANSLATE_NOOP("DrawerCreateDialog", "Carro") },
+        { "pin",        QT_TRANSLATE_NOOP("DrawerCreateDialog", "Pin") },
+        { "star",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Estrela") },
+        { "crown",      QT_TRANSLATE_NOOP("DrawerCreateDialog", "Coroa") },
+        { "heart",      QT_TRANSLATE_NOOP("DrawerCreateDialog", "Coração") },
+        { "tree",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Árvore") },
+        { "castle",     QT_TRANSLATE_NOOP("DrawerCreateDialog", "Castelo") },
+        { "flask",      QT_TRANSLATE_NOOP("DrawerCreateDialog", "Frasco") },
+        { "skull",      QT_TRANSLATE_NOOP("DrawerCreateDialog", "Caveira") },
+        { "book",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Livro") },
+        { "file",       QT_TRANSLATE_NOOP("DrawerCreateDialog", "Arquivo") },
+        { "drawer",     QT_TRANSLATE_NOOP("DrawerCreateDialog", "Gaveta") },
+        { "manuscript", QT_TRANSLATE_NOOP("DrawerCreateDialog", "Manuscrito") },
+        { "chapter",    QT_TRANSLATE_NOOP("DrawerCreateDialog", "Capítulo") },
     };
     return kCatalog;
 }
@@ -96,7 +99,7 @@ QStringList DrawerCreateDialog::drawerIconCatalog() {
 
 QString DrawerCreateDialog::iconLabel(const QString& iconId) {
     for (const auto& e : drawerIconCatalogRaw()) {
-        if (QString::fromLatin1(e.id) == iconId) return QString::fromUtf8(e.label);
+        if (QString::fromLatin1(e.id) == iconId) return DrawerCreateDialog::tr(e.label);
     }
     return iconId;
 }
@@ -203,7 +206,7 @@ void DrawerCreateDialog::populateIcons() {
     m_iconCombo->clear();
     for (const auto& e : drawerIconCatalogRaw()) {
         const QString id = QString::fromLatin1(e.id);
-        const QString label = QString::fromUtf8(e.label);
+        const QString label = DrawerCreateDialog::tr(e.label);
         QIcon icon = loadElementIcon(id);
         m_iconCombo->addItem(icon, label, id);
     }

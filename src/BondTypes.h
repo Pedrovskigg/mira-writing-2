@@ -29,4 +29,10 @@ QString defaultColor();
 // Grupos de tipo preset (Família, Romântico, Social, Conflito, Poder).
 QList<BondTypeGroup> presetGroups();
 
+// Traduz um valor de CharacterBond.type (ou nome de grupo) pra exibição, sem
+// tocar no que é persistido — os dados salvos continuam em PT-BR (compat com
+// Mira 1). Vínculos personalizados (texto livre, sem tradução registrada)
+// voltam inalterados.
+QString displayName(const QString& raw);
+
 } // namespace BondTypes

@@ -67,7 +67,7 @@ AboutDialog::AboutDialog(QWidget* parent)
     });
     emailRow->addWidget(m_emailBtn);
 
-    auto* emailDesc = new QLabel(QStringLiteral("  |  para bugs, sugestões e contato geral."), this);
+    auto* emailDesc = new QLabel(tr("  |  para bugs, sugestões e contato geral."), this);
     emailDesc->setObjectName(QStringLiteral("aboutFooter"));
     emailRow->addWidget(emailDesc);
     emailRow->addStretch();

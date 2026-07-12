@@ -116,20 +116,13 @@ void ElementsStore::loadFromJson(const QJsonObject& root) {
         m_elementOrder.append(e.id);
     }
 
-    const QJsonArray typesArr = root.value(QStringLiteral("elementTypes")).toArray();
-    if (!typesArr.isEmpty()) {
-        m_elementTypes.clear();
-        for (const auto& v : typesArr) {
-            const QJsonObject o = v.toObject();
-            ElementType t;
-            t.id = jsonString(o.value(QStringLiteral("id")));
-            t.label = jsonString(o.value(QStringLiteral("label")));
-            t.color = jsonString(o.value(QStringLiteral("color")));
-            t.icon = jsonString(o.value(QStringLiteral("icon")));
-            if (!t.id.isEmpty()) m_elementTypes.append(t);
-        }
-        if (m_elementTypes.isEmpty()) seedDefaultTypes();
-    }
+    // Os 3 tipos de elemento (character/setting/object) são fixos e definidos
+    // em código — não há UI pra criar tipos customizados. Por isso o array
+    // "elementTypes" do JSON (herdado de versões antigas do arquivo) é
+    // ignorado aqui: se ele fosse recarregado, o label salvo em disco (preso
+    // no idioma de quando o projeto foi criado) sobrescreveria o tr() atual e
+    // o combo de "Elemento" nunca acompanharia troca de idioma. m_elementTypes
+    // já foi populado por seedDefaultTypes() em clear(), antes desta chamada.
 
     m_docElements = root.value(QStringLiteral("docElements")).toObject();
 }

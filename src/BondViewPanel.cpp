@@ -1,4 +1,5 @@
 #include "BondViewPanel.h"
+#include "BondTypes.h"
 #include "IconUtils.h"
 #include "Theme.h"
 
@@ -135,23 +136,27 @@ void BondViewPanel::buildUi(const CharacterBond& bond,
     root->addWidget(m_header);
 
     // Sentença
-    QString typeLower = bond.type.trimmed();
+    QString typeLower = BondTypes::displayName(bond.type.trimmed());
     if (typeLower.isEmpty()) typeLower = tr("vinculado");
     // Preserva acentos; só lowercase do primeiro caractere se já não vier assim.
     if (!typeLower.isEmpty() && typeLower.at(0).isUpper()) {
         typeLower = typeLower.at(0).toLower() + typeLower.mid(1);
     }
 
+    const QString boldFrom = QStringLiteral("<b>%1</b>").arg(fromTitle.toHtmlEscaped());
+    const QString typeSpan = QStringLiteral("<span style='color:%1; font-weight:700;'>%2</span>")
+        .arg(m_color, typeLower.toHtmlEscaped());
+    const QString boldTo = QStringLiteral("<b>%1</b>").arg(toTitle.toHtmlEscaped());
+    // Frase traduzível: os fragmentos já vêm formatados em HTML, só as
+    // palavras de ligação ("é"/"de") precisam acompanhar o idioma do app.
+    const QString core = tr("%1 é %2 de %3").arg(boldFrom, typeSpan, boldTo);
+
     const QString sentence = QStringLiteral(
         "<span style='color:%1; font-size:16px; line-height: 18px;'>●</span> "
         "<span style='font-family:\"Lora\",\"Crimson Text\",serif; font-size:14px; color:%2;'>"
-        "<b>%3</b> é <span style='color:%1; font-weight:700;'>%4</span> de <b>%5</b>"
+        "%3"
         "</span>")
-        .arg(m_color,
-             Theme::textBright(),
-             fromTitle.toHtmlEscaped(),
-             typeLower.toHtmlEscaped(),
-             toTitle.toHtmlEscaped());
+        .arg(m_color, Theme::textBright(), core);
 
     auto* sentenceLabel = new QLabel(sentence, this);
     sentenceLabel->setTextFormat(Qt::RichText);

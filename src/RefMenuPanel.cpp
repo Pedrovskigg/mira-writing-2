@@ -9,6 +9,7 @@
 #include "MarkerStore.h"
 #include "MemoriesStore.h"
 #include "ProjectModel.h"
+#include "RoleTiers.h"
 #include "ProjectStorage.h"
 #include "SceneUtils.h"
 #include "Theme.h"
@@ -2340,10 +2341,10 @@ bool RefMenuPanel::drawerIsVisual(const Drawer* d) const
 
 QString RefMenuPanel::roleOrLabelForItem(const DrawerItem& it) const
 {
-    if (!it.role.isEmpty()) return it.role;
+    if (!it.role.isEmpty()) return RoleTiers::roleDisplayName(it.role);
     if (m_elements && !it.elementId.isEmpty()) {
         const Element* el = m_elements->findElement(it.elementId);
-        if (el && !el->role.isEmpty()) return el->role;
+        if (el && !el->role.isEmpty()) return RoleTiers::roleDisplayName(el->role);
     }
     return QString();
 }

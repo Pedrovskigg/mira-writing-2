@@ -620,15 +620,18 @@ void ConstrutorWindow::updateFocusedBlock()
 
 void ConstrutorWindow::setStore(ConstrutorStore* store)
 {
-    if (m_store == store) return;
-    if (m_store)
-        disconnect(m_store, &ConstrutorStore::changed, this, &ConstrutorWindow::onStoreChanged);
-    m_store = store;
-    if (m_searchEdit) m_searchEdit->clear();
-    if (m_store) {
-        connect(m_store, &ConstrutorStore::changed, this, &ConstrutorWindow::onStoreChanged);
-        rebuildSystemsList();
+    if (m_store != store) {
+        if (m_store)
+            disconnect(m_store, &ConstrutorStore::changed, this, &ConstrutorWindow::onStoreChanged);
+        m_store = store;
+        if (m_store)
+            connect(m_store, &ConstrutorStore::changed, this, &ConstrutorWindow::onStoreChanged);
     }
+    if (m_searchEdit) m_searchEdit->clear();
+    // Reconstrói sempre: o mesmo ponteiro de store é reaproveitado entre
+    // projetos (só o conteúdo interno muda via setProjectRoot+load), então a
+    // igualdade de ponteiro sozinha não pode ser usada pra pular o rebuild.
+    if (m_store) rebuildSystemsList();
 }
 
 void ConstrutorWindow::closeEvent(QCloseEvent* event)

@@ -196,7 +196,7 @@ void BondPopup::buildUi() {
     m_typeButton->setCursor(Qt::PointingHandCursor);
     m_typeButton->setMinimumHeight(36);
     m_typeButton->setStyleSheet(typeButtonQss(m_type.isEmpty()));
-    m_typeButton->setText(m_type.isEmpty() ? tr("Selecione ou escreva…") : m_type);
+    m_typeButton->setText(m_type.isEmpty() ? tr("Selecione ou escreva…") : BondTypes::displayName(m_type));
     connect(m_typeButton, &QPushButton::clicked, this, &BondPopup::openTypePicker);
     root->addWidget(m_typeButton);
 
@@ -337,7 +337,7 @@ void BondPopup::applyColor(const QString& c) {
 void BondPopup::applyType(const QString& t) {
     m_type = t;
     if (m_typeButton) {
-        m_typeButton->setText(t.isEmpty() ? tr("Selecione ou escreva…") : t);
+        m_typeButton->setText(t.isEmpty() ? tr("Selecione ou escreva…") : BondTypes::displayName(t));
         m_typeButton->setStyleSheet(typeButtonQss(t.isEmpty()));
     }
     if (m_confirmBtn) m_confirmBtn->setEnabled(!t.trimmed().isEmpty());
@@ -438,12 +438,12 @@ void BondPopup::openTypePicker() {
 
     // Grupos
     for (const auto& grp : BondTypes::presetGroups()) {
-        auto* header = new QListWidgetItem(grp.name.toUpper());
+        auto* header = new QListWidgetItem(BondTypes::displayName(grp.name).toUpper());
         header->setFlags(Qt::NoItemFlags); // header não selecionável
         list->addItem(header);
         for (const auto& opt : grp.options) {
             const QString label = (gender == QLatin1String("f")) ? opt.feminine : opt.masculine;
-            auto* it = new QListWidgetItem(label);
+            auto* it = new QListWidgetItem(BondTypes::displayName(label));
             it->setData(Qt::UserRole, label);
             if (label == m_type) it->setSelected(true);
             list->addItem(it);
