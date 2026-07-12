@@ -42,11 +42,17 @@ Enjoy.</translation>
     </message>
     <message>
         <location filename="../src/AboutDialog.cpp" line="90"/>
+        <location filename="../src/AboutDialog.cpp" line="113"/>
         <source>Abrir no navegador</source>
         <translation>Open in browser</translation>
     </message>
     <message>
-        <location filename="../src/AboutDialog.cpp" line="109"/>
+        <location filename="../src/AboutDialog.cpp" line="105"/>
+        <source>Código-fonte:  </source>
+        <translation>Source code:  </translation>
+    </message>
+    <message>
+        <location filename="../src/AboutDialog.cpp" line="133"/>
         <source>Current version: %1</source>
         <translation>Current version: %1</translation>
     </message>

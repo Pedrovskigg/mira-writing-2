@@ -36,11 +36,17 @@ Aproveite.</source>
     </message>
     <message>
         <location filename="../src/AboutDialog.cpp" line="90"/>
+        <location filename="../src/AboutDialog.cpp" line="113"/>
         <source>Abrir no navegador</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/AboutDialog.cpp" line="109"/>
+        <location filename="../src/AboutDialog.cpp" line="105"/>
+        <source>Código-fonte:  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/AboutDialog.cpp" line="133"/>
         <source>Current version: %1</source>
         <translation type="unfinished"></translation>
     </message>

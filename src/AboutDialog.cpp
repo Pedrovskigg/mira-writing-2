@@ -95,6 +95,30 @@ AboutDialog::AboutDialog(QWidget* parent)
     githubRow->addStretch();
     root->addLayout(githubRow);
 
+    root->addSpacing(6);
+
+    // Código-fonte: clique abre no browser
+    auto* sourceRow = new QHBoxLayout();
+    sourceRow->setContentsMargins(0, 0, 0, 0);
+    sourceRow->setSpacing(0);
+
+    auto* sourcePrefix = new QLabel(tr("Código-fonte:  "), this);
+    sourcePrefix->setObjectName(QStringLiteral("aboutFooter"));
+    sourceRow->addWidget(sourcePrefix);
+
+    auto* sourceBtn = new QPushButton(
+        QStringLiteral("https://github.com/Pedrovskigg/mira-writing-2"), this);
+    sourceBtn->setObjectName(QStringLiteral("aboutInlineBtn"));
+    sourceBtn->setCursor(Qt::PointingHandCursor);
+    sourceBtn->setToolTip(tr("Abrir no navegador"));
+    connect(sourceBtn, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(
+            QUrl(QStringLiteral("https://github.com/Pedrovskigg/mira-writing-2")));
+    });
+    sourceRow->addWidget(sourceBtn);
+    sourceRow->addStretch();
+    root->addLayout(sourceRow);
+
     root->addSpacing(20);
 
     auto* authorLabel = new QLabel(
