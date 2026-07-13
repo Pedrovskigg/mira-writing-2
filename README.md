@@ -1,6 +1,6 @@
-# Mira Writing
+# Qiyva Writer
 
-Mira Writing 2 is the remake of the original Mira Writing (JSX), now
+Qiyva Writer is the remake of the Mira Writing (JSX), now
 completely rebuilt in C++/Qt.
 
 This repository holds the **source code** of the application. For
@@ -9,13 +9,13 @@ https://github.com/Pedrovskigg/mira-writing-2-releases
 
 ---
 
-Mira Writing is a text editor and multi-document manager built entirely for
+Qiyva Writer is a text editor and multi-document manager built entirely for
 the craft of creative writing — drawers for characters, settings and
 objects, multi-manuscript projects, a visual Board for plotting, a Timeline,
 a world-building tool (the Builder), writing goals and stats, and more, all
 wrapped in a fully themeable editor with Focus Mode.
 
-Mira Writing is free — no subscriptions, no paywalled features. Made by one
+Qiyva Writer is free — no subscriptions, no paywalled features. Made by one
 writer, for other writers.
 
 ## Tech stack
