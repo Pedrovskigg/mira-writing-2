@@ -11,7 +11,7 @@
 
 namespace {
 constexpr const char* kReleaseUrl =
-    "https://github.com/Pedrovskigg/mira-writing-2-releases/releases/latest";
+    "https://github.com/Pedrovskigg/Qiyva-Writer-releases/releases/latest";
 }
 
 UpdateNoticeDialog::UpdateNoticeDialog(QWidget* parent)
