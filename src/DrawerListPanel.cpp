@@ -112,13 +112,23 @@ constexpr int kMaxPanelWidth = 600;
 constexpr int kMinPanelHeight = 220;
 constexpr int kResizeHandleWidth = 5;
 
+// Função livre (sem Q_OBJECT) — precisa de QCoreApplication::translate() com
+// contexto explícito, não tr() bruto, senão o texto nunca é traduzido em
+// runtime mesmo com a tradução presente no .ts (mesmo bug do ThemeCard, ver
+// translationmemories.md #2). O contexto e os textos batem com os tr()
+// já existentes no menu de ordenação logo abaixo, então reaproveita as
+// traduções que já existem pra eles.
 QString sortLabelFor(DrawerListPanel::SortMode mode, bool asc) {
     switch (mode) {
-        case DrawerListPanel::SortCreation: return asc ? QStringLiteral("Criação ↑") : QStringLiteral("Criação ↓");
-        case DrawerListPanel::SortAlpha:    return QStringLiteral("A → Z");
-        case DrawerListPanel::SortRole:     return QStringLiteral("Por papel");
+        case DrawerListPanel::SortCreation:
+            return asc ? QCoreApplication::translate("DrawerListPanel", "Criação ↑")
+                       : QCoreApplication::translate("DrawerListPanel", "Criação ↓");
+        case DrawerListPanel::SortAlpha:
+            return QCoreApplication::translate("DrawerListPanel", "A → Z");
+        case DrawerListPanel::SortRole:
+            return QCoreApplication::translate("DrawerListPanel", "Por papel");
     }
-    return QStringLiteral("Criação ↑");
+    return QCoreApplication::translate("DrawerListPanel", "Criação ↑");
 }
 
 QString miniIconBtnQss() {
