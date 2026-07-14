@@ -3,6 +3,9 @@
 #include <QList>
 #include <QObject>
 #include <QString>
+#include <QTime>
+
+class QTimer;
 
 namespace Theme {
 
@@ -93,6 +96,17 @@ struct MiraTheme {
     int editorOpacity = 100;
 };
 
+// Troca automática de tema por horário (dia/noite). "day"/"night" aqui
+// referem-se aos dois papéis configuráveis, não a categorias de tema —
+// qualquer tema (bundled ou custom) pode ser atribuído a qualquer papel.
+struct AutoSwitchConfig {
+    bool enabled = false;
+    QString dayThemeId;
+    QString nightThemeId;
+    QTime dayStart = QTime(7, 0);
+    QTime nightStart = QTime(19, 0);
+};
+
 // Singleton observável. Quem precisa reagir a troca de tema deve conectar
 // ao sinal themeChanged() e reaplicar suas stylesheets.
 class Manager : public QObject {
@@ -116,9 +130,17 @@ public:
     bool removeCustom(const QString& id);
     QString uniqueCustomId(const QString& base = QStringLiteral("custom")) const;
 
+    // Troca automática por horário (dia/noite). setAutoSwitchConfig() persiste,
+    // (re)inicia o timer interno e reaplica o tema esperado imediatamente se
+    // enabled. Aplicar um tema manualmente (setCurrent) enquanto enabled=true
+    // desliga a troca automática — evita o timer "brigar" com uma escolha manual.
+    const AutoSwitchConfig& autoSwitchConfig() const { return m_autoSwitch; }
+    void setAutoSwitchConfig(const AutoSwitchConfig& cfg);
+
 signals:
     void themeChanged();
     void customThemesChanged();
+    void autoSwitchConfigChanged();
 
 private:
     Manager();
@@ -127,10 +149,18 @@ private:
     void saveToSettings() const;
     void loadCustomThemes();
     void saveCustomThemes() const;
+    void loadAutoSwitchSettings();
+    void saveAutoSwitchSettings() const;
+    void tickAutoSwitch();
+    QString expectedAutoThemeId() const;
 
     QList<MiraTheme> m_themes;        // bundled + custom (custom no fim)
     int m_currentIndex = 0;
     int m_bundledCount = 0;           // bundled ocupam [0, m_bundledCount)
+
+    AutoSwitchConfig m_autoSwitch;
+    QTimer* m_autoSwitchTimer = nullptr;
+    bool m_applyingAutoSwitch = false; // true durante tickAutoSwitch(), evita autodesligar
 };
 
 // API legada — chamadas existentes (`Theme::appBackground()` etc.) seguem

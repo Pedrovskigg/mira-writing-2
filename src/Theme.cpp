@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
+#include <QTimer>
 
 namespace Theme {
 
@@ -43,6 +44,15 @@ Manager::Manager()
     m_bundledCount = m_themes.size();
     loadCustomThemes();
     loadFromSettings();
+    loadAutoSwitchSettings();
+
+    m_autoSwitchTimer = new QTimer(this);
+    m_autoSwitchTimer->setInterval(60000);
+    connect(m_autoSwitchTimer, &QTimer::timeout, this, &Manager::tickAutoSwitch);
+    if (m_autoSwitch.enabled) {
+        tickAutoSwitch();
+        m_autoSwitchTimer->start();
+    }
 }
 
 void Manager::loadBundled()
@@ -5544,6 +5554,82 @@ void Manager::saveToSettings() const
                m_themes.at(m_currentIndex).id);
 }
 
+void Manager::loadAutoSwitchSettings()
+{
+    QSettings s;
+    m_autoSwitch.enabled = s.value(QStringLiteral("theme/autoSwitch/enabled"), false).toBool();
+    m_autoSwitch.dayThemeId = s.value(QStringLiteral("theme/autoSwitch/dayThemeId")).toString();
+    m_autoSwitch.nightThemeId = s.value(QStringLiteral("theme/autoSwitch/nightThemeId")).toString();
+    m_autoSwitch.dayStart = QTime::fromString(
+        s.value(QStringLiteral("theme/autoSwitch/dayStart"), QStringLiteral("07:00")).toString(),
+        QStringLiteral("HH:mm"));
+    m_autoSwitch.nightStart = QTime::fromString(
+        s.value(QStringLiteral("theme/autoSwitch/nightStart"), QStringLiteral("19:00")).toString(),
+        QStringLiteral("HH:mm"));
+    if (!m_autoSwitch.dayStart.isValid()) m_autoSwitch.dayStart = QTime(7, 0);
+    if (!m_autoSwitch.nightStart.isValid()) m_autoSwitch.nightStart = QTime(19, 0);
+    // Config incompleta (ex.: papéis nunca atribuídos) não pode ficar "enabled".
+    if (m_autoSwitch.dayThemeId.isEmpty() || m_autoSwitch.nightThemeId.isEmpty())
+        m_autoSwitch.enabled = false;
+}
+
+void Manager::saveAutoSwitchSettings() const
+{
+    QSettings s;
+    s.setValue(QStringLiteral("theme/autoSwitch/enabled"), m_autoSwitch.enabled);
+    s.setValue(QStringLiteral("theme/autoSwitch/dayThemeId"), m_autoSwitch.dayThemeId);
+    s.setValue(QStringLiteral("theme/autoSwitch/nightThemeId"), m_autoSwitch.nightThemeId);
+    s.setValue(QStringLiteral("theme/autoSwitch/dayStart"), m_autoSwitch.dayStart.toString(QStringLiteral("HH:mm")));
+    s.setValue(QStringLiteral("theme/autoSwitch/nightStart"), m_autoSwitch.nightStart.toString(QStringLiteral("HH:mm")));
+}
+
+// Papel esperado ("day"/"night") pro horário atual. dayStart/nightStart formam
+// dois arcos complementares no relógio de 24h — funciona mesmo se o "dia"
+// atravessar a meia-noite (ex.: dayStart 22:00, nightStart 06:00).
+QString Manager::expectedAutoThemeId() const
+{
+    if (!m_autoSwitch.enabled) return QString();
+    if (m_autoSwitch.dayThemeId.isEmpty() || m_autoSwitch.nightThemeId.isEmpty()) return QString();
+    const QTime now = QTime::currentTime();
+    const QTime& d = m_autoSwitch.dayStart;
+    const QTime& n = m_autoSwitch.nightStart;
+    bool isDay;
+    if (d == n) {
+        isDay = true;
+    } else if (d < n) {
+        isDay = (now >= d && now < n);
+    } else {
+        isDay = (now >= d || now < n);
+    }
+    return isDay ? m_autoSwitch.dayThemeId : m_autoSwitch.nightThemeId;
+}
+
+void Manager::tickAutoSwitch()
+{
+    if (!m_autoSwitch.enabled) return;
+    const QString wanted = expectedAutoThemeId();
+    if (wanted.isEmpty() || wanted == m_themes.at(m_currentIndex).id) return;
+    m_applyingAutoSwitch = true;
+    setCurrent(wanted);
+    m_applyingAutoSwitch = false;
+}
+
+void Manager::setAutoSwitchConfig(const AutoSwitchConfig& cfg)
+{
+    m_autoSwitch = cfg;
+    if (m_autoSwitch.dayThemeId.isEmpty() || m_autoSwitch.nightThemeId.isEmpty())
+        m_autoSwitch.enabled = false;
+    saveAutoSwitchSettings();
+    emit autoSwitchConfigChanged();
+
+    if (m_autoSwitch.enabled) {
+        tickAutoSwitch();
+        if (!m_autoSwitchTimer->isActive()) m_autoSwitchTimer->start();
+    } else {
+        m_autoSwitchTimer->stop();
+    }
+}
+
 namespace {
 
 QJsonObject themeToJson(const MiraTheme& t)
@@ -5749,6 +5835,18 @@ bool Manager::removeCustom(const QString& id)
             }
             saveCustomThemes();
             emit customThemesChanged();
+            // Papel diurno/noturno apontando pro tema excluído perderia o
+            // destino — limpa o papel e desliga a troca automática (em vez de
+            // deixar um id morto que reativaria "quebrado" se o usuário
+            // religasse o checkbox sem reatribuir os dois papéis).
+            if (m_autoSwitch.dayThemeId == id || m_autoSwitch.nightThemeId == id) {
+                if (m_autoSwitch.dayThemeId == id) m_autoSwitch.dayThemeId.clear();
+                if (m_autoSwitch.nightThemeId == id) m_autoSwitch.nightThemeId.clear();
+                m_autoSwitch.enabled = false;
+                saveAutoSwitchSettings();
+                m_autoSwitchTimer->stop();
+                emit autoSwitchConfigChanged();
+            }
             return true;
         }
     }
@@ -5772,6 +5870,15 @@ void Manager::setCurrent(const QString& id)
             if (i == m_currentIndex) return;
             m_currentIndex = i;
             saveToSettings();
+            // Escolha manual (fora do tick do timer) enquanto a troca automática
+            // está ligada é uma decisão consciente do usuário — desliga o auto
+            // switch em vez de deixar o próximo tick sobrescrever a escolha.
+            if (!m_applyingAutoSwitch && m_autoSwitch.enabled) {
+                m_autoSwitch.enabled = false;
+                saveAutoSwitchSettings();
+                m_autoSwitchTimer->stop();
+                emit autoSwitchConfigChanged();
+            }
             emit themeChanged();
             return;
         }

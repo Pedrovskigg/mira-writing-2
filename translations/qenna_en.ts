@@ -1250,361 +1250,366 @@ The project folder will be erased from disk. This action CANNOT be undone.</tran
 <context>
     <name>DrawerListPanel</name>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="335"/>
-        <location filename="../src/DrawerListPanel.cpp" line="1078"/>
+        <location filename="../src/DrawerListPanel.cpp" line="337"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1129"/>
         <source>Gaveta</source>
         <translation>Drawer</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="360"/>
+        <location filename="../src/DrawerListPanel.cpp" line="362"/>
         <source>Fixar painel</source>
         <translation>Pin panel</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="369"/>
+        <location filename="../src/DrawerListPanel.cpp" line="371"/>
         <source>Modo consistência narrativa</source>
         <translation>Narrative consistency mode</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="399"/>
+        <location filename="../src/DrawerListPanel.cpp" line="401"/>
         <source>Alternar exibição</source>
         <translation>Toggle view</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="408"/>
+        <location filename="../src/DrawerListPanel.cpp" line="410"/>
         <source>Tamanho dos cards</source>
         <translation>Card size</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="420"/>
+        <location filename="../src/DrawerListPanel.cpp" line="422"/>
         <source>Ordem de exibição</source>
         <translation>Display order</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="448"/>
+        <location filename="../src/DrawerListPanel.cpp" line="450"/>
         <source>Criação ↑</source>
         <translation>Created ↑</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="449"/>
+        <location filename="../src/DrawerListPanel.cpp" line="451"/>
         <source>Criação ↓</source>
         <translation>Created ↓</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="450"/>
+        <location filename="../src/DrawerListPanel.cpp" line="452"/>
         <source>A → Z</source>
         <translation>A → Z</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="452"/>
+        <location filename="../src/DrawerListPanel.cpp" line="454"/>
         <source>Por papel</source>
         <translation>By role</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="458"/>
+        <location filename="../src/DrawerListPanel.cpp" line="460"/>
         <source>Fechar</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="487"/>
+        <location filename="../src/DrawerListPanel.cpp" line="489"/>
         <source>+ Pasta</source>
         <translation>+ Folder</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="703"/>
+        <location filename="../src/DrawerListPanel.cpp" line="688"/>
+        <source>Capítulo sem título</source>
+        <translation>Untitled chapter</translation>
+    </message>
+    <message>
+        <location filename="../src/DrawerListPanel.cpp" line="754"/>
         <source>Status personalizado...</source>
         <translation>Custom status...</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="716"/>
+        <location filename="../src/DrawerListPanel.cpp" line="767"/>
         <source>Limpar status</source>
         <translation>Clear status</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="729"/>
+        <location filename="../src/DrawerListPanel.cpp" line="780"/>
         <source>Morto</source>
         <translation>Dead</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="729"/>
+        <location filename="../src/DrawerListPanel.cpp" line="780"/>
         <source>Desaparecido</source>
         <translation>Missing</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="729"/>
+        <location filename="../src/DrawerListPanel.cpp" line="780"/>
         <source>Ferido</source>
         <translation>Injured</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="730"/>
+        <location filename="../src/DrawerListPanel.cpp" line="781"/>
         <source>Curado</source>
         <translation>Healed</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="730"/>
+        <location filename="../src/DrawerListPanel.cpp" line="781"/>
         <source>Apaixonado</source>
         <translation>In love</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="730"/>
+        <location filename="../src/DrawerListPanel.cpp" line="781"/>
         <source>Raivoso</source>
         <translation>Angry</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="731"/>
+        <location filename="../src/DrawerListPanel.cpp" line="782"/>
         <source>Feliz</source>
         <translation>Happy</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="731"/>
+        <location filename="../src/DrawerListPanel.cpp" line="782"/>
         <source>Triste</source>
         <translation>Sad</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="731"/>
+        <location filename="../src/DrawerListPanel.cpp" line="782"/>
         <source>Confuso</source>
         <translation>Confused</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="732"/>
+        <location filename="../src/DrawerListPanel.cpp" line="783"/>
         <source>Traído</source>
         <translation>Betrayed</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="732"/>
+        <location filename="../src/DrawerListPanel.cpp" line="783"/>
         <source>Com medo</source>
         <translation>Afraid</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="732"/>
+        <location filename="../src/DrawerListPanel.cpp" line="783"/>
         <source>Em fuga</source>
         <translation>On the run</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="733"/>
+        <location filename="../src/DrawerListPanel.cpp" line="784"/>
         <source>Preso</source>
         <translation>Imprisoned</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="733"/>
+        <location filename="../src/DrawerListPanel.cpp" line="784"/>
         <source>Transformado</source>
         <translation>Transformed</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="733"/>
+        <location filename="../src/DrawerListPanel.cpp" line="784"/>
         <source>Aliviado</source>
         <translation>Relieved</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="734"/>
+        <location filename="../src/DrawerListPanel.cpp" line="785"/>
         <source>Perdido</source>
         <translation>Lost</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="807"/>
+        <location filename="../src/DrawerListPanel.cpp" line="858"/>
         <source>Local personalizado...</source>
         <translation>Custom location...</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="820"/>
+        <location filename="../src/DrawerListPanel.cpp" line="871"/>
         <source>Limpar local</source>
         <translation>Clear location</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="832"/>
+        <location filename="../src/DrawerListPanel.cpp" line="883"/>
         <source>Nenhum cenário criado.</source>
         <translation>No setting created yet.</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="942"/>
+        <location filename="../src/DrawerListPanel.cpp" line="993"/>
         <source>Contar somente cenas</source>
         <translation>Count scenes only</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="943"/>
+        <location filename="../src/DrawerListPanel.cpp" line="994"/>
         <source>Contar somente capítulos inteiros</source>
         <translation>Count whole chapters only</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="983"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1034"/>
         <source>Sem ocorrências registradas.</source>
         <translation>No occurrences recorded.</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="996"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1047"/>
         <source>Cena %1</source>
         <translation>Scene %1</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1099"/>
-        <location filename="../src/DrawerListPanel.cpp" line="1101"/>
-        <location filename="../src/DrawerListPanel.cpp" line="1105"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1150"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1152"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1156"/>
         <source>Criar novo documento</source>
         <translation>Create new document</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1102"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1153"/>
         <source>Criar novo personagem</source>
         <translation>Create new character</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1103"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1154"/>
         <source>Criar novo cenário</source>
         <translation>Create new setting</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1104"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1155"/>
         <source>Criar novo objeto</source>
         <translation>Create new object</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1170"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1221"/>
         <source>Pasta</source>
         <translation>Folder</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1240"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1291"/>
         <source>Cards: Pequeno</source>
         <translation>Cards: Small</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1241"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1292"/>
         <source>Cards: Médio</source>
         <translation>Cards: Medium</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1242"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1293"/>
         <source>Cards: Grande</source>
         <translation>Cards: Large</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1253"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1304"/>
         <source>Exibição: Blocos — clique para Lista</source>
         <translation>View: Grid — click for List</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1254"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1305"/>
         <source>Exibição: Lista — clique para Blocos</source>
         <translation>View: List — click for Grid</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1306"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1357"/>
         <source>Voltar</source>
         <translation>Back</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1425"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1477"/>
         <source>Clique e arraste no nome dos personagens pra criar vínculos entre eles.</source>
         <translation>Click and drag character names to create bonds between them.</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1527"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1584"/>
         <source>sem foto</source>
         <translation>no photo</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1537"/>
-        <location filename="../src/DrawerListPanel.cpp" line="2300"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1594"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2377"/>
         <source>(sem nome)</source>
         <translation>(unnamed)</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1570"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1627"/>
         <source>Arrastar para criar vínculo</source>
         <translation>Drag to create a bond</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1612"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1673"/>
         <source>cena(s)</source>
         <translation>scene(s)</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1612"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1673"/>
         <source>capítulo(s)</source>
         <translation>chapter(s)</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1620"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1681"/>
         <source>Aparece em %1 de %2 %3 (%4%) — clique para detalhes</source>
         <translation>Appears in %1 of %2 %3 (%4%) — click for details</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1643"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1710"/>
         <source>Status: —</source>
         <translation>Status: —</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1644"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1711"/>
         <source>Status: %1</source>
         <translation>Status: %1</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1676"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1743"/>
         <source>⚠ Aparece em %1 cena(s) após %2</source>
         <translation>⚠ Appears in %1 scene(s) after %2</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1690"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1757"/>
         <source>Local: —</source>
         <translation>Location: —</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="1691"/>
+        <location filename="../src/DrawerListPanel.cpp" line="1758"/>
         <source>Local: %1</source>
         <translation>Location: %1</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2034"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2111"/>
         <source>Vazio. Use o botão acima pra criar.</source>
         <translation>Empty. Use the button above to create one.</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2082"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2159"/>
         <source>Novo grupo</source>
         <translation>New group</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2127"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2204"/>
         <source>Nome do grupo</source>
         <translation>Group name</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2161"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2238"/>
         <source>Cancelar</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2163"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2240"/>
         <source>Criar</source>
         <translation>Create</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2210"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2287"/>
         <source>Editar metadados…</source>
         <translation>Edit metadata…</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2216"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2293"/>
         <source>Remover elemento</source>
         <translation>Remove element</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2221"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2298"/>
         <source>Adicionar elemento…</source>
         <translation>Add element…</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2228"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2305"/>
         <source>Adicionar ao grupo</source>
         <translation>Add to group</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2254"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2331"/>
         <source>Novo grupo...</source>
         <translation>New group...</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2259"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2336"/>
         <source>Remover do grupo</source>
         <translation>Remove from group</translation>
     </message>
@@ -1617,39 +1622,39 @@ The project folder will be erased from disk. This action CANNOT be undone.</tran
         <translation type="vanished">Coming soon</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2266"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2343"/>
         <source>Abrir no Menu de Referência</source>
         <translation>Open in Reference Menu</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2273"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2350"/>
         <source>Mover para</source>
         <translation>Move to</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2276"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2353"/>
         <source>Esta gaveta</source>
         <translation>This drawer</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2278"/>
-        <location filename="../src/DrawerListPanel.cpp" line="2308"/>
-        <location filename="../src/DrawerListPanel.cpp" line="2352"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2355"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2385"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2429"/>
         <source>Raiz da gaveta</source>
         <translation>Drawer root</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2296"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2373"/>
         <source>Outras gavetas</source>
         <translation>Other drawers</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2324"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2401"/>
         <source>Excluir</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location filename="../src/DrawerListPanel.cpp" line="2351"/>
+        <location filename="../src/DrawerListPanel.cpp" line="2428"/>
         <source>Mover pasta para</source>
         <translation>Move folder to</translation>
     </message>
@@ -1817,6 +1822,34 @@ The project folder will be erased from disk. This action CANNOT be undone.</tran
         <location filename="../src/ElementCreateDialog.cpp" line="271"/>
         <source>Imagens (*.png *.jpg *.jpeg *.gif *.bmp *.webp)</source>
         <translation>Images (*.png *.jpg *.jpeg *.gif *.bmp *.webp)</translation>
+    </message>
+</context>
+<context>
+    <name>ElementsPresentDialog</name>
+    <message>
+        <location filename="../src/ElementsPresentDialog.cpp" line="18"/>
+        <source>Elementos presentes…</source>
+        <translation>Elements present…</translation>
+    </message>
+    <message>
+        <location filename="../src/ElementsPresentDialog.cpp" line="84"/>
+        <source>(sem nome)</source>
+        <translation>(unnamed)</translation>
+    </message>
+    <message>
+        <location filename="../src/ElementsPresentDialog.cpp" line="93"/>
+        <source>Nenhum elemento no projeto ainda.</source>
+        <translation>No elements in the project yet.</translation>
+    </message>
+    <message>
+        <location filename="../src/ElementsPresentDialog.cpp" line="105"/>
+        <source>Cancelar</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <location filename="../src/ElementsPresentDialog.cpp" line="107"/>
+        <source>Salvar</source>
+        <translation>Save</translation>
     </message>
 </context>
 <context>
@@ -3175,87 +3208,87 @@ Click &quot;New&quot; to start one, or &quot;Load&quot; to open an existing fold
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="349"/>
-        <location filename="../src/MainWindow.cpp" line="3685"/>
+        <location filename="../src/MainWindow.cpp" line="350"/>
+        <location filename="../src/MainWindow.cpp" line="3704"/>
         <source>Qenna Writer</source>
         <translation>Qenna Writer</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="506"/>
+        <location filename="../src/MainWindow.cpp" line="507"/>
         <source>Capítulo %1</source>
         <translation>Chapter %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="599"/>
+        <location filename="../src/MainWindow.cpp" line="600"/>
         <source>Negrito</source>
         <translation>Bold</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="606"/>
+        <location filename="../src/MainWindow.cpp" line="607"/>
         <source>Itálico</source>
         <translation>Italic</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="613"/>
+        <location filename="../src/MainWindow.cpp" line="614"/>
         <source>Sublinhado</source>
         <translation>Underline</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="620"/>
+        <location filename="../src/MainWindow.cpp" line="621"/>
         <source>Tachado</source>
         <translation>Strikethrough</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="629"/>
+        <location filename="../src/MainWindow.cpp" line="630"/>
         <source>Marcador</source>
         <translation>Marker</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="631"/>
+        <location filename="../src/MainWindow.cpp" line="632"/>
         <source>Marcador com comentário</source>
         <translation>Marker with comment</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="633"/>
+        <location filename="../src/MainWindow.cpp" line="634"/>
         <source>Adicionar ao Glossário</source>
         <translation>Add to Glossary</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="648"/>
+        <location filename="../src/MainWindow.cpp" line="649"/>
         <source>Criar documento disso...</source>
         <translation>Create document from this...</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="696"/>
+        <location filename="../src/MainWindow.cpp" line="697"/>
         <source>(capítulo sem título)</source>
         <translation>(untitled chapter)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="703"/>
-        <location filename="../src/MainWindow.cpp" line="1025"/>
-        <location filename="../src/MainWindow.cpp" line="1039"/>
-        <location filename="../src/MainWindow.cpp" line="2053"/>
-        <location filename="../src/MainWindow.cpp" line="5638"/>
+        <location filename="../src/MainWindow.cpp" line="704"/>
+        <location filename="../src/MainWindow.cpp" line="1026"/>
+        <location filename="../src/MainWindow.cpp" line="1040"/>
+        <location filename="../src/MainWindow.cpp" line="2072"/>
+        <location filename="../src/MainWindow.cpp" line="5657"/>
         <source>Cena %1</source>
         <translation>Scene %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="710"/>
+        <location filename="../src/MainWindow.cpp" line="711"/>
         <source>(item sem título)</source>
         <translation>(untitled item)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="802"/>
+        <location filename="../src/MainWindow.cpp" line="803"/>
         <source>Nova cena criada</source>
         <translation>New scene created</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1364"/>
+        <location filename="../src/MainWindow.cpp" line="1365"/>
         <source>Erro ao salvar</source>
         <translation>Error saving</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1365"/>
+        <location filename="../src/MainWindow.cpp" line="1366"/>
         <source>Não foi possível salvar o projeto:
 %1</source>
         <translation>Couldn&apos;t save the project:
@@ -3270,12 +3303,12 @@ Click &quot;New&quot; to start one, or &quot;Load&quot; to open an existing fold
         <translation type="vanished">Chapter title:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1963"/>
+        <location filename="../src/MainWindow.cpp" line="1964"/>
         <source>Novo manuscrito</source>
         <translation>New manuscript</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1964"/>
+        <location filename="../src/MainWindow.cpp" line="1965"/>
         <source>Título do manuscrito:</source>
         <translation>Manuscript title:</translation>
     </message>
@@ -3284,222 +3317,222 @@ Click &quot;New&quot; to start one, or &quot;Load&quot; to open an existing fold
         <translation type="vanished">Rename chapter</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1996"/>
-        <location filename="../src/MainWindow.cpp" line="2056"/>
+        <location filename="../src/MainWindow.cpp" line="1997"/>
+        <location filename="../src/MainWindow.cpp" line="2075"/>
         <source>Novo título:</source>
         <translation>New title:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1993"/>
-        <location filename="../src/MainWindow.cpp" line="2006"/>
-        <location filename="../src/MainWindow.cpp" line="2034"/>
-        <location filename="../src/MainWindow.cpp" line="2366"/>
+        <location filename="../src/MainWindow.cpp" line="1994"/>
+        <location filename="../src/MainWindow.cpp" line="2007"/>
+        <location filename="../src/MainWindow.cpp" line="2053"/>
+        <location filename="../src/MainWindow.cpp" line="2385"/>
         <source>(sem título)</source>
         <translation>(untitled)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="650"/>
+        <location filename="../src/MainWindow.cpp" line="651"/>
         <source>Criar evento da linha do tempo...</source>
         <translation>Create timeline event...</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="652"/>
+        <location filename="../src/MainWindow.cpp" line="653"/>
         <source>Adicionar à memória...</source>
         <translation>Add to memory...</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="656"/>
+        <location filename="../src/MainWindow.cpp" line="657"/>
         <source>Alinhar à esquerda</source>
         <translation>Align left</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="663"/>
+        <location filename="../src/MainWindow.cpp" line="664"/>
         <source>Centralizar</source>
         <translation>Center</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="670"/>
+        <location filename="../src/MainWindow.cpp" line="671"/>
         <source>Alinhar à direita</source>
         <translation>Align right</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="677"/>
+        <location filename="../src/MainWindow.cpp" line="678"/>
         <source>Justificar</source>
         <translation>Justify</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1008"/>
-        <location filename="../src/MainWindow.cpp" line="5636"/>
-        <location filename="../src/MainWindow.cpp" line="5645"/>
+        <location filename="../src/MainWindow.cpp" line="1009"/>
+        <location filename="../src/MainWindow.cpp" line="5655"/>
+        <location filename="../src/MainWindow.cpp" line="5664"/>
         <source>Capítulo</source>
         <translation>Chapter</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1026"/>
-        <location filename="../src/MainWindow.cpp" line="1040"/>
-        <location filename="../src/MainWindow.cpp" line="5639"/>
+        <location filename="../src/MainWindow.cpp" line="1027"/>
+        <location filename="../src/MainWindow.cpp" line="1041"/>
+        <location filename="../src/MainWindow.cpp" line="5658"/>
         <source>%1 — %2</source>
         <translation>%1 — %2</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1273"/>
+        <location filename="../src/MainWindow.cpp" line="1274"/>
         <source>memória do personagem</source>
         <translation>character memory</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1273"/>
+        <location filename="../src/MainWindow.cpp" line="1274"/>
         <source>memória do projeto</source>
         <translation>project memory</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1275"/>
+        <location filename="../src/MainWindow.cpp" line="1276"/>
         <source>Memória salva</source>
         <translation>Memory saved</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1276"/>
+        <location filename="../src/MainWindow.cpp" line="1277"/>
         <source>Trecho guardado na %1.</source>
         <translation>Passage saved to %1.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1314"/>
-        <location filename="../src/MainWindow.cpp" line="3673"/>
+        <location filename="../src/MainWindow.cpp" line="1315"/>
+        <location filename="../src/MainWindow.cpp" line="3692"/>
         <source>Lembrete</source>
         <translation>Reminder</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="1995"/>
+        <location filename="../src/MainWindow.cpp" line="1996"/>
         <source>Renomear manuscrito</source>
         <translation>Rename manuscript</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2007"/>
+        <location filename="../src/MainWindow.cpp" line="2008"/>
         <source>Excluir manuscrito</source>
         <translation>Delete manuscript</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2008"/>
+        <location filename="../src/MainWindow.cpp" line="2009"/>
         <source>Excluir &quot;%1&quot;? Todos os capítulos serão removidos. Esta ação não pode ser desfeita.</source>
         <translation>Delete &quot;%1&quot;? All chapters will be removed. This action cannot be undone.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2035"/>
+        <location filename="../src/MainWindow.cpp" line="2054"/>
         <source>Excluir capítulo</source>
         <translation>Delete chapter</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2036"/>
+        <location filename="../src/MainWindow.cpp" line="2055"/>
         <source>Excluir &quot;%1&quot;? O texto do capítulo será removido. Esta ação não pode ser desfeita.</source>
         <translation>Delete &quot;%1&quot;? The chapter&apos;s text will be removed. This action cannot be undone.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2055"/>
+        <location filename="../src/MainWindow.cpp" line="2074"/>
         <source>Renomear cena</source>
         <translation>Rename scene</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2089"/>
-        <location filename="../src/MainWindow.cpp" line="2093"/>
+        <location filename="../src/MainWindow.cpp" line="2108"/>
+        <location filename="../src/MainWindow.cpp" line="2112"/>
         <source>Excluir cena</source>
         <translation>Delete scene</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2090"/>
+        <location filename="../src/MainWindow.cpp" line="2109"/>
         <source>Não dá pra excluir a única cena de um capítulo. Apague o texto manualmente se quiser limpar.</source>
         <translation>You can&apos;t delete a chapter&apos;s only scene. Clear the text manually if you want to empty it.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2094"/>
+        <location filename="../src/MainWindow.cpp" line="2113"/>
         <source>Excluir esta cena? O texto da cena será removido.</source>
         <translation>Delete this scene? The scene&apos;s text will be removed.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2223"/>
+        <location filename="../src/MainWindow.cpp" line="2242"/>
         <source>Novo item</source>
         <translation>New item</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2224"/>
+        <location filename="../src/MainWindow.cpp" line="2243"/>
         <source>Nome do item:</source>
         <translation>Item name:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2245"/>
+        <location filename="../src/MainWindow.cpp" line="2264"/>
         <source>Nova pasta</source>
         <translation>New folder</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2246"/>
+        <location filename="../src/MainWindow.cpp" line="2265"/>
         <source>Nome da pasta:</source>
         <translation>Folder name:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2335"/>
+        <location filename="../src/MainWindow.cpp" line="2354"/>
         <source>Adicionar elemento</source>
         <translation>Add element</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2336"/>
+        <location filename="../src/MainWindow.cpp" line="2355"/>
         <source>Tipo do elemento:</source>
         <translation>Element type:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2367"/>
+        <location filename="../src/MainWindow.cpp" line="2386"/>
         <source>Excluir item</source>
         <translation>Delete item</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2368"/>
+        <location filename="../src/MainWindow.cpp" line="2387"/>
         <source>Excluir &quot;%1&quot; da gaveta? Esta ação não pode ser desfeita.</source>
         <translation>Delete &quot;%1&quot; from the drawer? This action cannot be undone.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2430"/>
+        <location filename="../src/MainWindow.cpp" line="2449"/>
         <source>Editar gaveta…</source>
         <translation>Edit drawer…</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2450"/>
-        <location filename="../src/MainWindow.cpp" line="2455"/>
-        <location filename="../src/MainWindow.cpp" line="2460"/>
+        <location filename="../src/MainWindow.cpp" line="2469"/>
+        <location filename="../src/MainWindow.cpp" line="2474"/>
+        <location filename="../src/MainWindow.cpp" line="2479"/>
         <source>Excluir gaveta</source>
         <translation>Delete drawer</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2456"/>
+        <location filename="../src/MainWindow.cpp" line="2475"/>
         <source>Esta gaveta não está vazia. Esvazie os itens e pastas antes de excluí-la.</source>
         <translation>This drawer isn&apos;t empty. Empty its items and folders before deleting it.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2459"/>
-        <location filename="../src/MainWindow.cpp" line="5388"/>
-        <location filename="../src/MainWindow.cpp" line="5660"/>
-        <location filename="../src/MainWindow.cpp" line="5868"/>
+        <location filename="../src/MainWindow.cpp" line="2478"/>
+        <location filename="../src/MainWindow.cpp" line="5407"/>
+        <location filename="../src/MainWindow.cpp" line="5679"/>
+        <location filename="../src/MainWindow.cpp" line="5887"/>
         <source>(sem nome)</source>
         <translation>(unnamed)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="2461"/>
+        <location filename="../src/MainWindow.cpp" line="2480"/>
         <source>Excluir a gaveta &quot;%1&quot;?</source>
         <translation>Delete the drawer &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3199"/>
+        <location filename="../src/MainWindow.cpp" line="3218"/>
         <source>Selecionar imagem</source>
         <translation>Select image</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3201"/>
+        <location filename="../src/MainWindow.cpp" line="3220"/>
         <source>Imagens (*.png *.jpg *.jpeg *.gif *.bmp *.webp)</source>
         <translation>Images (*.png *.jpg *.jpeg *.gif *.bmp *.webp)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3266"/>
+        <location filename="../src/MainWindow.cpp" line="3285"/>
         <source>Salvar projeto</source>
         <translation>Save project</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3267"/>
+        <location filename="../src/MainWindow.cpp" line="3286"/>
         <source>Falha ao salvar o projeto:
 %1
 
@@ -3510,272 +3543,272 @@ Fechar mesmo assim?</source>
 Close anyway?</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3674"/>
+        <location filename="../src/MainWindow.cpp" line="3693"/>
         <source>Lembretes (%1)</source>
         <translation>Reminders (%1)</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3678"/>
+        <location filename="../src/MainWindow.cpp" line="3697"/>
         <source>+ %1 mais</source>
         <translation>+ %1 more</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3685"/>
+        <location filename="../src/MainWindow.cpp" line="3704"/>
         <source>Qenna Writer — %1</source>
         <translation>Qenna Writer — %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3694"/>
+        <location filename="../src/MainWindow.cpp" line="3713"/>
         <source>Alterações não salvas</source>
         <translation>Unsaved changes</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3695"/>
+        <location filename="../src/MainWindow.cpp" line="3714"/>
         <source>Há alterações no projeto atual. Salvar antes de continuar?</source>
         <translation>There are changes in the current project. Save before continuing?</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3708"/>
+        <location filename="../src/MainWindow.cpp" line="3727"/>
         <source>Caminho do projeto vazio.</source>
         <translation>Empty project path.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3712"/>
+        <location filename="../src/MainWindow.cpp" line="3731"/>
         <source>Pasta do projeto não existe: %1</source>
         <translation>Project folder doesn&apos;t exist: %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4038"/>
+        <location filename="../src/MainWindow.cpp" line="4057"/>
         <source>Nova versão disponível: %1</source>
         <translation>New version available: %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4049"/>
-        <location filename="../src/MainWindow.cpp" line="4079"/>
+        <location filename="../src/MainWindow.cpp" line="4068"/>
+        <location filename="../src/MainWindow.cpp" line="4098"/>
         <source>Baixar e instalar</source>
         <translation>Download and install</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4097"/>
+        <location filename="../src/MainWindow.cpp" line="4116"/>
         <source>Tentar novamente</source>
         <translation>Try again</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4124"/>
+        <location filename="../src/MainWindow.cpp" line="4143"/>
         <source>Baixando…</source>
         <translation>Downloading…</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4140"/>
+        <location filename="../src/MainWindow.cpp" line="4159"/>
         <source>Não foi possível salvar o instalador no disco.</source>
         <translation>Couldn&apos;t save the installer to disk.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4184"/>
+        <location filename="../src/MainWindow.cpp" line="4203"/>
         <source>arquivo incompleto (conexão interrompida).</source>
         <translation>incomplete file (connection interrupted).</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4185"/>
+        <location filename="../src/MainWindow.cpp" line="4204"/>
         <source>Falha ao baixar atualização: %1</source>
         <translation>Failed to download update: %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4282"/>
+        <location filename="../src/MainWindow.cpp" line="4301"/>
         <source>Não é possível excluir</source>
         <translation>Cannot delete</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4283"/>
+        <location filename="../src/MainWindow.cpp" line="4302"/>
         <source>Este é o projeto aberto no momento. Feche-o antes de excluí-lo.</source>
         <translation>This is the project currently open. Close it before deleting it.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4288"/>
+        <location filename="../src/MainWindow.cpp" line="4307"/>
         <source>Erro ao excluir</source>
         <translation>Error deleting</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4289"/>
+        <location filename="../src/MainWindow.cpp" line="4308"/>
         <source>Não foi possível apagar a pasta do projeto.</source>
         <translation>Couldn&apos;t delete the project folder.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4313"/>
+        <location filename="../src/MainWindow.cpp" line="4332"/>
         <source>Tudo atualizado</source>
         <translation>Everything up to date</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4314"/>
+        <location filename="../src/MainWindow.cpp" line="4333"/>
         <source>O Qenna Writer e o Cover Creator estão na versão mais recente.</source>
         <translation>Qenna Writer and Cover Creator are both up to date.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4340"/>
+        <location filename="../src/MainWindow.cpp" line="4359"/>
         <source>Cover Creator %1</source>
         <translation>Cover Creator %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4342"/>
+        <location filename="../src/MainWindow.cpp" line="4361"/>
         <source>Nova versão do Cover Creator disponível.</source>
         <translation>New version of Cover Creator available.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4445"/>
+        <location filename="../src/MainWindow.cpp" line="4464"/>
         <source>Pasta já existe</source>
         <translation>Folder already exists</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4446"/>
+        <location filename="../src/MainWindow.cpp" line="4465"/>
         <source>A pasta &apos;%1&apos; já existe e não está vazia. Usar mesmo assim?
 Conteúdo existente pode ser sobrescrito.</source>
         <translation>The folder &apos;%1&apos; already exists and isn&apos;t empty. Use it anyway?
 Existing content may be overwritten.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4454"/>
-        <location filename="../src/MainWindow.cpp" line="4477"/>
+        <location filename="../src/MainWindow.cpp" line="4473"/>
+        <location filename="../src/MainWindow.cpp" line="4496"/>
         <source>Erro</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4455"/>
+        <location filename="../src/MainWindow.cpp" line="4474"/>
         <source>Falha ao criar o projeto:
 %1</source>
         <translation>Failed to create the project:
 %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4478"/>
+        <location filename="../src/MainWindow.cpp" line="4497"/>
         <source>Projeto criado, mas falha ao salvar índice inicial:
 %1</source>
         <translation>Project created, but failed to save the initial index:
 %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4234"/>
+        <location filename="../src/MainWindow.cpp" line="4253"/>
         <source>Abrir projeto</source>
         <translation>Open project</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4211"/>
+        <location filename="../src/MainWindow.cpp" line="4230"/>
         <source>Abertura automática ativada</source>
         <translation>Automatic opening enabled</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4212"/>
+        <location filename="../src/MainWindow.cpp" line="4231"/>
         <source>O app agora sempre abrirá esse projeto de forma automática. Caso queira desabilitar isso depois, basta desmarcar essa opção.</source>
         <translation>The app will now always open this project automatically. If you want to disable this later, just uncheck this option.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4240"/>
-        <location filename="../src/MainWindow.cpp" line="4257"/>
+        <location filename="../src/MainWindow.cpp" line="4259"/>
+        <location filename="../src/MainWindow.cpp" line="4276"/>
         <source>Erro ao abrir</source>
         <translation>Error opening</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4241"/>
-        <location filename="../src/MainWindow.cpp" line="4258"/>
+        <location filename="../src/MainWindow.cpp" line="4260"/>
+        <location filename="../src/MainWindow.cpp" line="4277"/>
         <source>Não foi possível abrir o projeto:
 %1</source>
         <translation>Couldn&apos;t open the project:
 %1</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4560"/>
+        <location filename="../src/MainWindow.cpp" line="4579"/>
         <source>Voltando para</source>
         <translation>Going back to</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4560"/>
+        <location filename="../src/MainWindow.cpp" line="4579"/>
         <source>Avançando para</source>
         <translation>Moving forward to</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4822"/>
+        <location filename="../src/MainWindow.cpp" line="4841"/>
         <source>Exportado com sucesso</source>
         <translation>Exported successfully</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="4839"/>
+        <location filename="../src/MainWindow.cpp" line="4858"/>
         <source>Exportar</source>
         <translation>Export</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5302"/>
-        <location filename="../src/MainWindow.cpp" line="5345"/>
+        <location filename="../src/MainWindow.cpp" line="5321"/>
+        <location filename="../src/MainWindow.cpp" line="5364"/>
         <source>Excluir vínculo</source>
         <translation>Delete bond</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5303"/>
-        <location filename="../src/MainWindow.cpp" line="5346"/>
+        <location filename="../src/MainWindow.cpp" line="5322"/>
+        <location filename="../src/MainWindow.cpp" line="5365"/>
         <source>Excluir este vínculo? Esta ação não pode ser desfeita.</source>
         <translation>Delete this bond? This action cannot be undone.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5368"/>
+        <location filename="../src/MainWindow.cpp" line="5387"/>
         <source>Documento do vínculo</source>
         <translation>Bond document</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5376"/>
-        <location filename="../src/MainWindow.cpp" line="5858"/>
+        <location filename="../src/MainWindow.cpp" line="5395"/>
+        <location filename="../src/MainWindow.cpp" line="5877"/>
         <source>Nome do documento:</source>
         <translation>Document name:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5382"/>
-        <location filename="../src/MainWindow.cpp" line="5864"/>
+        <location filename="../src/MainWindow.cpp" line="5401"/>
+        <location filename="../src/MainWindow.cpp" line="5883"/>
         <source>Gaveta de destino:</source>
         <translation>Target drawer:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="3993"/>
-        <location filename="../src/MainWindow.cpp" line="5400"/>
-        <location filename="../src/MainWindow.cpp" line="5896"/>
+        <location filename="../src/MainWindow.cpp" line="4012"/>
+        <location filename="../src/MainWindow.cpp" line="5419"/>
+        <location filename="../src/MainWindow.cpp" line="5915"/>
         <source>Cancelar</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5401"/>
-        <location filename="../src/MainWindow.cpp" line="5897"/>
+        <location filename="../src/MainWindow.cpp" line="5420"/>
+        <location filename="../src/MainWindow.cpp" line="5916"/>
         <source>Criar</source>
         <translation>Create</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5419"/>
+        <location filename="../src/MainWindow.cpp" line="5438"/>
         <source>%1 — %2 de %3</source>
         <translation>%1 — %2 of %3</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5650"/>
+        <location filename="../src/MainWindow.cpp" line="5669"/>
         <source>Documento</source>
         <translation>Document</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5824"/>
-        <location filename="../src/MainWindow.cpp" line="5850"/>
+        <location filename="../src/MainWindow.cpp" line="5843"/>
+        <location filename="../src/MainWindow.cpp" line="5869"/>
         <source>Criar documento</source>
         <translation>Create document</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5825"/>
+        <location filename="../src/MainWindow.cpp" line="5844"/>
         <source>Crie uma gaveta antes de usar este recurso.</source>
         <translation>Create a drawer before using this feature.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5883"/>
+        <location filename="../src/MainWindow.cpp" line="5902"/>
         <source>Vai abrir o cadastro de personagem em seguida (foto e papel).</source>
         <translation>This will open the character form next (photo and role).</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5884"/>
+        <location filename="../src/MainWindow.cpp" line="5903"/>
         <source>Vai abrir o cadastro de cenário em seguida (foto).</source>
         <translation>This will open the setting form next (photo).</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="5885"/>
+        <location filename="../src/MainWindow.cpp" line="5904"/>
         <source>Vai abrir o cadastro de objeto em seguida (foto).</source>
         <translation>This will open the object form next (photo).</translation>
     </message>
@@ -3840,8 +3873,6 @@ Existing content may be overwritten.</translation>
     </message>
     <message>
         <location filename="../src/ManuscriptPanel.cpp" line="505"/>
-        <location filename="../src/ManuscriptPanel.cpp" line="514"/>
-        <location filename="../src/ManuscriptPanel.cpp" line="542"/>
         <source>Em breve</source>
         <translation>Coming soon</translation>
     </message>
@@ -3852,33 +3883,33 @@ Existing content may be overwritten.</translation>
     </message>
     <message>
         <location filename="../src/ManuscriptPanel.cpp" line="512"/>
-        <location filename="../src/ManuscriptPanel.cpp" line="540"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="541"/>
         <source>Elementos presentes…</source>
         <translation>Elements present…</translation>
     </message>
     <message>
-        <location filename="../src/ManuscriptPanel.cpp" line="516"/>
-        <location filename="../src/ManuscriptPanel.cpp" line="549"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="517"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="551"/>
         <source>Abrir no Menu de Referência</source>
         <translation>Open in Reference Menu</translation>
     </message>
     <message>
-        <location filename="../src/ManuscriptPanel.cpp" line="523"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="524"/>
         <source>Excluir capítulo</source>
         <translation>Delete chapter</translation>
     </message>
     <message>
-        <location filename="../src/ManuscriptPanel.cpp" line="535"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="536"/>
         <source>Renomear cena</source>
         <translation>Rename scene</translation>
     </message>
     <message>
-        <location filename="../src/ManuscriptPanel.cpp" line="544"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="546"/>
         <source>Criar variação</source>
         <translation>Create variation</translation>
     </message>
     <message>
-        <location filename="../src/ManuscriptPanel.cpp" line="556"/>
+        <location filename="../src/ManuscriptPanel.cpp" line="558"/>
         <source>Excluir cena</source>
         <translation>Delete scene</translation>
     </message>
@@ -4513,296 +4544,296 @@ Existing content may be overwritten.</translation>
 <context>
     <name>PensarioPanel</name>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="102"/>
+        <location filename="../src/PensarioPanel.cpp" line="103"/>
         <source>Pensário</source>
         <translation>Pensarium</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="115"/>
+        <location filename="../src/PensarioPanel.cpp" line="116"/>
         <source>Por capítulo</source>
         <translation>By chapter</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="116"/>
+        <location filename="../src/PensarioPanel.cpp" line="117"/>
         <source>Por criação</source>
         <translation>By creation</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="126"/>
+        <location filename="../src/PensarioPanel.cpp" line="127"/>
         <source>Capítulo</source>
         <translation>Chapter</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="126"/>
+        <location filename="../src/PensarioPanel.cpp" line="127"/>
         <source>Criação</source>
         <translation>Creation</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="144"/>
+        <location filename="../src/PensarioPanel.cpp" line="145"/>
         <source>Gerador de nomes</source>
         <translation>Name Generator</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="153"/>
+        <location filename="../src/PensarioPanel.cpp" line="154"/>
         <source>Mapa-múndi</source>
         <translation>World Map</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="163"/>
+        <location filename="../src/PensarioPanel.cpp" line="164"/>
         <source>Fechar</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="187"/>
+        <location filename="../src/PensarioPanel.cpp" line="188"/>
         <source>Comentários</source>
         <translation>Comments</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="188"/>
+        <location filename="../src/PensarioPanel.cpp" line="189"/>
         <source>Notas</source>
         <translation>Notes</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="189"/>
+        <location filename="../src/PensarioPanel.cpp" line="190"/>
         <source>Memórias</source>
         <translation>Memories</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="190"/>
+        <location filename="../src/PensarioPanel.cpp" line="191"/>
         <source>Diálogos</source>
         <translation>Dialogue</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="264"/>
+        <location filename="../src/PensarioPanel.cpp" line="265"/>
         <source>+ Nova nota</source>
         <translation>+ New note</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="311"/>
+        <location filename="../src/PensarioPanel.cpp" line="312"/>
         <source>Nenhuma nota ainda.
 Clique em “+ Nova nota” para criar a primeira.</source>
         <translation>No notes yet.
 Click &quot;+ New note&quot; to create your first one.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="366"/>
+        <location filename="../src/PensarioPanel.cpp" line="367"/>
         <source>Excluir nota</source>
         <translation>Delete note</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="467"/>
+        <location filename="../src/PensarioPanel.cpp" line="468"/>
         <source>Personagens</source>
         <translation>Characters</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="468"/>
+        <location filename="../src/PensarioPanel.cpp" line="469"/>
         <source>Lugares</source>
         <translation>Places</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="469"/>
+        <location filename="../src/PensarioPanel.cpp" line="470"/>
         <source>Armas</source>
         <translation>Weapons</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="488"/>
+        <location filename="../src/PensarioPanel.cpp" line="489"/>
         <source>Gerar</source>
         <translation>Generate</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="501"/>
+        <location filename="../src/PensarioPanel.cpp" line="502"/>
         <source>Feminino</source>
         <translation>Feminine</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="508"/>
+        <location filename="../src/PensarioPanel.cpp" line="509"/>
         <source>Masculino</source>
         <translation>Masculine</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="532"/>
+        <location filename="../src/PensarioPanel.cpp" line="533"/>
         <source>Começa com…</source>
         <translation>Starts with…</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="536"/>
+        <location filename="../src/PensarioPanel.cpp" line="537"/>
         <source>Termina com…</source>
         <translation>Ends with…</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="557"/>
+        <location filename="../src/PensarioPanel.cpp" line="558"/>
         <source>Escolha uma categoria e clique em Gerar.</source>
         <translation>Choose a category and click Generate.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="635"/>
+        <location filename="../src/PensarioPanel.cpp" line="636"/>
         <source>Clique para copiar</source>
         <translation>Click to copy</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="641"/>
+        <location filename="../src/PensarioPanel.cpp" line="642"/>
         <source>Nenhum nome com esse começo/fim neste estilo.
 Tente outro estilo ou um afixo mais comum.</source>
         <translation>No names with that start/end in this style.
 Try another style or a more common affix.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="643"/>
+        <location filename="../src/PensarioPanel.cpp" line="644"/>
         <source>Nada gerado. Tente de novo.</source>
         <translation>Nothing generated. Try again.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="657"/>
+        <location filename="../src/PensarioPanel.cpp" line="658"/>
         <source>« %1 » copiado</source>
         <translation>&quot;%1&quot; copied</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="706"/>
-        <location filename="../src/PensarioPanel.cpp" line="989"/>
-        <location filename="../src/PensarioPanel.cpp" line="1106"/>
+        <location filename="../src/PensarioPanel.cpp" line="707"/>
+        <location filename="../src/PensarioPanel.cpp" line="996"/>
+        <location filename="../src/PensarioPanel.cpp" line="1113"/>
         <source>Personagem</source>
         <translation>Character</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="710"/>
+        <location filename="../src/PensarioPanel.cpp" line="711"/>
         <source>Todas</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="711"/>
+        <location filename="../src/PensarioPanel.cpp" line="712"/>
         <source>Do projeto</source>
         <translation>From the project</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="719"/>
+        <location filename="../src/PensarioPanel.cpp" line="720"/>
         <source>Filtro: %1  ▾</source>
         <translation>Filter: %1  ▾</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="740"/>
+        <location filename="../src/PensarioPanel.cpp" line="741"/>
         <source>Todas as memórias</source>
         <translation>All memories</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="741"/>
+        <location filename="../src/PensarioPanel.cpp" line="742"/>
         <source>Memórias do projeto</source>
         <translation>Project memories</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="753"/>
+        <location filename="../src/PensarioPanel.cpp" line="754"/>
         <source>Memórias de %1</source>
         <translation>Memories of %1</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="787"/>
+        <location filename="../src/PensarioPanel.cpp" line="788"/>
         <source>Nenhuma memória ainda. Selecione um trecho no editor e escolha “Adicionar à memória…” na barra de seleção.</source>
         <translation>No memories yet. Select a passage in the editor and choose &quot;Add to memory…&quot; from the selection bar.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="789"/>
+        <location filename="../src/PensarioPanel.cpp" line="790"/>
         <source>Nenhuma memória neste filtro.</source>
         <translation>No memories in this filter.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="803"/>
+        <location filename="../src/PensarioPanel.cpp" line="804"/>
         <source>Memória</source>
         <translation>Memory</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="803"/>
+        <location filename="../src/PensarioPanel.cpp" line="804"/>
         <source>Memória do %1</source>
         <translation>%1&apos;s memory</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="804"/>
-        <location filename="../src/PensarioPanel.cpp" line="1082"/>
+        <location filename="../src/PensarioPanel.cpp" line="805"/>
+        <location filename="../src/PensarioPanel.cpp" line="1089"/>
         <source>%1  ·  %2</source>
         <translation>%1  ·  %2</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="807"/>
+        <location filename="../src/PensarioPanel.cpp" line="808"/>
         <source>[%1]  %2</source>
         <translation>[%1]  %2</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="894"/>
+        <location filename="../src/PensarioPanel.cpp" line="895"/>
         <source>Excluir memória</source>
         <translation>Delete memory</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="938"/>
+        <location filename="../src/PensarioPanel.cpp" line="945"/>
         <source>Abrir no editor</source>
         <translation>Open in editor</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="939"/>
+        <location filename="../src/PensarioPanel.cpp" line="946"/>
         <source>Abrir no menu de referência</source>
         <translation>Open in reference menu</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="993"/>
+        <location filename="../src/PensarioPanel.cpp" line="1000"/>
         <source>Todos</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1000"/>
+        <location filename="../src/PensarioPanel.cpp" line="1007"/>
         <source>Fala: %1  ▾</source>
         <translation>Speaker: %1  ▾</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1021"/>
+        <location filename="../src/PensarioPanel.cpp" line="1028"/>
         <source>Todos os diálogos</source>
         <translation>All dialogue</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1030"/>
+        <location filename="../src/PensarioPanel.cpp" line="1037"/>
         <source>Falas de %1</source>
         <translation>Lines by %1</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1068"/>
+        <location filename="../src/PensarioPanel.cpp" line="1075"/>
         <source>Nenhum diálogo detectado ainda. Escreva falas com travessão (“— Não vou, disse Maria.”) e espere alguns segundos.</source>
         <translation>No dialogue detected yet. Write lines with an em dash (&quot;— I won&apos;t, said Maria.&quot;) and wait a few seconds.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1070"/>
+        <location filename="../src/PensarioPanel.cpp" line="1077"/>
         <source>Nenhum diálogo neste filtro.</source>
         <translation>No dialogue in this filter.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1117"/>
+        <location filename="../src/PensarioPanel.cpp" line="1124"/>
         <source>também fala: %1</source>
         <translation>also speaks: %1</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1174"/>
+        <location filename="../src/PensarioPanel.cpp" line="1181"/>
         <source>Excluir diálogo</source>
         <translation>Delete dialogue</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1272"/>
+        <location filename="../src/PensarioPanel.cpp" line="1279"/>
         <source>Nenhum comentário ainda.
 Selecione um trecho e use o marcador com comentário para que ele apareça aqui.</source>
         <translation>No comments yet.
 Select a passage and use the marker with comment so it shows up here.</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1368"/>
+        <location filename="../src/PensarioPanel.cpp" line="1376"/>
         <source>Cena %1</source>
         <translation>Scene %1</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1393"/>
+        <location filename="../src/PensarioPanel.cpp" line="1401"/>
         <source>Capítulo sem título</source>
         <translation>Untitled chapter</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1399"/>
+        <location filename="../src/PensarioPanel.cpp" line="1407"/>
         <source>Item sem título</source>
         <translation>Untitled item</translation>
     </message>
     <message>
-        <location filename="../src/PensarioPanel.cpp" line="1408"/>
+        <location filename="../src/PensarioPanel.cpp" line="1416"/>
         <source>Manuscrito</source>
         <translation>Manuscript</translation>
     </message>
@@ -11153,52 +11184,52 @@ Select a passage and use the marker with comment so it shows up here.</translati
         <translation>Untitled</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="164"/>
+        <location filename="../src/MainWindow.cpp" line="165"/>
         <source>Editar capítulo</source>
         <translation>Edit chapter</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="165"/>
+        <location filename="../src/MainWindow.cpp" line="166"/>
         <source>Novo capítulo</source>
         <translation>New chapter</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="175"/>
+        <location filename="../src/MainWindow.cpp" line="176"/>
         <source>Título do capítulo</source>
         <translation>Chapter title</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="177"/>
+        <location filename="../src/MainWindow.cpp" line="178"/>
         <source>ex.: Dia 5, Verão de 1999, há 10 anos…</source>
         <translation>e.g.: Day 5, Summer of 1999, 10 years ago…</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="178"/>
+        <location filename="../src/MainWindow.cpp" line="179"/>
         <source>Título:</source>
         <translation>Title:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="179"/>
+        <location filename="../src/MainWindow.cpp" line="180"/>
         <source>Quando se passa:</source>
         <translation>When it takes place:</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="182"/>
+        <location filename="../src/MainWindow.cpp" line="183"/>
         <source>O marcador temporal é opcional e alimenta o eixo História da linha do tempo.</source>
         <translation>The time marker is optional and feeds the Story axis of the timeline.</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="189"/>
+        <location filename="../src/MainWindow.cpp" line="190"/>
         <source>Salvar</source>
         <translation>Save</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="190"/>
+        <location filename="../src/MainWindow.cpp" line="191"/>
         <source>Criar</source>
         <translation>Create</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="191"/>
+        <location filename="../src/MainWindow.cpp" line="192"/>
         <source>Cancelar</source>
         <translation>Cancel</translation>
     </message>
@@ -12699,8 +12730,12 @@ Select a passage and use the marker with comment so it shows up here.</translati
     </message>
     <message>
         <location filename="../src/_quotes_data.inc" line="202"/>
+        <source>O nome da guerreira que ficava no logo do Mira Writing (um dos nomes antigos do Qenna Writer, que por um dia também se chamou Qiyva Writer) era... Mira. Sente saudade dela? Ainda dá pra trazer esse logo de volta na opção de Temas do Main Menu ali em cima.</source>
+        <translation>The name of the warrior who used to be in the Mira Writing logo (one of Qenna Writer&apos;s old names, which for one day was also called Qiyva Writer) was... Mira. Miss her? You can still bring that logo back in the Themes option up in the Main Menu.</translation>
+    </message>
+    <message>
         <source>O nome da guerreira que ficava no logo do Mira Writing (nome antigo do Qenna Writer) era... Mira. Sente saudade dela? Ainda dá pra trazer esse logo de volta na opção de Temas do Main Menu ali em cima.</source>
-        <translation>The name of the warrior who used to be in the Mira Writing logo (Qenna Writer&apos;s old name) was... Mira. Miss her? You can still bring that logo back in the Themes option up in the Main Menu.</translation>
+        <translation type="vanished">The name of the warrior who used to be in the Mira Writing logo (Qenna Writer&apos;s old name) was... Mira. Miss her? You can still bring that logo back in the Themes option up in the Main Menu.</translation>
     </message>
     <message>
         <location filename="../src/_quotes_data.inc" line="203"/>
@@ -13217,10 +13252,10 @@ Select a passage and use the marker with comment so it shows up here.</translati
     </message>
     <message>
         <location filename="../src/RefMenuPanel.cpp" line="607"/>
-        <location filename="../src/RefMenuPanel.cpp" line="618"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1022"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1420"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1944"/>
+        <location filename="../src/RefMenuPanel.cpp" line="616"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1018"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1416"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1939"/>
         <source>Gaveta</source>
         <translation>Drawer</translation>
     </message>
@@ -13230,26 +13265,25 @@ Select a passage and use the marker with comment so it shows up here.</translati
     </message>
     <message>
         <location filename="../src/RefMenuPanel.cpp" line="612"/>
-        <location filename="../src/RefMenuPanel.cpp" line="662"/>
+        <location filename="../src/RefMenuPanel.cpp" line="660"/>
         <source>Timelines</source>
         <translation>Timelines</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="614"/>
         <source>Elementos</source>
-        <translation>Elements</translation>
+        <translation type="vanished">Elements</translation>
     </message>
     <message>
         <source>Memórias</source>
         <translation type="vanished">Memories</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="633"/>
+        <location filename="../src/RefMenuPanel.cpp" line="631"/>
         <source>Modo lista</source>
         <translation>List mode</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="633"/>
+        <location filename="../src/RefMenuPanel.cpp" line="631"/>
         <source>Modo visual</source>
         <translation>Visual mode</translation>
     </message>
@@ -13258,46 +13292,43 @@ Select a passage and use the marker with comment so it shows up here.</translati
         <translation type="vanished">Coming soon. Will list the project&apos;s markers.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="662"/>
+        <location filename="../src/RefMenuPanel.cpp" line="660"/>
         <source>Em breve. Vai listar as linhas do tempo.</source>
         <translation>Coming soon. Will list the timelines.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="664"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1938"/>
         <source>Elementos usados</source>
-        <translation>Elements used</translation>
+        <translation type="vanished">Elements used</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="664"/>
         <source>Em breve. Gráficos de participação dos elementos.</source>
-        <translation>Coming soon. Element participation charts.</translation>
+        <translation type="vanished">Coming soon. Element participation charts.</translation>
     </message>
     <message>
         <source>Em breve. Suas memórias do projeto.</source>
         <translation type="vanished">Coming soon. Your project&apos;s memories.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1315"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1311"/>
         <source>MANUSCRITOS</source>
         <translation>MANUSCRIPTS</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1321"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1988"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1317"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1983"/>
         <source>Manuscrito</source>
         <translation>Manuscript</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="922"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1373"/>
+        <location filename="../src/RefMenuPanel.cpp" line="918"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1369"/>
         <source>CAPÍTULOS</source>
         <translation>CHAPTERS</translation>
     </message>
     <message>
         <location filename="../src/RefMenuPanel.cpp" line="214"/>
-        <location filename="../src/RefMenuPanel.cpp" line="2095"/>
-        <location filename="../src/RefMenuPanel.cpp" line="2101"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2090"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2096"/>
         <source>Editar documento</source>
         <translation>Edit document</translation>
     </message>
@@ -13308,152 +13339,152 @@ Select a passage and use the marker with comment so it shows up here.</translati
     </message>
     <message>
         <location filename="../src/RefMenuPanel.cpp" line="610"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1937"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1933"/>
         <source>Grupos</source>
         <translation>Groups</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="616"/>
-        <location filename="../src/RefMenuPanel.cpp" line="676"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1940"/>
+        <location filename="../src/RefMenuPanel.cpp" line="614"/>
+        <location filename="../src/RefMenuPanel.cpp" line="672"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1935"/>
         <source>Construtor</source>
         <translation>Builder</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="677"/>
+        <location filename="../src/RefMenuPanel.cpp" line="673"/>
         <source>Nenhum sistema criado ainda. Use o botão ⚙ Construtor no Pensário pra criar o primeiro.</source>
         <translation>No systems created yet. Use the ⚙ Builder button in the Pensarium to create your first one.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="774"/>
+        <location filename="../src/RefMenuPanel.cpp" line="770"/>
         <source>Este sistema ainda não tem regras/seções.</source>
         <translation>This system doesn&apos;t have rules/sections yet.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="793"/>
+        <location filename="../src/RefMenuPanel.cpp" line="789"/>
         <source>GRUPOS</source>
         <translation>GROUPS</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="803"/>
+        <location filename="../src/RefMenuPanel.cpp" line="799"/>
         <source>Nenhum grupo criado. Clique com o botão direito num documento de gaveta e escolha &quot;Adicionar ao grupo&quot;.</source>
         <translation>No groups created. Right-click a drawer document and choose &quot;Add to group&quot;.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="861"/>
+        <location filename="../src/RefMenuPanel.cpp" line="857"/>
         <source>DOCUMENTOS NO GRUPO</source>
         <translation>DOCUMENTS IN GROUP</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="888"/>
+        <location filename="../src/RefMenuPanel.cpp" line="884"/>
         <source>(sem nome)</source>
         <translation>(unnamed)</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="890"/>
+        <location filename="../src/RefMenuPanel.cpp" line="886"/>
         <source>gaveta</source>
         <translation>drawer</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="901"/>
+        <location filename="../src/RefMenuPanel.cpp" line="897"/>
         <source>Nenhum documento neste grupo</source>
         <translation>No documents in this group</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="964"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1110"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1202"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1248"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1353"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1414"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1431"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1618"/>
+        <location filename="../src/RefMenuPanel.cpp" line="960"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1106"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1198"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1244"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1349"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1410"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1427"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1614"/>
         <source>(sem título)</source>
         <translation>(untitled)</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="972"/>
-        <location filename="../src/RefMenuPanel.cpp" line="992"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1359"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1584"/>
+        <location filename="../src/RefMenuPanel.cpp" line="968"/>
+        <location filename="../src/RefMenuPanel.cpp" line="988"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1355"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1580"/>
         <source>Cena %1</source>
         <translation>Scene %1</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1005"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1001"/>
         <source>(nenhum capítulo)</source>
         <translation>(no chapters)</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1005"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1001"/>
         <source>(nenhum resultado)</source>
         <translation>(no results)</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1022"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1018"/>
         <source>Selecione uma gaveta acima.</source>
         <translation>Select a drawer above.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1043"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1075"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1039"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1071"/>
         <source>Pasta</source>
         <translation>Folder</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1120"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1116"/>
         <source>Sem itens nesta gaveta.</source>
         <translation>No items in this drawer.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="774"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1120"/>
-        <location filename="../src/RefMenuPanel.cpp" line="1452"/>
+        <location filename="../src/RefMenuPanel.cpp" line="770"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1116"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1448"/>
         <source>Nada encontrado.</source>
         <translation>Nothing found.</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1609"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1605"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1610"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1606"/>
         <source>Regra</source>
         <translation>Rule</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1610"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1606"/>
         <source>Seção</source>
         <translation>Section</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1614"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1610"/>
         <source>Sistema · Construtor</source>
         <translation>System · Builder</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="1667"/>
+        <location filename="../src/RefMenuPanel.cpp" line="1663"/>
         <source>(documento vazio)</source>
         <translation>(empty document)</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="2097"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2092"/>
         <source>Edição de cena individual em breve</source>
         <translation>Individual scene editing coming soon</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="2099"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2094"/>
         <source>Este documento está aberto no editor principal</source>
         <translation>This document is open in the main editor</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="2226"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2221"/>
         <source>Mostrar explorador</source>
         <translation>Show explorer</translation>
     </message>
     <message>
-        <location filename="../src/RefMenuPanel.cpp" line="2226"/>
+        <location filename="../src/RefMenuPanel.cpp" line="2221"/>
         <source>Ocultar explorador</source>
         <translation>Hide explorer</translation>
     </message>
@@ -13697,7 +13728,17 @@ Select a passage and use the marker with comment so it shows up here.</translati
 <context>
     <name>ThemeCard</name>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="55"/>
+        <location filename="../src/ThemesPanel.cpp" line="61"/>
+        <source>Tema diurno</source>
+        <translation>Day theme</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="68"/>
+        <source>Tema noturno</source>
+        <translation>Night theme</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="73"/>
         <source>em uso</source>
         <translation>in use</translation>
     </message>
@@ -13888,121 +13929,168 @@ Select a passage and use the marker with comment so it shows up here.</translati
 <context>
     <name>ThemesPanel</name>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="249"/>
-        <location filename="../src/ThemesPanel.cpp" line="368"/>
+        <location filename="../src/ThemesPanel.cpp" line="281"/>
+        <location filename="../src/ThemesPanel.cpp" line="471"/>
         <source>Padrão</source>
         <translation>Default</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="250"/>
-        <location filename="../src/ThemesPanel.cpp" line="368"/>
+        <location filename="../src/ThemesPanel.cpp" line="282"/>
+        <location filename="../src/ThemesPanel.cpp" line="471"/>
         <source>Personalizado</source>
         <translation>Custom</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="258"/>
+        <location filename="../src/ThemesPanel.cpp" line="290"/>
         <source>Novo</source>
         <translation>New</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="260"/>
+        <location filename="../src/ThemesPanel.cpp" line="292"/>
         <source>Duplicar</source>
         <translation>Duplicate</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="262"/>
+        <location filename="../src/ThemesPanel.cpp" line="294"/>
         <source>Editar</source>
         <translation>Edit</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="264"/>
+        <location filename="../src/ThemesPanel.cpp" line="296"/>
         <source>Excluir</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="284"/>
+        <location filename="../src/ThemesPanel.cpp" line="318"/>
         <source>Aplicar</source>
         <translation>Apply</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="365"/>
+        <location filename="../src/ThemesPanel.cpp" line="341"/>
+        <source>Troca automática por horário</source>
+        <translation>Automatic time-based switching</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="344"/>
+        <source>Alterna sozinho entre um tema diurno e um noturno, nos horários que você definir.</source>
+        <translation>Automatically switches between a day theme and a night theme, at times you set.</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="356"/>
+        <source>Diurno</source>
+        <translation>Day</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="363"/>
+        <source>Noturno</source>
+        <translation>Night</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="369"/>
+        <source>Selecione um tema no grid acima e marque aqui pra defini-lo.</source>
+        <translation>Select a theme in the grid above and check here to set it.</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="376"/>
+        <source>Trocar pro diurno às</source>
+        <translation>Switch to day theme at</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="382"/>
+        <source>Trocar pro noturno às</source>
+        <translation>Switch to night theme at</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="468"/>
         <source>Em uso</source>
         <translation>In use</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="372"/>
+        <location filename="../src/ThemesPanel.cpp" line="475"/>
         <source>Com imagem</source>
         <translation>With image</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="378"/>
+        <location filename="../src/ThemesPanel.cpp" line="481"/>
         <source>Nenhum tema selecionado</source>
         <translation>No theme selected</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="395"/>
+        <location filename="../src/ThemesPanel.cpp" line="498"/>
         <source>Todos</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="396"/>
+        <location filename="../src/ThemesPanel.cpp" line="499"/>
         <source>Claros</source>
         <translation>Light</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="397"/>
+        <location filename="../src/ThemesPanel.cpp" line="500"/>
         <source>Amarelados</source>
         <translation>Yellowish</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="398"/>
+        <location filename="../src/ThemesPanel.cpp" line="501"/>
         <source>Escuros</source>
         <translation>Dark</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="399"/>
+        <location filename="../src/ThemesPanel.cpp" line="502"/>
         <source>Coloridos</source>
         <translation>Colorful</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="400"/>
+        <location filename="../src/ThemesPanel.cpp" line="503"/>
         <source>Estampados</source>
         <translation>Patterned</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="458"/>
+        <location filename="../src/ThemesPanel.cpp" line="561"/>
         <source>Nenhum tema personalizado ainda.
 Use &quot;Duplicar&quot; em um tema padrão pra começar.</source>
         <translation>No custom themes yet.
 Use &quot;Duplicate&quot; on a default theme to get started.</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="495"/>
+        <location filename="../src/ThemesPanel.cpp" line="602"/>
         <source>Novo tema</source>
         <translation>New theme</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="517"/>
+        <location filename="../src/ThemesPanel.cpp" line="624"/>
         <source>%1 (cópia)</source>
         <translation>%1 (copy)</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="548"/>
+        <location filename="../src/ThemesPanel.cpp" line="655"/>
         <source>Excluir tema</source>
         <translation>Delete theme</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="549"/>
+        <location filename="../src/ThemesPanel.cpp" line="656"/>
         <source>Excluir este tema personalizado? Esta ação não pode ser desfeita.</source>
         <translation>Delete this custom theme? This action cannot be undone.</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="195"/>
+        <location filename="../src/ThemesPanel.cpp" line="772"/>
+        <location filename="../src/ThemesPanel.cpp" line="775"/>
+        <source>— %1</source>
+        <translation>— %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="773"/>
+        <location filename="../src/ThemesPanel.cpp" line="776"/>
+        <source>— nenhum tema definido</source>
+        <translation>— no theme set</translation>
+    </message>
+    <message>
+        <location filename="../src/ThemesPanel.cpp" line="222"/>
         <source>Temas</source>
         <translation>Themes</translation>
     </message>
     <message>
-        <location filename="../src/ThemesPanel.cpp" line="282"/>
+        <location filename="../src/ThemesPanel.cpp" line="316"/>
         <source>Fechar</source>
         <translation>Close</translation>
     </message>

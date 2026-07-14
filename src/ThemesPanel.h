@@ -7,11 +7,13 @@
 #include <QPointer>
 #include <QString>
 
+class QCheckBox;
 class QFrame;
 class QLabel;
 class QPushButton;
 class QScrollArea;
 class QTabWidget;
+class QTimeEdit;
 class QVBoxLayout;
 class QWidget;
 
@@ -32,16 +34,23 @@ private slots:
     void onTabChanged(int index);
     void onThemeChanged();
     void onCustomThemesChanged();
+    void onAutoSwitchToggled(bool checked);
+    void onDayRoleToggled(bool checked);
+    void onNightRoleToggled(bool checked);
+    void onAutoSwitchTimeChanged();
+    void onAutoSwitchConfigChanged();
 
 private:
     enum Tab { TabBundled = 0, TabCustom = 1 };
 
     void buildUi();
     QWidget* buildCategoryFilterRow(QWidget* parent);
+    QWidget* buildAutoSwitchRow();
     void rebuildGrids();
     void rebuildOneGrid(QWidget* gridContainer, const QList<Theme::MiraTheme>& themes, bool custom);
     void selectId(const QString& id);
     void updateButtonsState();
+    void refreshAutoSwitchUi();
     void applyDialogStyle();
 
     Tab activeTab() const;
@@ -61,6 +70,17 @@ private:
     QPushButton* m_closeButton;
 
     QLabel* m_selectionInfo;
+
+    // Troca automática por horário (dia/noite) — ver Theme::AutoSwitchConfig.
+    QCheckBox* m_autoSwitchCheck;
+    QWidget* m_autoSwitchBody;
+    QCheckBox* m_dayRoleCheck;
+    QCheckBox* m_nightRoleCheck;
+    QLabel* m_dayThemeLabel;
+    QLabel* m_nightThemeLabel;
+    QTimeEdit* m_dayStartEdit;
+    QTimeEdit* m_nightStartEdit;
+    bool m_syncingAutoSwitchUi = false; // evita reentrância ao setar valores dos widgets programaticamente
 
     QString m_selectedId;
     // Filtro de categoria da aba Padrão: "all"|"light"|"warm"|"dark"|"colorful".

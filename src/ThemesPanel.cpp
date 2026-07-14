@@ -5,6 +5,8 @@
 
 #include <QApplication>
 #include <QButtonGroup>
+#include <QCheckBox>
+#include <QCoreApplication>
 #include <QEvent>
 #include <QFrame>
 #include <QGridLayout>
@@ -15,6 +17,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QTabWidget>
+#include <QTimeEdit>
 #include <QVBoxLayout>
 
 namespace {
@@ -26,7 +29,8 @@ constexpr int kCardSpacing = 14;
 // Card visual de um tema: preview + nome + (em uso) ring.
 class ThemeCard : public QFrame {
 public:
-    ThemeCard(const Theme::MiraTheme& theme, bool inUse, QWidget* parent = nullptr)
+    ThemeCard(const Theme::MiraTheme& theme, bool inUse, bool dayRole, bool nightRole,
+              QWidget* parent = nullptr)
         : QFrame(parent), m_id(theme.id), m_inUse(inUse), m_selected(false)
     {
         setObjectName(QStringLiteral("themeCard"));
@@ -51,8 +55,22 @@ public:
         m_nameLabel->setObjectName(QStringLiteral("themeCardName"));
         m_nameLabel->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         nameRow->addWidget(m_nameLabel, 1);
+        if (dayRole) {
+            auto* badge = new QLabel(QStringLiteral("☀"), this);
+            badge->setObjectName(QStringLiteral("themeCardRoleBadge"));
+            badge->setToolTip(QCoreApplication::translate("ThemeCard", "Tema diurno"));
+            badge->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+            nameRow->addWidget(badge);
+        }
+        if (nightRole) {
+            auto* badge = new QLabel(QStringLiteral("☽"), this);
+            badge->setObjectName(QStringLiteral("themeCardRoleBadge"));
+            badge->setToolTip(QCoreApplication::translate("ThemeCard", "Tema noturno"));
+            badge->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+            nameRow->addWidget(badge);
+        }
         if (inUse) {
-            auto* badge = new QLabel(tr("em uso"), this);
+            auto* badge = new QLabel(QCoreApplication::translate("ThemeCard", "em uso"), this);
             badge->setObjectName(QStringLiteral("themeCardBadge"));
             badge->setAttribute(Qt::WA_TransparentForMouseEvents, true);
             nameRow->addWidget(badge);
@@ -105,6 +123,7 @@ private:
             "#themeCardName { color: %5; font-size: 12px; font-weight: 500; background: transparent; }"
             "#themeCardBadge { color: %6; font-size: 10px; background: %7; "
             "  padding: 2px 6px; border-radius: 8px; font-weight: 600; }"
+            "#themeCardRoleBadge { color: %4; font-size: 13px; background: transparent; }"
         ).arg(
             Theme::panelBackground(),
             QString::number(bw),
@@ -190,6 +209,14 @@ ThemesPanel::ThemesPanel(QWidget* parent)
     , m_deleteButton(nullptr)
     , m_closeButton(nullptr)
     , m_selectionInfo(nullptr)
+    , m_autoSwitchCheck(nullptr)
+    , m_autoSwitchBody(nullptr)
+    , m_dayRoleCheck(nullptr)
+    , m_nightRoleCheck(nullptr)
+    , m_dayThemeLabel(nullptr)
+    , m_nightThemeLabel(nullptr)
+    , m_dayStartEdit(nullptr)
+    , m_nightStartEdit(nullptr)
 {
     setObjectName(QStringLiteral("themesPanel"));
     setWindowTitle(tr("Temas"));
@@ -203,12 +230,17 @@ ThemesPanel::ThemesPanel(QWidget* parent)
             this, &ThemesPanel::onThemeChanged);
     connect(Theme::Manager::instance(), &Theme::Manager::customThemesChanged,
             this, &ThemesPanel::onCustomThemesChanged);
+    connect(Theme::Manager::instance(), &Theme::Manager::autoSwitchConfigChanged,
+            this, &ThemesPanel::onAutoSwitchConfigChanged);
 
     // Seleciona o tema em uso por padrão.
     const QString currentId = Theme::Manager::instance()->current().id;
     m_selectedId = currentId;
     rebuildGrids();
     updateButtonsState();
+    m_autoSwitchCheck->setChecked(Theme::Manager::instance()->autoSwitchConfig().enabled);
+    m_autoSwitchBody->setVisible(m_autoSwitchCheck->isChecked());
+    refreshAutoSwitchUi();
     if (Theme::Manager::instance()->isCustom(currentId)) {
         m_tabs->setCurrentIndex(TabCustom);
     }
@@ -271,6 +303,8 @@ void ThemesPanel::buildUi()
 
     main->addWidget(m_tabs, 1);
 
+    main->addWidget(buildAutoSwitchRow());
+
     // ---- Footer: info da seleção (esquerda) + ações finais (direita) ----
     auto* footer = new QHBoxLayout;
     footer->setSpacing(12);
@@ -294,6 +328,73 @@ void ThemesPanel::buildUi()
     connect(m_duplicateButton, &QPushButton::clicked, this, &ThemesPanel::onDuplicateClicked);
     connect(m_editButton, &QPushButton::clicked, this, &ThemesPanel::onEditClicked);
     connect(m_deleteButton, &QPushButton::clicked, this, &ThemesPanel::onDeleteClicked);
+}
+
+QWidget* ThemesPanel::buildAutoSwitchRow()
+{
+    auto* wrap = new QWidget(this);
+    wrap->setObjectName(QStringLiteral("autoSwitchWrap"));
+    auto* wrapLay = new QVBoxLayout(wrap);
+    wrapLay->setContentsMargins(0, 0, 0, 0);
+    wrapLay->setSpacing(8);
+
+    m_autoSwitchCheck = new QCheckBox(tr("Troca automática por horário"), wrap);
+    m_autoSwitchCheck->setObjectName(QStringLiteral("autoSwitchMasterCheck"));
+    m_autoSwitchCheck->setToolTip(
+        tr("Alterna sozinho entre um tema diurno e um noturno, nos horários que você definir."));
+    wrapLay->addWidget(m_autoSwitchCheck);
+
+    m_autoSwitchBody = new QWidget(wrap);
+    auto* bodyLay = new QHBoxLayout(m_autoSwitchBody);
+    bodyLay->setContentsMargins(20, 0, 0, 0);
+    bodyLay->setSpacing(20);
+
+    // Coluna esquerda: atribuir o tema selecionado no grid ao papel diurno/noturno.
+    auto* rolesCol = new QVBoxLayout;
+    rolesCol->setSpacing(4);
+    auto* dayRow = new QHBoxLayout;
+    m_dayRoleCheck = new QCheckBox(tr("Diurno"), m_autoSwitchBody);
+    m_dayThemeLabel = new QLabel(m_autoSwitchBody);
+    m_dayThemeLabel->setObjectName(QStringLiteral("autoSwitchRoleLabel"));
+    dayRow->addWidget(m_dayRoleCheck);
+    dayRow->addWidget(m_dayThemeLabel, 1);
+    rolesCol->addLayout(dayRow);
+    auto* nightRow = new QHBoxLayout;
+    m_nightRoleCheck = new QCheckBox(tr("Noturno"), m_autoSwitchBody);
+    m_nightThemeLabel = new QLabel(m_autoSwitchBody);
+    m_nightThemeLabel->setObjectName(QStringLiteral("autoSwitchRoleLabel"));
+    nightRow->addWidget(m_nightRoleCheck);
+    nightRow->addWidget(m_nightThemeLabel, 1);
+    rolesCol->addLayout(nightRow);
+    rolesCol->addWidget(new QLabel(tr("Selecione um tema no grid acima e marque aqui pra defini-lo."), m_autoSwitchBody));
+    bodyLay->addLayout(rolesCol, 1);
+
+    // Coluna direita: horários de troca.
+    auto* timesCol = new QVBoxLayout;
+    timesCol->setSpacing(4);
+    auto* dayTimeRow = new QHBoxLayout;
+    dayTimeRow->addWidget(new QLabel(tr("Trocar pro diurno às"), m_autoSwitchBody));
+    m_dayStartEdit = new QTimeEdit(m_autoSwitchBody);
+    m_dayStartEdit->setDisplayFormat(QStringLiteral("HH:mm"));
+    dayTimeRow->addWidget(m_dayStartEdit);
+    timesCol->addLayout(dayTimeRow);
+    auto* nightTimeRow = new QHBoxLayout;
+    nightTimeRow->addWidget(new QLabel(tr("Trocar pro noturno às"), m_autoSwitchBody));
+    m_nightStartEdit = new QTimeEdit(m_autoSwitchBody);
+    m_nightStartEdit->setDisplayFormat(QStringLiteral("HH:mm"));
+    nightTimeRow->addWidget(m_nightStartEdit);
+    timesCol->addLayout(nightTimeRow);
+    bodyLay->addLayout(timesCol);
+
+    wrapLay->addWidget(m_autoSwitchBody);
+
+    connect(m_autoSwitchCheck, &QCheckBox::toggled, this, &ThemesPanel::onAutoSwitchToggled);
+    connect(m_dayRoleCheck, &QCheckBox::toggled, this, &ThemesPanel::onDayRoleToggled);
+    connect(m_nightRoleCheck, &QCheckBox::toggled, this, &ThemesPanel::onNightRoleToggled);
+    connect(m_dayStartEdit, &QTimeEdit::timeChanged, this, &ThemesPanel::onAutoSwitchTimeChanged);
+    connect(m_nightStartEdit, &QTimeEdit::timeChanged, this, &ThemesPanel::onAutoSwitchTimeChanged);
+
+    return wrap;
 }
 
 ThemesPanel::Tab ThemesPanel::activeTab() const
@@ -325,6 +426,7 @@ void ThemesPanel::onTabChanged(int /*index*/)
     }
     rebuildGrids();
     updateButtonsState();
+    refreshAutoSwitchUi();
 }
 
 void ThemesPanel::selectId(const QString& id)
@@ -339,6 +441,7 @@ void ThemesPanel::selectId(const QString& id)
         }
     }
     updateButtonsState();
+    refreshAutoSwitchUi();
 }
 
 void ThemesPanel::updateButtonsState()
@@ -463,12 +566,16 @@ void ThemesPanel::rebuildOneGrid(QWidget* gridContainer, const QList<Theme::Mira
         return;
     }
 
-    const QString currentId = Theme::Manager::instance()->current().id;
+    const auto* mgr = Theme::Manager::instance();
+    const QString currentId = mgr->current().id;
+    const auto& autoSwitch = mgr->autoSwitchConfig();
     // 3 colunas por linha — vai esticar conforme o espaço.
     const int cols = 3;
     for (int i = 0; i < themes.size(); ++i) {
         const auto& t = themes.at(i);
-        auto* card = new ThemeCard(t, t.id == currentId, gridContainer);
+        const bool dayRole = !autoSwitch.dayThemeId.isEmpty() && t.id == autoSwitch.dayThemeId;
+        const bool nightRole = !autoSwitch.nightThemeId.isEmpty() && t.id == autoSwitch.nightThemeId;
+        auto* card = new ThemeCard(t, t.id == currentId, dayRole, nightRole, gridContainer);
         card->setSelected(t.id == m_selectedId);
         gl->addWidget(card, i / cols, i % cols);
         m_cards.append(QPointer<QFrame>(card));
@@ -563,6 +670,114 @@ void ThemesPanel::onThemeChanged()
 void ThemesPanel::onCustomThemesChanged()
 {
     rebuildGrids();
+}
+
+void ThemesPanel::onAutoSwitchToggled(bool checked)
+{
+    if (m_syncingAutoSwitchUi) return;
+    m_autoSwitchBody->setVisible(checked);
+
+    auto* mgr = Theme::Manager::instance();
+    Theme::AutoSwitchConfig cfg = mgr->autoSwitchConfig();
+    if (!checked) {
+        cfg.enabled = false;
+        mgr->setAutoSwitchConfig(cfg);
+        return;
+    }
+    // Só liga de verdade quando os dois papéis já estão atribuídos — senão o
+    // checkbox fica marcado (corpo expandido) esperando a atribuição.
+    if (!cfg.dayThemeId.isEmpty() && !cfg.nightThemeId.isEmpty()) {
+        cfg.enabled = true;
+        mgr->setAutoSwitchConfig(cfg);
+    }
+}
+
+void ThemesPanel::onDayRoleToggled(bool checked)
+{
+    if (m_syncingAutoSwitchUi || m_selectedId.isEmpty()) return;
+    auto* mgr = Theme::Manager::instance();
+    Theme::AutoSwitchConfig cfg = mgr->autoSwitchConfig();
+    if (checked) {
+        cfg.dayThemeId = m_selectedId;
+        if (cfg.nightThemeId == m_selectedId) cfg.nightThemeId.clear();
+    } else if (cfg.dayThemeId == m_selectedId) {
+        cfg.dayThemeId.clear();
+    }
+    cfg.enabled = m_autoSwitchCheck->isChecked()
+        && !cfg.dayThemeId.isEmpty() && !cfg.nightThemeId.isEmpty();
+    mgr->setAutoSwitchConfig(cfg);
+}
+
+void ThemesPanel::onNightRoleToggled(bool checked)
+{
+    if (m_syncingAutoSwitchUi || m_selectedId.isEmpty()) return;
+    auto* mgr = Theme::Manager::instance();
+    Theme::AutoSwitchConfig cfg = mgr->autoSwitchConfig();
+    if (checked) {
+        cfg.nightThemeId = m_selectedId;
+        if (cfg.dayThemeId == m_selectedId) cfg.dayThemeId.clear();
+    } else if (cfg.nightThemeId == m_selectedId) {
+        cfg.nightThemeId.clear();
+    }
+    cfg.enabled = m_autoSwitchCheck->isChecked()
+        && !cfg.dayThemeId.isEmpty() && !cfg.nightThemeId.isEmpty();
+    mgr->setAutoSwitchConfig(cfg);
+}
+
+void ThemesPanel::onAutoSwitchTimeChanged()
+{
+    if (m_syncingAutoSwitchUi) return;
+    auto* mgr = Theme::Manager::instance();
+    Theme::AutoSwitchConfig cfg = mgr->autoSwitchConfig();
+    cfg.dayStart = m_dayStartEdit->time();
+    cfg.nightStart = m_nightStartEdit->time();
+    mgr->setAutoSwitchConfig(cfg);
+}
+
+void ThemesPanel::onAutoSwitchConfigChanged()
+{
+    const auto& cfg = Theme::Manager::instance()->autoSwitchConfig();
+    // Desligamento externo de verdade (override manual de tema ou exclusão do
+    // tema de um papel) — os dois ids continuam preenchidos mas enabled caiu
+    // sozinho. Atribuição incompleta de papéis (algum id vazio, no meio do
+    // fluxo de configuração) não deve recolher o painel.
+    if (!cfg.enabled && m_autoSwitchCheck->isChecked()
+        && !cfg.dayThemeId.isEmpty() && !cfg.nightThemeId.isEmpty()) {
+        m_syncingAutoSwitchUi = true;
+        m_autoSwitchCheck->setChecked(false);
+        m_syncingAutoSwitchUi = false;
+    }
+    m_autoSwitchBody->setVisible(m_autoSwitchCheck->isChecked());
+    refreshAutoSwitchUi();
+    rebuildGrids();
+}
+
+void ThemesPanel::refreshAutoSwitchUi()
+{
+    if (!m_autoSwitchCheck) return;
+    const auto* mgr = Theme::Manager::instance();
+    const auto& cfg = mgr->autoSwitchConfig();
+
+    m_syncingAutoSwitchUi = true;
+
+    const Theme::MiraTheme* dayTheme = nullptr;
+    const Theme::MiraTheme* nightTheme = nullptr;
+    for (const auto& t : mgr->available()) {
+        if (t.id == cfg.dayThemeId) dayTheme = &t;
+        if (t.id == cfg.nightThemeId) nightTheme = &t;
+    }
+    m_dayRoleCheck->setChecked(!m_selectedId.isEmpty() && m_selectedId == cfg.dayThemeId);
+    m_nightRoleCheck->setChecked(!m_selectedId.isEmpty() && m_selectedId == cfg.nightThemeId);
+    m_dayThemeLabel->setText(dayTheme
+        ? tr("— %1").arg(dayTheme->name)
+        : tr("— nenhum tema definido"));
+    m_nightThemeLabel->setText(nightTheme
+        ? tr("— %1").arg(nightTheme->name)
+        : tr("— nenhum tema definido"));
+    m_dayStartEdit->setTime(cfg.dayStart);
+    m_nightStartEdit->setTime(cfg.nightStart);
+
+    m_syncingAutoSwitchUi = false;
 }
 
 void ThemesPanel::applyDialogStyle()
@@ -671,6 +886,21 @@ void ThemesPanel::applyDialogStyle()
             background: %9;
             color: %3;
             border-color: %9;
+        }
+        #autoSwitchWrap QCheckBox {
+            color: %2;
+            font-size: 12px;
+            spacing: 6px;
+        }
+        #autoSwitchMasterCheck { font-weight: 600; }
+        #autoSwitchRoleLabel { color: %4; font-size: 11px; }
+        #autoSwitchWrap QTimeEdit {
+            background: %5;
+            color: %2;
+            border: 1px solid %6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
         }
     )").arg(
         Theme::appBackground(),     // 1
